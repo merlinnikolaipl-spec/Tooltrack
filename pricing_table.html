@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToolKeeper — Тарифы</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f1117;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .wrapper {
+    width: 900px;
+    background: #16181f;
+    border-radius: 24px;
+    padding: 48px;
+    border: 1px solid #2a2d3a;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #6c7280;
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #6c7280;
+  }
+
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .plan {
+    background: #1e2130;
+    border-radius: 16px;
+    padding: 20px 14px;
+    border: 1px solid #2a2d3a;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+  }
+
+  .plan.popular {
+    background: linear-gradient(135deg, #1a2a4a, #1e2d52);
+    border: 1.5px solid #3b5bdb;
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #3b5bdb, #7048e8);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .plan-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .plan-people {
+    font-size: 11px;
+    color: #6c7280;
+    margin-bottom: 14px;
+  }
+
+  .plan-gps {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  .gps-yes {
+    background: #0d2e1a;
+    color: #22c55e;
+    border: 1px solid #166534;
+  }
+
+  .gps-no {
+    background: #1f1f1f;
+    color: #4b5563;
+    border: 1px solid #2a2d3a;
+  }
+
+  .plan-usd {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 2px;
+  }
+
+  .plan-usd span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6c7280;
+  }
+
+  .plan-period {
+    font-size: 11px;
+    color: #4b5563;
+    margin-bottom: 16px;
+  }
+
+  .divider {
+    height: 1px;
+    background: #2a2d3a;
+    margin-bottom: 14px;
+  }
+
+  .currency-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 7px;
+  }
+
+  .currency-flag {
+    font-size: 14px;
+  }
+
+  .currency-netto {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  .currency-brutto {
+    font-size: 11px;
+    color: #6c7280;
+  }
+
+  .currency-label {
+    font-size: 10px;
+    color: #4b5563;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .vat-info {
+    background: #1e2130;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #2a2d3a;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .vat-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6c7280;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .vat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+
+  .note {
+    background: #1e2130;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #2a2d3a;
+    flex: 2;
+    min-width: 300px;
+  }
+
+  .note-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6c7280;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .note-text {
+    font-size: 12px;
+    color: #6c7280;
+    line-height: 1.6;
+  }
+
+  .note-text strong {
+    color: #9ca3af;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="logo">ToolKeeper</div>
+    <div class="title">Тарифные планы</div>
+    <div class="subtitle">Цены нетто / месяц · НДС начисляется по стране пользователя</div>
+  </div>
+
+  <div class="plans">
+
+    <!-- FREE -->
+    <div class="plan">
+      <div class="plan-name">Free</div>
+      <div class="plan-people">до 3 человек</div>
+      <div class="plan-gps gps-no">GPS ✗</div>
+      <div class="plan-usd">$0</div>
+      <div class="plan-period">навсегда</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">0 PLN</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">0 EUR</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">0 CZK</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">0 UAH</span></div>
+    </div>
+
+    <!-- СТАРТ -->
+    <div class="plan">
+      <div class="plan-name">Старт</div>
+      <div class="plan-people">до 15 человек</div>
+      <div class="plan-gps gps-no">GPS ✗</div>
+      <div class="plan-usd">$12 <span>нетто</span></div>
+      <div class="plan-period">в месяц</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">49 PLN</span><span class="currency-brutto">→ 60 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">11 EUR</span><span class="currency-brutto">→ 13 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">275 CZK</span><span class="currency-brutto">→ 333</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">500 UAH</span><span class="currency-brutto">→ 600</span></div>
+    </div>
+
+    <!-- ПРО -->
+    <div class="plan popular">
+      <div class="popular-badge">Популярный</div>
+      <div class="plan-name">Про</div>
+      <div class="plan-people">до 30 человек</div>
+      <div class="plan-gps gps-yes">GPS ✓</div>
+      <div class="plan-usd">$24 <span>нетто</span></div>
+      <div class="plan-period">в месяц</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">99 PLN</span><span class="currency-brutto">→ 122 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">22 EUR</span><span class="currency-brutto">→ 26 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">550 CZK</span><span class="currency-brutto">→ 666</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">990 UAH</span><span class="currency-brutto">→ 1 188</span></div>
+    </div>
+
+    <!-- БИЗНЕС -->
+    <div class="plan">
+      <div class="plan-name">Бизнес</div>
+      <div class="plan-people">до 100 человек</div>
+      <div class="plan-gps gps-yes">GPS ✓</div>
+      <div class="plan-usd">$42 <span>нетто</span></div>
+      <div class="plan-period">в месяц</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">179 PLN</span><span class="currency-brutto">→ 220 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">39 EUR</span><span class="currency-brutto">→ 46 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">975 CZK</span><span class="currency-brutto">→ 1 180</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">1 750 UAH</span><span class="currency-brutto">→ 2 100</span></div>
+    </div>
+
+    <!-- КОРПОРАТ -->
+    <div class="plan">
+      <div class="plan-name">Корпорат</div>
+      <div class="plan-people">до 300 человек</div>
+      <div class="plan-gps gps-yes">GPS ✓</div>
+      <div class="plan-usd">$69 <span>нетто</span></div>
+      <div class="plan-period">в месяц</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">299 PLN</span><span class="currency-brutto">→ 368 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">64 EUR</span><span class="currency-brutto">→ 76 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">1 600 CZK</span><span class="currency-brutto">→ 1 936</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">2 900 UAH</span><span class="currency-brutto">→ 3 480</span></div>
+    </div>
+
+    <!-- МАКС -->
+    <div class="plan">
+      <div class="plan-name">Макс</div>
+      <div class="plan-people">до 500 человек</div>
+      <div class="plan-gps gps-yes">GPS ✓</div>
+      <div class="plan-usd">$99 <span>нетто</span></div>
+      <div class="plan-period">в месяц</div>
+      <div class="divider"></div>
+      <div class="currency-row"><span class="currency-flag">🇵🇱</span><span class="currency-netto">399 PLN</span><span class="currency-brutto">→ 491 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇩🇪</span><span class="currency-netto">92 EUR</span><span class="currency-brutto">→ 109 брутто</span></div>
+      <div class="currency-row"><span class="currency-flag">🇨🇿</span><span class="currency-netto">2 300 CZK</span><span class="currency-brutto">→ 2 783</span></div>
+      <div class="currency-row"><span class="currency-flag">🇺🇦</span><span class="currency-netto">4 100 UAH</span><span class="currency-brutto">→ 4 920</span></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="vat-info">
+      <div class="vat-title">Ставки НДС</div>
+      <div class="vat-row">🇵🇱 <span>Польша — 23% VAT</span></div>
+      <div class="vat-row">🇩🇪 <span>Германия — 19% MwSt</span></div>
+      <div class="vat-row">🇨🇿 <span>Чехия — 21% DPH</span></div>
+      <div class="vat-row">🇺🇦 <span>Украина — 20% ПДВ</span></div>
+    </div>
+    <div class="note">
+      <div class="note-title">Важно</div>
+      <div class="note-text">
+        <strong>Оплата через Google Play</strong> — цены автоматически отображаются в валюте страны пользователя.<br>
+        <strong>B2B клиенты ЕС</strong> с номером VAT — применяется Reverse Charge (НДС 0%).<br>
+        Все цены указаны <strong>нетто</strong>, НДС начисляется сверху согласно законодательству страны.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

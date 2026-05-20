@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub *)",
+      "Bash(./gradlew assembleRelease)",
+      "Bash(find /c/Users/Admin/AppData/Local/Pub/Cache/hosted -path \"*/flutter_foreground_task-*/lib/flutter_foreground_task.dart\" 2>/dev/null | head -3)",
+      "Read(//c/Users/Admin/AppData/Local/Pub/Cache/hosted/**)",
+      "Bash(xargs grep -l \"ForegroundTaskOptions\\\\|ForegroundTaskEventAction\")"
+    ]
+  }
+}

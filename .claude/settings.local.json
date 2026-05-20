@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path . -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(flutter analyze *)",
+      "PowerShell(cd \"c:\\\\Users\\\\Admin\\\\develop\\\\tooltrack_fixed\"; $r = flutter analyze lib/main.dart 2>&1; Write-Host \\($r | Where-Object { $_ -match \"error\" } | Out-String\\); Write-Host \"DONE\")",
+      "PowerShell(cd \"c:\\\\Users\\\\Admin\\\\develop\\\\tooltrack_fixed\"; flutter analyze lib/main.dart; $ec = $LASTEXITCODE; Write-Host \"Exit: $ec\")"
+    ]
+  }
+}
