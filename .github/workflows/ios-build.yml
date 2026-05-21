@@ -1,0 +1,36 @@
+name: iOS Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Build iOS (no codesign)
+      run: flutter build ios --release --no-codesign
+    
+    - name: Create IPA
+      run: |
+        cd build/ios/iphoneos
+        mkdir Payload
+        cp -r Runner.app Payload/
+        zip -r ToolKeeper.ipa Payload
+    
+    - name: Upload IPA
+      uses: actions/upload-artifact@v3
+      with:
+        name: ToolKeeper-iOS
+        path: build/ios/iphoneos/ToolKeeper.ipa
