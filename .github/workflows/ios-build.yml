@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
@@ -30,7 +30,7 @@ jobs:
         zip -r ToolKeeper.ipa Payload
     
     - name: Upload IPA
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ToolKeeper-iOS
         path: build/ios/iphoneos/ToolKeeper.ipa
