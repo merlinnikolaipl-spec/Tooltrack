@@ -99,10 +99,8 @@ Future<void> _pingGps() async {
     }
 
     final pos = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        timeLimit: Duration(seconds: 20),
-      ),
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: Duration(seconds: 20),
     );
 
     await FirebaseFirestore.instance

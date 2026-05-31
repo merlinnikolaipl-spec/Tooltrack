@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
     
     <!-- Разрешения для работы интернета и проверки сети -->
@@ -21,7 +21,7 @@
 
     <application
         android:label="ToolKeeper"
-        android:name="${applicationName}"
+        android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/ic_launcher">
         
         <activity
@@ -36,7 +36,7 @@
             
             <!-- Тема для отображения во время инициализации Flutter -->
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
+              android:name="io.flutter.embedding.android.FlutterActivity"
               android:resource="@style/NormalTheme"
               />
             

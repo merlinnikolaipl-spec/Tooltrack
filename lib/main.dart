@@ -7501,7 +7501,7 @@ class _ToolsPageState extends State<ToolsPage> {
     await file.writeAsBytes(bytes.buffer.asUint8List());
     await SharePlus.instance.share(ShareParams(
       files: [XFile(file.path)],
-      text: inv.isNotEmpty ? '$toolName — $inv' : toolName,
+      subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
     ));
   }
 
