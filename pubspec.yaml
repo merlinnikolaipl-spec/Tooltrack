@@ -1,7 +1,7 @@
 name: tooltrack_app
 description: ToolTrack app
 publish_to: none
-version: 1.1.0+29
+version: 1.1.0+30
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
