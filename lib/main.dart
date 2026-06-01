@@ -10,7 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'billing/plans.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in/google_sign_in.dart';h
 
 import 'firebase_options.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8089,7 +8089,7 @@ class _HistoryTabState extends State<HistoryTab> {
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: mimeType)]));
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл сохранён: ${file.path}')));
@@ -8419,7 +8419,7 @@ class _ReportsTabState extends State<ReportsTab> with SingleTickerProviderStateM
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: mimeType)]));
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -10251,7 +10251,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
       } else {
-        await SharePlus.instance.share(ShareParams(files: [XFile(file.path, mimeType: mimeType)]));
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
