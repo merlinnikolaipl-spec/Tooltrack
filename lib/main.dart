@@ -7499,10 +7499,10 @@ class _ToolsPageState extends State<ToolsPage> {
     final safeName = toolName.replaceAll(RegExp(r'[^\w]'), '_');
     final file = File('${dir.path}/qr_$safeName.png');
     await file.writeAsBytes(bytes.buffer.asUint8List());
-    await SharePlus.instance.share(ShareParams(
-      files: [XFile(file.path)],
-      subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
-    ));
+            await Share.shareXFiles(
+                        [XFile(file.path)],
+                        subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
+                      );
   }
 
   // Thermal label PDF — 57×32mm (Brother QL / Zebra format)
