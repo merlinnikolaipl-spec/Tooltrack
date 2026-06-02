@@ -23,10 +23,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+          return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -74,4 +71,13 @@ class DefaultFirebaseOptions {
     measurementId: 'G-CWFRQ5FFZB',
   );
 
+    static const FirebaseOptions ios = FirebaseOptions(
+                apiKey: 'AIzaSyCBdT1E83YRvplBukX9t1bdDTymViz3-6k',
+                appId: '1:242560270718:ios:52f3c941785f469bccb32f',
+                messagingSenderId: '242560270718',
+                projectId: 'tooltrack-ee0aa',
+                storageBucket: 'tooltrack-ee0aa.firebasestorage.app',
+                iosClientId: '242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com',
+                iosBundleId: 'com.toolkeeper.app',
+            );
 }
