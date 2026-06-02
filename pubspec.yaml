@@ -1,7 +1,7 @@
 name: tooltrack_app
 description: ToolTrack app
 publish_to: none
-version: 1.1.0+34
+version: 1.1.0+35
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -15,7 +15,7 @@ dependencies:
   google_sign_in: ^6.1.6
   path_provider: ^2.1.1
   share_plus: ^10.0.0
-  pdf: ^3.11.3
+  pdf: ^3.12.0
   printing: ^5.12.0
   excel: ^4.0.6
   cross_file: ^0.3.3+8
@@ -36,7 +36,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
 
 dependency_overrides:
-  pdf_widget_wrapper: ^2.0.0
+  pdf_widget_wrapper: any
   win32: 5.5.1
 
 flutter:
