@@ -9868,7 +9868,7 @@ class _ShiftButtonState extends State<ShiftButton> {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(i18n.t('gpsPermissionDenied'))));
         } else {
           final pos = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
+                        desiredAccuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10),
           );
           if (!mounted) return;
           userLat = pos.latitude;
@@ -10042,9 +10042,9 @@ class _ShiftButtonState extends State<ShiftButton> {
                   double? distFromSite;
                   try {
                     final pos = await Geolocator.getCurrentPosition(
-                      locationSettings: const LocationSettings(
-                          accuracy: LocationAccuracy.high,
-                          timeLimit: Duration(seconds: 10)),
+                      desiredAccuracy: LocationAccuracy.high,
+              
+                          timeLimit: Duration(seconds: 10),
                     );
                     endLat = pos.latitude;
                     endLng = pos.longitude;
