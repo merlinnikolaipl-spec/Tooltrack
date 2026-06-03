@@ -69,5 +69,7 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Used for scanning QR codes of tools</string>
+	<key>GIDClientID</key>
+	<string>242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com</string>
 </dict>
 </plist>
