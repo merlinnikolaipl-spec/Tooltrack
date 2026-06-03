@@ -9277,7 +9277,7 @@ class EmployeeProfileEditPage extends StatefulWidget {
         '/system/fonts/NotoSans-Regular.ttf',
         '/system/fonts/DroidSans.ttf',
       ]);
-    } else if (Platform.isWindows) {
+    } else if (Platform.isIOS) { try { final data = await rootBundle.load('assets/fonts/Roboto-Regular.ttf'); final iFont = pw.Font.ttf(data); return pw.ThemeData.withFont(base: iFont, bold: iFont); } catch (_) {} } else if (Platform.isWindows) {
       candidates.addAll([
         r'C:\\Windows\\Fonts\\arial.ttf',
         r'C:\\Windows\\Fonts\\segoeui.ttf',
