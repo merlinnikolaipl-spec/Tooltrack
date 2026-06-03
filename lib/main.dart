@@ -97,7 +97,7 @@ Future<void> _initBackgroundService() async {
       foregroundServiceNotificationId: 256,
       foregroundServiceTypes: [AndroidForegroundType.location],
     ),
-    iosConfiguration: IosConfiguration(autoStart: false),
+            iosConfiguration: IosConfiguration(autoStart: false, onForeground: gpsServiceMain),
   );
 }
 
