@@ -9,43 +9,55 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 
-// ─── Entry point for BOTH foreground and background isolates ───────────────
+// ─── Entry point for FOREGROUND (app on screen) ───────────────────────────
 
 @pragma('vm:entry-point')
 void gpsServiceMain(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
 
-  // On Android — keep as foreground service
   if (service is AndroidServiceInstance) {
     service.setAsForegroundService();
   }
 
-  // Listen for startTracking (foreground use only — saves to prefs)
+  Timer? _gpsTimer;
+
   service.on('startTracking').listen((data) async {
     final companyId = data?['companyId'] as String?;
-    final shiftId   = data?['shiftId']   as String?;
-    final interval  = data?['interval']  as int?;
+    final shiftId  = data?['shiftId']  as String?;
+    final interval = (data?['interval'] as int?) ?? 5;
+
     if (companyId != null && shiftId != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('shift_companyId', companyId);
-      await prefs.setString('shift_shiftId', shiftId);
-      if (interval != null) await prefs.setInt('shift_gpsInterval', interval);
-      print('[GPS] startTracking saved: company=${companyId} shift=${shiftId} interval=${interval}');
+      await prefs.setString('shift_shiftId',   shiftId);
+      await prefs.setInt   ('shift_gpsInterval', interval);
+      print('[GPS] startTracking: company=$companyId shift=$shiftId interval=$interval min');
+
+      // Cancel any existing timer
+      _gpsTimer?.cancel();
+
+      // Ping immediately on start
+      await _pingGps();
+
+      // Then repeat every interval minutes
+      _gpsTimer = Timer.periodic(Duration(minutes: interval), (_) async {
+        await _pingGps();
+      });
     }
   });
 
   service.on('stopService').listen((_) async {
+    _gpsTimer?.cancel();
+    _gpsTimer = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('shift_companyId');
     await prefs.remove('shift_shiftId');
+    await prefs.remove('shift_gpsInterval');
     service.stopSelf();
   });
-
-  // Do an immediate ping when the service starts
-  await _pingGps();
 }
 
-// ─── onBackground for iOS BGTask — called periodically by the OS ──────────
+// ─── onBackground for iOS BGTask — called periodically by the OS ─────────
 
 @pragma('vm:entry-point')
 Future<bool> iosBackgroundHandler(ServiceInstance service) async {
@@ -54,12 +66,11 @@ Future<bool> iosBackgroundHandler(ServiceInstance service) async {
   return true;
 }
 
-// ─── Core GPS ping logic ────────────────────────────────────────────────────
+// ─── Core GPS ping ────────────────────────────────────────────────────────
 
 Future<void> _pingGps() async {
   try {
-    // 1. Read shift data from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
+    final prefs   = await SharedPreferences.getInstance();
     final company = prefs.getString('shift_companyId');
     final shift   = prefs.getString('shift_shiftId');
 
@@ -68,33 +79,28 @@ Future<void> _pingGps() async {
       return;
     }
 
-    print('[GPS] Pinging for company=${company} shift=${shift}');
+    print('[GPS] Pinging for company=$company shift=$shift');
 
-    // 2. Ensure Firebase is initialised in this isolate
     await _ensureFirebase();
 
-    // 3. Check location permission
     final perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
-      print('[GPS] Permission denied: ${perm}');
+      print('[GPS] Permission denied: $perm');
       return;
     }
 
-    // 4. Check location service enabled
     final enabled = await Geolocator.isLocationServiceEnabled();
     if (!enabled) {
       print('[GPS] Location service disabled');
       return;
     }
 
-    // 5. Get position — short timeout for BGTask budget
     final pos = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
-      timeLimit: Duration(seconds: 15),
+      timeLimit: const Duration(seconds: 15),
     );
 
-    // 6. Write to Firestore
     await FirebaseFirestore.instance
         .collection('companies')
         .doc(company)
@@ -110,11 +116,11 @@ Future<void> _pingGps() async {
 
     print('[GPS] Ping OK: ${pos.latitude}, ${pos.longitude}');
   } catch (e, st) {
-    print('[GPS] Ping error: ${e}\n${st}');
+    print('[GPS] Ping error: $e\n$st');
   }
 }
 
-// ─── Firebase init helper ────────────────────────────────────────────────────
+// ─── Firebase init helper ─────────────────────────────────────────────────
 
 Future<void> _ensureFirebase() async {
   try {
@@ -124,10 +130,10 @@ Future<void> _ensureFirebase() async {
       );
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        cacheSizeBytes:     Settings.CACHE_SIZE_UNLIMITED,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
     }
   } catch (e) {
-    print('[GPS] Firebase init error: ${e}');
+    print('[GPS] Firebase init error: $e');
   }
 }
