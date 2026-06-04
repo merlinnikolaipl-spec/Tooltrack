@@ -21,26 +21,43 @@ void gpsServiceMain(ServiceInstance service) async {
 
   Timer? _gpsTimer;
 
-  service.on('startTracking').listen((data) async {
-    final companyId = data?['companyId'] as String?;
-    final shiftId  = data?['shiftId']  as String?;
-    final interval = (data?['interval'] as int?) ?? 5;
+  // Read prefs that were saved BEFORE startService() was called
+  final prefs = await SharedPreferences.getInstance();
+  final companyId = prefs.getString('shift_companyId');
+  final shiftId   = prefs.getString('shift_shiftId');
+  final interval  = prefs.getInt('shift_gpsInterval') ?? 5;
 
-    if (companyId != null && shiftId != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('shift_companyId', companyId);
-      await prefs.setString('shift_shiftId',   shiftId);
-      await prefs.setInt   ('shift_gpsInterval', interval);
-      print('[GPS] startTracking: company=$companyId shift=$shiftId interval=$interval min');
+  if (companyId != null && companyId.isNotEmpty &&
+      shiftId   != null && shiftId.isNotEmpty) {
+    print('[GPS] Service started: company=$companyId shift=$shiftId interval=$interval min');
 
-      // Cancel any existing timer
-      _gpsTimer?.cancel();
+    // Ping immediately on service start
+    await _pingGps();
 
-      // Ping immediately on start
+    // Then repeat every interval minutes
+    _gpsTimer = Timer.periodic(Duration(minutes: interval), (_) async {
       await _pingGps();
+    });
+  } else {
+    print('[GPS] No shift in prefs at service start — waiting for startTracking event');
+  }
 
-      // Then repeat every interval minutes
-      _gpsTimer = Timer.periodic(Duration(minutes: interval), (_) async {
+  // Also listen for startTracking (in case called after service start)
+  service.on('startTracking').listen((data) async {
+    final cId = data?['companyId'] as String?;
+    final sId = data?['shiftId']   as String?;
+    final inv = (data?['interval'] as int?) ?? 5;
+
+    if (cId != null && sId != null) {
+      final p = await SharedPreferences.getInstance();
+      await p.setString('shift_companyId', cId);
+      await p.setString('shift_shiftId',   sId);
+      await p.setInt   ('shift_gpsInterval', inv);
+      print('[GPS] startTracking event: company=$cId shift=$sId interval=$inv min');
+
+      _gpsTimer?.cancel();
+      await _pingGps();
+      _gpsTimer = Timer.periodic(Duration(minutes: inv), (_) async {
         await _pingGps();
       });
     }
@@ -49,15 +66,15 @@ void gpsServiceMain(ServiceInstance service) async {
   service.on('stopService').listen((_) async {
     _gpsTimer?.cancel();
     _gpsTimer = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('shift_companyId');
-    await prefs.remove('shift_shiftId');
-    await prefs.remove('shift_gpsInterval');
+    final p = await SharedPreferences.getInstance();
+    await p.remove('shift_companyId');
+    await p.remove('shift_shiftId');
+    await p.remove('shift_gpsInterval');
     service.stopSelf();
   });
 }
 
-// ─── onBackground for iOS BGTask — called periodically by the OS ─────────
+// ─── onBackground for iOS BGTask — one-shot call by iOS ──────────────────
 
 @pragma('vm:entry-point')
 Future<bool> iosBackgroundHandler(ServiceInstance service) async {
@@ -98,7 +115,7 @@ Future<void> _pingGps() async {
 
     final pos = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
-      timeLimit: const Duration(seconds: 15),
+      timeLimit: const Duration(seconds: 20),
     );
 
     await FirebaseFirestore.instance
