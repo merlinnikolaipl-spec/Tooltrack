@@ -47,8 +47,9 @@
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>location</string>
 		<string>fetch</string>
+		<string>location</string>
+		<string>processing</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -71,5 +72,9 @@
 	<string>Used for scanning QR codes of tools</string>
 	<key>GIDClientID</key>
 	<string>242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dev.fluttercommunity.plus.backgroundservice</string>
+	</array>
 </dict>
 </plist>
