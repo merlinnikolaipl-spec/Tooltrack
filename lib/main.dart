@@ -9938,6 +9938,14 @@ class _ShiftButtonState extends State<ShiftButton> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('shift_companyId', widget.companyId);
         await prefs.setString('shift_shiftId', shiftRef.id);
+        // Save Firebase idToken for GPS background service (valid 1h)
+        try {
+          final fbUser = FirebaseAuth.instance.currentUser;
+          if (fbUser != null) {
+            final fbToken = await fbUser.getIdToken(true);
+            await prefs.setString('shift_idToken', fbToken ?? '');
+          }
+        } catch (_) {}
 
         // Запуск сервиса — fire-and-forget, не блокирует UI
         final capturedCompany = widget.companyId;
