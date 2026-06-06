@@ -9268,34 +9268,14 @@ class EmployeeProfileEditPage extends StatefulWidget {
 
 
   Future<pw.ThemeData> _pdfTheme() async {
-    // Load a system font that supports Cyrillic (Android/Windows) to avoid "squares" in PDF.
-    final candidates = <String>[];
-    if (Platform.isAndroid) {
-      candidates.addAll([
-        '/system/fonts/Roboto-Regular.ttf',
-        '/system/fonts/Roboto-Medium.ttf',
-        '/system/fonts/NotoSans-Regular.ttf',
-        '/system/fonts/DroidSans.ttf',
-      ]);
-    } else if (Platform.isIOS) { try { final data = await rootBundle.load('assets/fonts/Roboto-Regular.ttf'); final iFont = pw.Font.ttf(data); return pw.ThemeData.withFont(base: iFont, bold: iFont); } catch (_) {} } else if (Platform.isWindows) {
-      candidates.addAll([
-        r'C:\\Windows\\Fonts\\arial.ttf',
-        r'C:\\Windows\\Fonts\\segoeui.ttf',
-      ]);
+    // Use bundled assets font for cross-platform Cyrillic support (iOS fix)
+    try {
+      final fontData = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
+      final font = pw.Font.ttf(fontData);
+      return pw.ThemeData.withFont(base: font, bold: font);
+    } catch (e) {
+      return pw.ThemeData();
     }
-    Uint8List? bytes;
-    for (final p in candidates) {
-      try {
-        final f = File(p);
-        if (await f.exists()) {
-          bytes = await f.readAsBytes();
-          break;
-        }
-      } catch (_) {}
-    }
-    if (bytes == null) return pw.ThemeData.base();
-    final font = pw.Font.ttf(ByteData.view(bytes.buffer));
-    return pw.ThemeData.withFont(base: font, bold: font);
   }
 
 class _EmployeeProfileEditPageState extends State<EmployeeProfileEditPage> {
