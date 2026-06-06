@@ -7,151 +7,184 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import 'firebase_options.dart';
 
+const _kApiKey = 'AIzaSyB28W647o4zrAZisrQNLfrn_4CXN_jjeIg';
 const _kProjectId = 'tooltrack-ee0aa';
-const _kFirebaseApiKey = 'AIzaSyB28W647o4zrAZisrQNLfrn_4CXN_jjeIg';
+const _kRefreshUrl = 'https://securetoken.googleapis.com/v1/token?key=${_kApiKey}';
+
+String? _cachedIdToken;
+DateTime? _tokenFetchedAt;
+
+Future<String?> _refreshIdToken(String refreshToken) async {
+  try {
+    final resp = await http.post(
+      Uri.parse(_kRefreshUrl),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'grant_type=refresh_token&refresh_token=$refreshToken',
+    );
+    if (resp.statusCode == 200) {
+      final data = json.decode(resp.body) as Map<String, dynamic>;
+      return data['id_token'] as String?;
+    }
+  } catch (_) {}
+  return null;
+}
+
+Future<String?> _getValidToken(SharedPreferences prefs) async {
+  final now = DateTime.now();
+  if (_cachedIdToken != null && _tokenFetchedAt != null) {
+    final age = now.difference(_tokenFetchedAt!).inMinutes;
+    if (age < 55) return _cachedIdToken;
+  }
+  final refreshToken = prefs.getString('shift_refreshToken') ?? '';
+  if (refreshToken.isNotEmpty) {
+    final newToken = await _refreshIdToken(refreshToken);
+    if (newToken != null) {
+      _cachedIdToken = newToken;
+      _tokenFetchedAt = now;
+      await prefs.setString('shift_idToken', newToken);
+      return newToken;
+    }
+  }
+  final stored = prefs.getString('shift_idToken') ?? '';
+  if (stored.isNotEmpty) {
+    _cachedIdToken = stored;
+    _tokenFetchedAt = now;
+    return stored;
+  }
+  return null;
+}
 
 @pragma('vm:entry-point')
-void gpsServiceMain(ServiceInstance service) async {
-  DartPluginRegistrant.ensureInitialized();
+void gpsServiceMain() {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  try {
+  FlutterBackgroundService().on('startTracking').listen((event) async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (_) {}
 
-  if (service is AndroidServiceInstance) {
-    service.setAsForegroundService();
-  }
-
-  Timer? _gpsTimer;
-  String? _companyId;
-  String? _shiftId;
-  int _interval = 5;
-
-  Future<String?> _getIdToken() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    final token = prefs.getString('shift_idToken');
-    if (token == null || token.isEmpty) {
-      await prefs.setString('gps_last_error', 'NO_ID_TOKEN: Start shift first');
-      return null;
+    final companyId = prefs.getString('shift_companyId') ?? '';
+    final shiftId = prefs.getString('shift_shiftId') ?? '';
+
+    if (companyId.isEmpty || shiftId.isEmpty) {
+      await prefs.setString('gps_last_error', 'NO_SHIFT_DATA');
+      return;
     }
-    return token;
-  }
 
-  Future<void> _writeLocation({
-    required String companyId,
-    required String shiftId,
-    required String idToken,
-    required double lat,
-    required double lng,
-    required double accuracy,
-  }) async {
-    final url = 'https://firestore.googleapis.com/v1/projects/$_kProjectId'
-        '/databases/(default)/documents'
-        '/companies/$companyId/timesheets/$shiftId/locations';
+    final intervalSec = (event?['gpsInterval'] ?? event?['interval'] ?? 30) as int;
 
-    final now = DateTime.now().toUtc().toIso8601String();
-    final body = jsonEncode({
-      'fields': {
-        'lat': {'doubleValue': lat},
-        'lng': {'doubleValue': lng},
-        'accuracy': {'doubleValue': accuracy},
-        'timestamp': {'timestampValue': now},
-      }
+    await _sendGpsPoint(prefs, companyId, shiftId);
+
+    Timer.periodic(Duration(seconds: intervalSec), (_) async {
+      await _sendGpsPoint(prefs, companyId, shiftId);
     });
+  });
 
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 15);
-    try {
-      final req = await client.postUrl(Uri.parse(url));
-      req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $idToken');
-      req.headers.contentType = ContentType.json;
-      req.write(body);
-      final resp = await req.close();
-      final respBody = await resp.transform(utf8.decoder).join();
-      if (resp.statusCode >= 400) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('gps_last_error',
-            'HTTP_${resp.statusCode}: ${respBody.length > 200 ? respBody.substring(0, 200) : respBody}');
-      } else {
-        // Success - clear error
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('gps_last_error');
-      }
-    } finally {
-      client.close();
-    }
-  }
+  FlutterBackgroundService().on('stopTracking').listen((event) async {
+    final service = FlutterBackgroundService();
+    service.invoke('stop');
+  });
 
-  Future<void> sendGps() async {
-    if (_companyId == null || _shiftId == null) return;
-    try {
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 15),
-      );
-      final idToken = await _getIdToken();
-      if (idToken == null) return;
-      await _writeLocation(
-        companyId: _companyId!,
-        shiftId: _shiftId!,
-        idToken: idToken,
-        lat: pos.latitude,
-        lng: pos.longitude,
-        accuracy: pos.accuracy,
-      );
-    } catch (e) {
+  FlutterBackgroundService().on('updateToken').listen((event) async {
+    final newToken = event?['idToken'] as String?;
+    final newRefresh = event?['refreshToken'] as String?;
+    if (newToken != null && newToken.isNotEmpty) {
+      _cachedIdToken = newToken;
+      _tokenFetchedAt = DateTime.now();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('gps_last_error', 'SEND_ERR: ${e.toString().substring(0, 150)}');
+      await prefs.setString('shift_idToken', newToken);
     }
-  }
+    if (newRefresh != null && newRefresh.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('shift_refreshToken', newRefresh);
+    }
+  });
+}
 
-  // On startup - check if there's a saved shift
+Future<void> _sendGpsPoint(
+  SharedPreferences prefs,
+  String companyId,
+  String shiftId,
+) async {
   try {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    final savedCompany = prefs.getString('shift_companyId');
-    final savedShift = prefs.getString('shift_shiftId');
-    final savedInterval = prefs.getInt('shift_gpsInterval') ?? 5;
-    if (savedCompany != null && savedShift != null) {
-      _companyId = savedCompany;
-      _shiftId = savedShift;
-      _interval = savedInterval;
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await prefs.setString('gps_last_error', 'GPS_DISABLED');
+      return;
     }
-  } catch (_) {}
 
-  service.on('startTracking').listen((data) async {
-    _gpsTimer?.cancel();
-    _companyId = data?['companyId'] as String?;
-    _shiftId = data?['shiftId'] as String?;
-    _interval = (data?['interval'] as int?) ??
-        (data?['gpsInterval'] as int?) ?? 5;
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      await prefs.setString('gps_last_error', 'NO_PERMISSION');
+      return;
+    }
 
-    // Save to prefs for recovery
+    final pos = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 15),
+    );
+
+    final idToken = await _getValidToken(prefs);
+    if (idToken == null || idToken.isEmpty) {
+      await prefs.setString('gps_last_error', 'NO_ID_TOKEN');
+      return;
+    }
+
+    await _writeLocation(
+      idToken: idToken,
+      companyId: companyId,
+      shiftId: shiftId,
+      lat: pos.latitude,
+      lng: pos.longitude,
+      accuracy: pos.accuracy,
+    );
+
+    await prefs.setString('gps_last_error', 'OK');
+  } catch (e) {
+    await prefs.setString('gps_last_error', 'GPS_ERR:$e');
+  }
+}
+
+Future<void> _writeLocation({
+  required String idToken,
+  required String companyId,
+  required String shiftId,
+  required double lat,
+  required double lng,
+  required double accuracy,
+}) async {
+  final url = 'https://firestore.googleapis.com/v1/projects/$_kProjectId'
+      '/databases/(default)/documents'
+      '/companies/$companyId/timesheets/$shiftId/locations';
+
+  final ts = DateTime.now().toIso8601String();
+  final body = json.encode({
+    'fields': {
+      'lat': {'doubleValue': lat},
+      'lng': {'doubleValue': lng},
+      'accuracy': {'doubleValue': accuracy},
+      'timestamp': {'stringValue': ts},
+    }
+  });
+
+  final resp = await http.post(
+    Uri.parse(url),
+    headers: {
+      'Authorization': 'Bearer $idToken',
+      'Content-Type': 'application/json',
+    },
+    body: body,
+  );
+
+  if (resp.statusCode < 200 || resp.statusCode >= 300) {
     final prefs = await SharedPreferences.getInstance();
-    if (_companyId != null) await prefs.setString('shift_companyId', _companyId!);
-    if (_shiftId != null) await prefs.setString('shift_shiftId', _shiftId!);
-    await prefs.setInt('shift_gpsInterval', _interval);
-
-    // Send first point immediately, then periodic
-    await sendGps();
-    _gpsTimer = Timer.periodic(Duration(minutes: _interval), (_) => sendGps());
-  });
-
-  service.on('stopTracking').listen((_) {
-    _gpsTimer?.cancel();
-    _gpsTimer = null;
-    _companyId = null;
-    _shiftId = null;
-  });
-
-  service.on('stopService').listen((_) {
-    _gpsTimer?.cancel();
-    service.stopSelf();
-  });
+    final errMsg = resp.body.length > 200 ? resp.body.substring(0, 200) : resp.body;
+    await prefs.setString('gps_last_error', 'HTTP_${resp.statusCode}:$errMsg');
+  }
 }
