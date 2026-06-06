@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -59,10 +58,10 @@ Future<String?> _getValidToken(SharedPreferences prefs) async {
 }
 
 @pragma('vm:entry-point')
-void gpsServiceMain() {
+void gpsServiceMain(ServiceInstance service) {
   WidgetsFlutterBinding.ensureInitialized();
 
-  FlutterBackgroundService().on('startTracking').listen((event) async {
+  service.on('startTracking').listen((event) async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -76,7 +75,8 @@ void gpsServiceMain() {
       return;
     }
 
-    final intervalSec = (event?['gpsInterval'] ?? event?['interval'] ?? 30) as int;
+    final rawInterval = event?['gpsInterval'] ?? event?['interval'] ?? 30;
+    final intervalSec = (rawInterval is int) ? rawInterval : (rawInterval as num).toInt();
 
     await _sendGpsPoint(prefs, companyId, shiftId);
 
@@ -85,12 +85,11 @@ void gpsServiceMain() {
     });
   });
 
-  FlutterBackgroundService().on('stopTracking').listen((event) async {
-    final service = FlutterBackgroundService();
-    service.invoke('stop');
+  service.on('stopTracking').listen((_) {
+    service.stopSelf();
   });
 
-  FlutterBackgroundService().on('updateToken').listen((event) async {
+  service.on('updateToken').listen((event) async {
     final newToken = event?['idToken'] as String?;
     final newRefresh = event?['refreshToken'] as String?;
     if (newToken != null && newToken.isNotEmpty) {
