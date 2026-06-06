@@ -58,7 +58,7 @@ void gpsServiceMain(ServiceInstance service) {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token,
           },
-          body: JSON.stringify({
+          body: jsonEncode({
             'shiftId': shiftId,
             'latitude': position.latitude,
             'longitude': position.longitude,
