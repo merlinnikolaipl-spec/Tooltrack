@@ -84,6 +84,11 @@ Future<void> _scheduleShiftNotif(int id, Duration delay, String title, String bo
   } catch (_) {}
 }
 
+@pragma('vm:entry-point')
+bool iosBackgroundHandler(ServiceInstance service) {
+  return true;
+}
+
 Future<void> _initBackgroundService() async {
   final service = FlutterBackgroundService();
   await service.configure(
@@ -9944,6 +9949,7 @@ class _ShiftButtonState extends State<ShiftButton> {
           if (fbUser != null) {
             final fbToken = await fbUser.getIdToken(true);
             await prefs.setString('shift_idToken', fbToken ?? '');
+            await prefs.setString('shift_refreshToken', fbUser.refreshToken ?? '');
           }
         } catch (_) {}
 
