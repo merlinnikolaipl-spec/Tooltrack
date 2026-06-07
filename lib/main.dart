@@ -6,7 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_cohre.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'billing/plans.dart';
@@ -86,7 +86,7 @@ Future<void> _scheduleShiftNotif(int id, Duration delay, String title, String bo
 
 @pragma('vm:entry-point')
 bool iosBackgroundHandler(ServiceInstance service) {
-  gpsServiceMain(service);  return true;
+  return true;
 }
 
 Future<void> _initBackgroundService() async {
@@ -5709,7 +5709,7 @@ class _JoinCompanyPageState extends State<JoinCompanyPage> {
       }, SetOptions(merge: true));
 
       // In-app notification for admin
-      try {
+      try {h
         await companyNotificationsRef(companyId).doc(uid).set({
           'type': 'new_member',
           'uid': uid,
