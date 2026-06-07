@@ -22,7 +22,11 @@ void gpsServiceMain(ServiceInstance service) {
     final prefs = await SharedPreferences.getInstance();
     String? idToken = prefs.getString('shift_idToken');
     String? refreshToken = prefs.getString('shift_refreshToken');
-    final String? shiftId = event?['shiftId'] as String?;
+    final String? shiftIdFromEvent = event?['shiftId'] as String?;
+    if (shiftIdFromEvent != null) {
+      await prefs.setString('shift_shiftId', shiftIdFromEvent);
+    }
+    String? shiftId = shiftIdFromEvent ?? prefs.getString('shift_shiftId');
 
     Timer? tokenRefreshTimer;
     if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -80,7 +84,7 @@ void gpsServiceMain(ServiceInstance service) {
 }
 
 Future<String?> _refreshIdToken(String refreshToken) async {
-  const apiKey = 'AIzaSyBWM0gMgkuMr5eAtbETlOtQn08Ld3_7cnI';
+  const apiKey = 'AIzaSyBWM0gMgkuMr5eAtbET1OtQn08Ld3_7cnI';
   final response = await http.post(
     Uri.parse(
       'https://securetoken.googleapis.com/v1/token?key=' + apiKey,
