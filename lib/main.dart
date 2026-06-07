@@ -7507,6 +7507,7 @@ class _ToolsPageState extends State<ToolsPage> {
             await Share.shareXFiles(
                         [XFile(file.path)],
                         subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
+                                      sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100),
                       );
   }
 
@@ -8094,7 +8095,7 @@ class _HistoryTabState extends State<HistoryTab> {
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл сохранён: ${file.path}')));
@@ -8424,7 +8425,7 @@ class _ReportsTabState extends State<ReportsTab> with SingleTickerProviderStateM
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -10245,7 +10246,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
