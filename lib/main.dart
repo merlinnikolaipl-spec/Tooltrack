@@ -86,7 +86,7 @@ Future<void> _scheduleShiftNotif(int id, Duration delay, String title, String bo
 
 @pragma('vm:entry-point')
 bool iosBackgroundHandler(ServiceInstance service) {
-  return true;
+  gpsServiceMain(service);  return true;
 }
 
 Future<void> _initBackgroundService() async {
@@ -102,7 +102,7 @@ Future<void> _initBackgroundService() async {
       foregroundServiceNotificationId: 256,
       foregroundServiceTypes: [AndroidForegroundType.location],
     ),
-            iosConfiguration: IosConfiguration(autoStart: false, onForeground: gpsServiceMain, onBackground: gpsServiceMain),
+            iosConfiguration: IosConfiguration(autoStart: false, onForeground: gpsServiceMain, onBackground: iosBackgroundHandler),
   );
 }
 
