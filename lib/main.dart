@@ -5709,7 +5709,7 @@ class _JoinCompanyPageState extends State<JoinCompanyPage> {
       }, SetOptions(merge: true));
 
       // In-app notification for admin
-      try {h
+      try {
         await companyNotificationsRef(companyId).doc(uid).set({
           'type': 'new_member',
           'uid': uid,
