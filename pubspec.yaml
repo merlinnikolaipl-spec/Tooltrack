@@ -26,10 +26,7 @@ dependencies:
   flutter_local_notifications: ^17.1.2
   timezone: ^0.9.3
   geolocator: ^12.0.0
-  background_locator_2:
-    git:
-      url: https://github.com/icaksama/background_locator_2.git
-      ref: 2.0.7
+  background_locator_2: ^2.0.8
   flutter_launcher_icons: "^0.13.1"
 
 dev_dependencies:
