@@ -50,5 +50,4 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
-
+  image_path: "assets/icon/icon.png"
