@@ -56,17 +56,14 @@ Future<void> _initLocalNotifications() async {
     // Без этого на Android 14+ выбрасывается CannotPostForegroundServiceNotificationException.
     await androidImpl?.createNotificationChannel(const AndroidNotificationChannel(
       'shift_gps',
-      'GPS Трекинг',
-      description: 'Отслеживание геопозиции во время смены',
+      'GPS tracking',
+      description: 'Отслеживание местоположения во время смены',
       importance: Importance.low,
-      enableVibration: false,
-      playSound: false,
     ));
-    await androidImpl?.requestNotificationsPermission();
   } catch (_) {}
 }
 
-Future<void> _scheduleShiftNotif(int id, Duration delay, String title, String body) async {
+Future<void> _scheduleShiftNotif(int id, String title, String body, Duration delay) async {
   try {
     final when = tz.TZDateTime.now(tz.local).add(delay);
     await _localNotifs.zonedSchedule(
@@ -97,17 +94,14 @@ Future<void> _initBackgroundService() async {
       autoStart: false,
       isForegroundMode: true,
       notificationChannelId: 'shift_gps',
-      initialNotificationTitle: 'ToolKeeper',
-      initialNotificationContent: 'Отслеживание смены',
-      foregroundServiceNotificationId: 256,
-      foregroundServiceTypes: [AndroidForegroundType.location],
+      initialNotificationTitle: 'GPS tracking',
+      initialNotificationContent: 'Отслеживание местоположения активно',
+      foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,
       onForeground: gpsServiceMain,
       onBackground: iosBackgroundHandler,
-      // This is crucial for keeping location updates running in the background on iOS.
-      pausesLocationUpdatesAutomatically: false,
     ),
   );
 }
@@ -125,4 +119,21 @@ Future<void> main() async {
   );
   await _initLocalNotifications();
   runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ToolKeeper',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6B4EFF)),
+        useMaterial3: true,
+      ),
+      home: const AuthGate(),
+    );
+  }
 }
