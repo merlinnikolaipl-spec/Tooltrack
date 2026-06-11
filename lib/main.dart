@@ -36,7 +36,6 @@ import 'gps_foreground_service.dart';
 final FlutterLocalNotificationsPlugin _localNotifs = FlutterLocalNotificationsPlugin();
 
 /// MethodChannel для Android-специфичных операций
-const _batteryChannel = MethodChannel('com.toolkeeper.app/battery');
 
 Future<void> _initLocalNotifications() async {
   try {
@@ -63,6 +62,7 @@ Future<void> _initLocalNotifications() async {
   } catch (_) {}
 }
 
+// ignore: unused_element
 Future<void> _scheduleShiftNotif(int id, String title, String body, Duration delay) async {
   try {
     final when = tz.TZDateTime.now(tz.local).add(delay);
@@ -86,6 +86,7 @@ bool iosBackgroundHandler(ServiceInstance service) {
   return true;
 }
 
+// ignore: unused_element
 Future<void> _initBackgroundService() async {
   final service = FlutterBackgroundService();
   await service.configure(
@@ -133,7 +134,33 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6B4EFF)),
         useMaterial3: true,
       ),
-      home: const AuthGate(),
+      home: const _AuthGate(),
+    );
+  }
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return const Scaffold(
+          body: Center(
+            child: Text(
+              'ToolKeeper',
+              style: TextStyle(fontSize: 24),
+            ),
+          ),
+        );
+      },
     );
   }
 }
