@@ -10,9 +10,6 @@ import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
 void gpsServiceMain(ServiceInstance service) {
-  // Activate WAKE_LOCK to ensure the service keeps running on Android
-  service.setAsForegroundService();
-
   service.on('startTracking').listen((event) async {
     try {
       await Firebase.initializeApp(
