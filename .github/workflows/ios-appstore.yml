@@ -85,23 +85,23 @@ jobs:
           PP_UUID: ${{ env.PP_UUID }}
         run: |
           python3 -c "
-          import os
-          uuid = os.environ.get('PP_UUID', '')
+          import os, re
+          uuid = os.environ.get('PP_UUID', '').strip()
+          print('Using PP_UUID:', uuid)
           with open('ios/Runner.xcodeproj/project.pbxproj', 'r') as f:
             content = f.read()
           content = content.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
           content = content.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
-          content = content.replace('CODE_SIGN_IDENTITY = \"iPhone Distribution\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
-          if 'DEVELOPMENT_TEAM = VHF76Z663B' not in content:
-            content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
-            content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          if uuid:
+            content = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]*;', 'PROVISIONING_PROFILE_SPECIFIER = "' + uuid + '";', content)
+            if 'PROVISIONING_PROFILE_SPECIFIER' not in content:
+              content = content.replace('CODE_SIGN_IDENTITY = \"Apple Distribution\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"' + uuid + '\";')
           with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
             f.write(content)
-          print('Code signing configured, PP_UUID:', uuid)
+          print('Code signing configured with UUID:', uuid)
           "
-
-      - name: Remove PROVISIONING_PROFILE_SPECIFIER
-        run: sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj || true
 
       - name: Pod install
         run: cd ios && pod install --repo-update
@@ -111,8 +111,7 @@ jobs:
           PP_UUID: ${{ env.PP_UUID }}
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-          flutter build ipa --release --export-method app-store \
-            --dart-define=DEVELOPMENT_TEAM=VHF76Z663B
+          flutter build ipa --release --export-method app-store
           find build -name "*.ipa" 2>/dev/null || echo "No IPA found"
 
       - name: Upload to TestFlight
