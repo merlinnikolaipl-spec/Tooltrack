@@ -5,11 +5,16 @@ on:
 
 jobs:
   build_ios:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -165,27 +170,18 @@ jobs:
           mkdir -p ~/.private_keys
           python3 << 'PYEOF'
           import os, base64
-          key = os.environ['ASC_PRIVATE_KEY']
-          key = key.strip()
-          print('Key first 20 chars:', key[:20])
-          # If key is base64-encoded (doesn't start with PEM header)
+          key = os.environ['ASC_PRIVATE_KEY'].strip()
           if not key.startswith('-----'):
               print('Decoding from base64...')
-              try:
-                  key = base64.b64decode(key).decode('utf-8')
-                  print('Decoded OK, starts with:', key[:30])
-              except Exception as e:
-                  print('Base64 decode failed:', e)
-          else:
-              print('Key is already PEM format')
+              key = base64.b64decode(key).decode('utf-8')
+              print('Decoded, starts with:', key[:30])
           key_id = os.environ['ASC_KEY_ID']
           fname = os.path.expanduser('~/.private_keys/AuthKey_' + key_id + '.p8')
           with open(fname, 'w') as f:
               f.write(key)
           with open(fname) as f:
               lines = f.readlines()
-          print('File written, lines:', len(lines))
-          print('First line:', lines[0].strip() if lines else 'EMPTY')
+          print('File written, lines:', len(lines), 'First:', lines[0].strip() if lines else 'EMPTY')
           PYEOF
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
           echo "IPA: $IPA_PATH"
