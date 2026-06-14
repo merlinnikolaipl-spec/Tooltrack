@@ -42,9 +42,6 @@ jobs:
           security list-keychain -d user -s $KP
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-          PP_UUID=$(security cms -D -i $PP_PATH | plutil -p - | grep '"UUID"' | awk -F'"' '{print $4}')
-          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
-          echo "Provisioning profile UUID: $PP_UUID"
 
       - name: Setup Google Services
         env:
@@ -118,37 +115,56 @@ jobs:
           "
 
       - name: Configure code signing
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
         run: |
           python3 -c "
-          import os, re
-          uuid = os.environ.get('PP_UUID', '').strip()
-          print('Using PP_UUID:', uuid)
           with open('ios/Runner.xcodeproj/project.pbxproj', 'r') as f:
             content = f.read()
           content = content.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
           content = content.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
           content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
           content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
-          if uuid:
-            if 'PROVISIONING_PROFILE_SPECIFIER' in content:
-              content = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]*;', 'PROVISIONING_PROFILE_SPECIFIER = \"' + uuid + '\";', content)
-            else:
-              content = content.replace('CODE_SIGN_IDENTITY = \"Apple Distribution\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"' + uuid + '\";')
           with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
             f.write(content)
           print('Code signing configured')
           "
 
+      - name: Remove PROVISIONING_PROFILE_SPECIFIER
+        run: sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj || true
+
       - name: Pod install
         run: cd ios && pod install --repo-update
 
-      - name: Build iOS app
+      - name: Build iOS app archive
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-          flutter build ipa --release --export-method app-store
-          find build -name "*.ipa" 2>/dev/null || echo "No IPA found"
+          flutter build ipa --release --no-codesign
+          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
+          echo "Archive created: $ARCHIVE"
+          ls -la build/ios/ || true
+
+      - name: Export and sign IPA
+        run: |
+          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
+          echo "Exporting: $ARCHIVE"
+          python3 -c "
+          content = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>' + chr(10)
+          content += '<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">' + chr(10)
+          content += '<plist version=\"1.0\"><dict>' + chr(10)
+          content += '<key>method</key><string>app-store</string>' + chr(10)
+          content += '<key>teamID</key><string>VHF76Z663B</string>' + chr(10)
+          content += '<key>uploadBitcode</key><false/>' + chr(10)
+          content += '<key>signingStyle</key><string>automatic</string>' + chr(10)
+          content += '</dict></plist>'
+          open('/tmp/ExportOptions.plist', 'w').write(content)
+          print('ExportOptions written')
+          "
+          mkdir -p build/ios/ipa
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE" \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -allowProvisioningUpdates
+          find build/ios/ipa -name "*.ipa" || echo "No IPA found"
 
       - name: Upload to TestFlight
         env:
