@@ -42,6 +42,8 @@ jobs:
           security list-keychain -d user -s $KP
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+          PP_UUID=$(security cms -D -i $PP_PATH | plutil -p - | grep '"UUID"' | awk -F'"' '{print $4}')
+          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
       - name: Setup Google Services
         env:
@@ -74,7 +76,7 @@ jobs:
               result.append(sp + 'config.build_settings[\'OTHER_CPLUSPLUSFLAGS\'] = \'$(inherited)\'' + '\n')
           with open('ios/Podfile', 'w') as f:
             f.writelines(result)
-          print('Patched ok, lines:', len(result))
+          print('Patched ok')
           "
 
       - name: Remove PROVISIONING_PROFILE_SPECIFIER
@@ -83,11 +85,30 @@ jobs:
       - name: Pod install
         run: cd ios && pod install --repo-update
 
-      - name: Build iOS app
+      - name: Build and sign iOS app
+        env:
+          PP_UUID: ${{ env.PP_UUID }}
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-          flutter build ipa --release --export-method app-store
-          find build -name "*.ipa" 2>/dev/null || echo "No IPA found"
+
+          flutter build ipa --release --no-codesign
+
+          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
+          echo "Archive: $ARCHIVE"
+
+          python3 -c "
+          plist = '<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>method</key><string>app-store</string><key>teamID</key><string>VHF76Z663B</string><key>uploadBitcode</key><false/><key>uploadSymbols</key><true/><key>signingStyle</key><string>automatic</string></dict></plist>'
+          open('/tmp/ExportOptions.plist', 'w').write(plist)
+          print('ExportOptions.plist written')
+          "
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE" \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -allowProvisioningUpdates
+
+          find build/ios/ipa -name "*.ipa" 2>/dev/null || echo "No IPA found"
 
       - name: Upload to TestFlight
         env:
