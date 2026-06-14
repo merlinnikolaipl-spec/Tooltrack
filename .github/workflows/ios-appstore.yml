@@ -42,6 +42,9 @@ jobs:
           security list-keychain -d user -s $KP
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+          PP_UUID=$(security cms -D -i $PP_PATH | plutil -p - | grep '"UUID"' | awk -F'"' '{print $4}')
+          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
+          echo "Provisioning profile UUID: $PP_UUID"
 
       - name: Setup Google Services
         env:
@@ -77,17 +80,24 @@ jobs:
           print('Patched ok')
           "
 
-      - name: Set signing to automatic
+      - name: Configure code signing
+        env:
+          PP_UUID: ${{ env.PP_UUID }}
         run: |
           python3 -c "
+          import os
+          uuid = os.environ.get('PP_UUID', '')
           with open('ios/Runner.xcodeproj/project.pbxproj', 'r') as f:
             content = f.read()
-          content = content.replace('CODE_SIGN_STYLE = Manual;', 'CODE_SIGN_STYLE = Automatic;')
-          content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
-          content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          content = content.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
+          content = content.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
+          content = content.replace('CODE_SIGN_IDENTITY = \"iPhone Distribution\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
+          if 'DEVELOPMENT_TEAM = VHF76Z663B' not in content:
+            content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+            content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
           with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
             f.write(content)
-          print('Signing set to automatic')
+          print('Code signing configured, PP_UUID:', uuid)
           "
 
       - name: Remove PROVISIONING_PROFILE_SPECIFIER
@@ -97,9 +107,12 @@ jobs:
         run: cd ios && pod install --repo-update
 
       - name: Build iOS app
+        env:
+          PP_UUID: ${{ env.PP_UUID }}
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-          flutter build ipa --release --export-method app-store
+          flutter build ipa --release --export-method app-store \
+            --dart-define=DEVELOPMENT_TEAM=VHF76Z663B
           find build -name "*.ipa" 2>/dev/null || echo "No IPA found"
 
       - name: Upload to TestFlight
