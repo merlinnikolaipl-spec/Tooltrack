@@ -111,7 +111,7 @@ jobs:
           ]
           with open('ios/Podfile', 'w') as f:
             f.write('\n'.join(lines) + '\n')
-          print('Podfile written, lines:', len(lines))
+          print('Podfile written')
           "
 
       - name: Configure code signing
@@ -134,21 +134,29 @@ jobs:
       - name: Pod install
         run: cd ios && pod install --repo-update
 
+      - name: Patch -G flag in all xcconfig files
+        run: |
+          find ios/Pods -name "*.xcconfig" 2>/dev/null | while read f; do
+            if grep -q ' -G' "$f" 2>/dev/null; then
+              echo "Patching: $f"
+              sed -i '' 's/ -G / /g' "$f" 2>/dev/null || true
+              sed -i '' 's/ -G$//g' "$f" 2>/dev/null || true
+            fi
+          done
+          echo "xcconfig patching done"
+
       - name: Build iOS app archive
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
           flutter build ipa --release --no-codesign
           ARCHIVE=$(find build -name "*.xcarchive" | head -1)
-          echo "Archive created: $ARCHIVE"
-          ls -la build/ios/ || true
+          echo "Archive: $ARCHIVE"
 
       - name: Export and sign IPA
         run: |
           ARCHIVE=$(find build -name "*.xcarchive" | head -1)
-          echo "Exporting: $ARCHIVE"
           python3 -c "
           content = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>' + chr(10)
-          content += '<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">' + chr(10)
           content += '<plist version=\"1.0\"><dict>' + chr(10)
           content += '<key>method</key><string>app-store</string>' + chr(10)
           content += '<key>teamID</key><string>VHF76Z663B</string>' + chr(10)
@@ -156,7 +164,6 @@ jobs:
           content += '<key>signingStyle</key><string>automatic</string>' + chr(10)
           content += '</dict></plist>'
           open('/tmp/ExportOptions.plist', 'w').write(content)
-          print('ExportOptions written')
           "
           mkdir -p build/ios/ipa
           xcodebuild -exportArchive \
@@ -182,7 +189,6 @@ jobs:
           print('Key written')
           "
           IPA=$(find build -name "*.ipa" | head -1)
-          echo "Uploading: $IPA"
           xcrun altool --upload-app --type ios --file "$IPA" --apiKey "${{ secrets.ASC_KEY_ID }}" --apiIssuer "${{ secrets.ASC_ISSUER_ID }}" --verbose
 
       - name: Upload IPA artifact
