@@ -61,16 +61,20 @@ jobs:
       - name: Patch Podfile to remove -G flag
         run: |
           python3 -c "
-          import re, sys
           with open('ios/Podfile', 'r') as f:
-            txt = f.read()
-          patch = 'post_install do |installer|\n  installer.pods_project.targets.each do |target|\n    flutter_additional_ios_build_settings(target)\n    target.build_configurations.each do |config|\n      config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = \'13.0\'\n      config.build_settings[\'OTHER_CFLAGS\'] = \'$(inherited)\'\n      config.build_settings[\'OTHER_CPLUSPLUSFLAGS\'] = \'$(inherited)\'\n    end\n  end\nend'
-          result = re.sub(r'post_install do.*?^end', patch, txt, flags=re.DOTALL|re.MULTILINE)
-          if result == txt:
-            result = txt.rstrip() + '\n\n' + patch + '\n'
+            lines = f.readlines()
+          result = []
+          for line in lines:
+            result.append(line)
+            stripped = line.strip()
+            if stripped == 'flutter_additional_ios_build_settings(target)':
+              indent = len(line) - len(line.lstrip())
+              sp = ' ' * indent
+              result.append(sp + 'config.build_settings[\'OTHER_CFLAGS\'] = \'$(inherited)\'' + '\n')
+              result.append(sp + 'config.build_settings[\'OTHER_CPLUSPLUSFLAGS\'] = \'$(inherited)\'' + '\n')
           with open('ios/Podfile', 'w') as f:
-            f.write(result)
-          print('Podfile patched ok')
+            f.writelines(result)
+          print('Patched ok, lines:', len(result))
           "
 
       - name: Remove PROVISIONING_PROFILE_SPECIFIER
