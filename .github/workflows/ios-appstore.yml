@@ -107,6 +107,8 @@ jobs:
                   val = config.build_settings[key]
                   if val.is_a?(String)
                     config.build_settings[key] = val.split.reject { |f| f == '-G' }.join(' ')
+                  elsif val.is_a?(Array)
+                    config.build_settings[key] = val.reject { |f| f == '-G' }
                   end
                 end
               end
@@ -129,7 +131,15 @@ jobs:
           PP_UUID: ${{ env.PP_UUID }}
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
+
+          # Fix -G flag in all generated xcconfig and build settings files
+          find ios -name "*.xcconfig" | xargs grep -l '\-G' 2>/dev/null | while read f; do
+            echo "Patching $f"
+            sed -i '' 's/ -G / /g; s/ -G$//g; s/^-G //g' "$f"
+          done
+
           flutter build ipa --release --no-codesign
+
           cat > /tmp/ExportOptions.plist << EOPLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
