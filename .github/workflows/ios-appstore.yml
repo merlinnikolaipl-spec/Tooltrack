@@ -163,17 +163,35 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           mkdir -p ~/.private_keys
-          python3 -c "
-          import os
+          python3 << 'PYEOF'
+          import os, re
           key = os.environ['ASC_PRIVATE_KEY']
-          if '\\\\n' in key:
-              key = key.replace('\\\\n', '\\n')
-          fname = os.path.expanduser('~/.private_keys/AuthKey_' + os.environ['ASC_KEY_ID'] + '.p8')
-          open(fname, 'w').write(key)
-          print('Key written, lines:', key.count('\\n'))
-          "
-          echo "Key first line:"
-          head -1 ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
+          # Handle literal backslash-n sequences
+          if '\\n' in key:
+              key = key.replace('\\n', '\n')
+          # Remove ALL whitespace to get pure base64 body
+          flat = re.sub(r'[\s]', '', key)
+          # Find PEM markers
+          m = re.match(r'(-----BEGIN[A-Z ]+-----)([A-Za-z0-9+/=]+)(-----END[A-Z ]+-----)', flat)
+          if m:
+              header = m.group(1)
+              body = m.group(2)
+              footer = m.group(3)
+              chunks = [body[i:i+64] for i in range(0, len(body), 64)]
+              formatted = header + '\n' + '\n'.join(chunks) + '\n' + footer + '\n'
+              print('Reformatted PEM: header=' + header[:20] + ' body_len=' + str(len(body)) + ' lines=' + str(len(chunks)))
+          else:
+              formatted = key
+              print('Could not match PEM pattern, using raw. Key[:80]=' + key[:80])
+          key_id = os.environ['ASC_KEY_ID']
+          fname = os.path.expanduser('~/.private_keys/AuthKey_' + key_id + '.p8')
+          with open(fname, 'w') as f:
+              f.write(formatted)
+          with open(fname) as f:
+              all_lines = f.readlines()
+          print('File written, total lines:', len(all_lines))
+          print('Line 1:', all_lines[0].strip() if all_lines else 'EMPTY')
+          PYEOF
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
           echo "IPA: $IPA_PATH"
           xcrun altool --upload-app \
