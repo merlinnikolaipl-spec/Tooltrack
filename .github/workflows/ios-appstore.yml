@@ -126,11 +126,15 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
           mkdir -p ~/.private_keys
-          # Write key preserving PEM format with proper newlines
-          printf '%s' "$ASC_PRIVATE_KEY" > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
-          # Verify key file exists and has content
-          ls -la ~/.private_keys/
+          # The secret may store \n as literal backslash-n, convert to real newlines
+          echo "$ASC_PRIVATE_KEY" | sed 's/\\n/\n/g' > ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
+          # Verify
+          echo "=== Key file first line ==="
           head -1 ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
+          echo "=== Key file last line ==="
+          tail -1 ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
+          echo "=== Key file line count ==="
+          wc -l ~/.private_keys/AuthKey_${ASC_KEY_ID}.p8
 
       - name: Build Flutter iOS archive
         run: flutter build ipa --release --no-codesign
@@ -173,7 +177,7 @@ jobs:
             -authenticationKeyIssuerID ${ASC_ISSUER_ID} \
             -allowProvisioningUpdates
 
-      - name: Upload to App Store Connect
+      - name: Upload to TestFlight via altool
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
