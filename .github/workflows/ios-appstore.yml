@@ -61,23 +61,60 @@ jobs:
       - name: Flutter precache iOS
         run: flutter precache --ios
 
-      - name: Patch Podfile to remove -G flag
+      - name: Write Podfile
         run: |
           python3 -c "
-          with open('ios/Podfile', 'r') as f:
-            lines = f.readlines()
-          result = []
-          for line in lines:
-            result.append(line)
-            stripped = line.strip()
-            if stripped == 'flutter_additional_ios_build_settings(target)':
-              indent = len(line) - len(line.lstrip())
-              sp = ' ' * indent
-              result.append(sp + 'config.build_settings[\'OTHER_CFLAGS\'] = \'$(inherited)\'' + '\n')
-              result.append(sp + 'config.build_settings[\'OTHER_CPLUSPLUSFLAGS\'] = \'$(inherited)\'' + '\n')
+          lines = [
+            \"platform :ios, '13.0'\",
+            \"\",
+            \"ENV['COCOAPODS_DISABLE_STATS'] = 'true'\",
+            \"\",
+            \"project 'Runner', {\",
+            \"  'Debug' => :debug,\",
+            \"  'Profile' => :release,\",
+            \"  'Release' => :release,\",
+            \"}\",
+            \"\",
+            \"def flutter_root\",
+            \"  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)\",
+            \"  unless File.exist?(generated_xcode_build_settings_path)\",
+            \"    raise generated_xcode_build_settings_path + ' must exist.'\",
+            \"  end\",
+            \"  File.foreach(generated_xcode_build_settings_path) do |line|\",
+            \"    matches = line.match(/FLUTTER_ROOT\\\\=(.*)/)\",
+            \"    return matches[1].strip if matches\",
+            \"  end\",
+            \"  raise 'FLUTTER_ROOT not found'\",
+            \"end\",
+            \"\",
+            \"require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)\",
+            \"\",
+            \"flutter_ios_podfile_setup\",
+            \"\",
+            \"target 'Runner' do\",
+            \"  use_frameworks!\",
+            \"  use_modular_headers!\",
+            \"\",
+            \"  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))\",
+            \"  target 'RunnerTests' do\",
+            \"    inherit! :search_paths\",
+            \"  end\",
+            \"end\",
+            \"\",
+            \"post_install do |installer|\",
+            \"  installer.pods_project.targets.each do |target|\",
+            \"    flutter_additional_ios_build_settings(target)\",
+            \"    target.build_configurations.each do |config|\",
+            \"      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'\",
+            \"      config.build_settings['OTHER_CFLAGS'] = '\$(inherited)'\",
+            \"      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '\$(inherited)'\",
+            \"    end\",
+            \"  end\",
+            \"end\",
+          ]
           with open('ios/Podfile', 'w') as f:
-            f.writelines(result)
-          print('Patched ok')
+            f.write('\n'.join(lines) + '\n')
+          print('Podfile written, lines:', len(lines))
           "
 
       - name: Configure code signing
@@ -95,20 +132,19 @@ jobs:
           content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
           content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
           if uuid:
-            content = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]*;', 'PROVISIONING_PROFILE_SPECIFIER = "' + uuid + '";', content)
-            if 'PROVISIONING_PROFILE_SPECIFIER' not in content:
+            if 'PROVISIONING_PROFILE_SPECIFIER' in content:
+              content = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]*;', 'PROVISIONING_PROFILE_SPECIFIER = \"' + uuid + '\";', content)
+            else:
               content = content.replace('CODE_SIGN_IDENTITY = \"Apple Distribution\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"' + uuid + '\";')
           with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
             f.write(content)
-          print('Code signing configured with UUID:', uuid)
+          print('Code signing configured')
           "
 
       - name: Pod install
         run: cd ios && pod install --repo-update
 
       - name: Build iOS app
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
           flutter build ipa --release --export-method app-store
