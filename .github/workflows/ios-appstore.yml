@@ -42,8 +42,6 @@ jobs:
           security list-keychain -d user -s $KP
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-          PP_UUID=$(security cms -D -i $PP_PATH | plutil -p - | grep '"UUID"' | awk -F'"' '{print $4}')
-          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
       - name: Setup Google Services
         env:
@@ -79,36 +77,30 @@ jobs:
           print('Patched ok')
           "
 
+      - name: Set signing to automatic
+        run: |
+          python3 -c "
+          with open('ios/Runner.xcodeproj/project.pbxproj', 'r') as f:
+            content = f.read()
+          content = content.replace('CODE_SIGN_STYLE = Manual;', 'CODE_SIGN_STYLE = Automatic;')
+          content = content.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          content = content.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
+          with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
+            f.write(content)
+          print('Signing set to automatic')
+          "
+
       - name: Remove PROVISIONING_PROFILE_SPECIFIER
         run: sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj || true
 
       - name: Pod install
         run: cd ios && pod install --repo-update
 
-      - name: Build and sign iOS app
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
+      - name: Build iOS app
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-
-          flutter build ipa --release --no-codesign
-
-          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
-          echo "Archive: $ARCHIVE"
-
-          python3 -c "
-          plist = '<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>method</key><string>app-store</string><key>teamID</key><string>VHF76Z663B</string><key>uploadBitcode</key><false/><key>uploadSymbols</key><true/><key>signingStyle</key><string>automatic</string></dict></plist>'
-          open('/tmp/ExportOptions.plist', 'w').write(plist)
-          print('ExportOptions.plist written')
-          "
-
-          xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE" \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates
-
-          find build/ios/ipa -name "*.ipa" 2>/dev/null || echo "No IPA found"
+          flutter build ipa --release --export-method app-store
+          find build -name "*.ipa" 2>/dev/null || echo "No IPA found"
 
       - name: Upload to TestFlight
         env:
