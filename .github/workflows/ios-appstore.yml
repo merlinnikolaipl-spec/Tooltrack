@@ -114,6 +114,18 @@ jobs:
                 config.build_settings['CODE_SIGN_IDENTITY'] = ''
                 config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
                 config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+                cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
+                if cflags.is_a?(Array)
+                  cflags = cflags.join(' ')
+                end
+                cflags = cflags.gsub(/ -G(s|$)/, ' ').gsub(/^-G(s|$)/, '')
+                config.build_settings['OTHER_CFLAGS'] = cflags
+                cxxflags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'
+                if cxxflags.is_a?(Array)
+                  cxxflags = cxxflags.join(' ')
+                end
+                cxxflags = cxxflags.gsub(/ -G(s|$)/, ' ').gsub(/^-G(s|$)/, '')
+                config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cxxflags
               end
             end
           end
@@ -143,47 +155,6 @@ jobs:
         run: |
           cd ios
           pod install --repo-update
-
-      - name: Patch -G flag from all sources
-        run: |
-          python3 << 'PYEOF'
-          import os, re, glob
-
-          def remove_G(text):
-              return re.sub(r' -G(?= |-G|$)', ' ', text, flags=re.MULTILINE)
-
-          patched = []
-          xcconfigs = glob.glob('ios/Pods/**/*.xcconfig', recursive=True)
-          xcconfigs += glob.glob('ios/Flutter/**/*.xcconfig', recursive=True)
-          xcconfigs += glob.glob('ios/*.xcconfig')
-
-          for f in xcconfigs:
-              try:
-                  content = open(f).read()
-                  if '-G' in content:
-                      new = remove_G(content)
-                      if new != content:
-                          open(f, 'w').write(new)
-                          patched.append(f)
-                          print('Patched xcconfig:', f)
-                  if 'OTHER_CFLAGS' in content:
-                      for line in content.splitlines():
-                          if 'OTHER_CFLAGS' in line:
-                              print('  OTHER_CFLAGS in', f, ':', line.strip())
-              except Exception as e:
-                  print('Error:', f, e)
-
-          pbx = 'ios/Pods/Pods.xcodeproj/project.pbxproj'
-          if os.path.exists(pbx):
-              content = open(pbx).read()
-              if '-G' in content:
-                  new = remove_G(content)
-                  open(pbx, 'w').write(new)
-                  patched.append(pbx)
-                  print('Patched Pods pbxproj')
-
-          print('Total patched:', len(patched))
-          PYEOF
 
       - name: Build and archive iOS app
         env:
