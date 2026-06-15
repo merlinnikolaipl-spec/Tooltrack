@@ -104,6 +104,7 @@ jobs:
             \"      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'\",
             \"      config.build_settings['OTHER_CFLAGS'] = '$(inherited)'\",
             \"      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited)'\",
+            \"      config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')\",
             \"    end\",
             \"  end\",
             \"end\",
@@ -137,19 +138,6 @@ jobs:
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
 
-          PP_UUID=$(python3 -c "
-          import plistlib, os
-          d = os.path.expanduser('~/Library/MobileDevice/Provisioning Profiles')
-          for fn in os.listdir(d):
-              fp = os.path.join(d, fn)
-              with open(fp, 'rb') as fh: raw = fh.read()
-              s = raw.find(b'<?xml'); e = raw.find(b'</plist>') + 8
-              pl = plistlib.loads(raw[s:e])
-              print(pl.get('UUID', ''))
-              break
-          ")
-          echo "PP UUID: $PP_UUID"
-
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -160,8 +148,7 @@ jobs:
             OTHER_CPLUSPLUSFLAGS='$(inherited)' \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="$PP_UUID"
+            CODE_SIGN_IDENTITY="Apple Distribution"
 
       - name: Export and sign IPA
         run: |
