@@ -14,7 +14,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 'latest'
+          xcode-version: latest
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -29,28 +29,36 @@ jobs:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          CERT_PATH=$RUNNER_TEMP/build_certificate.p12
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-          KP=$RUNNER_TEMP/app-signing.keychain-db
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KP
-          security set-keychain-settings -lut 21600 $KP
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KP
-          security import $CERT_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KP
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KP
-          security list-keychain -d user -s $KP
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
+          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
       - name: Setup Google Services
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
-        run: echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
+        run: |
+          echo -n "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode -o ios/Runner/GoogleService-Info.plist
 
       - name: Write pubspec overrides
         run: |
-          printf 'dependency_overrides:\n  win32: 5.5.4\n  pdf_widget_wrapper: 1.0.4\n  mobile_scanner: 5.2.3\n' > pubspec_overrides.yaml
+          cat > pubspec_overrides.yaml << 'PUBSPEC_EOF'
+          dependency_overrides:
+            win32: 5.5.4
+            pdf_widget_wrapper: 1.0.4
+            mobile_scanner: 5.2.3
+          PUBSPEC_EOF
 
       - name: Flutter pub get
         run: flutter pub get
@@ -70,18 +78,18 @@ jobs:
             \"  'Debug' => :debug,\",
             \"  'Profile' => :release,\",
             \"  'Release' => :release,\",
-            \"}\",
+            \"} \",
             \"\",
             \"def flutter_root\",
             \"  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)\",
             \"  unless File.exist?(generated_xcode_build_settings_path)\",
-            \"    raise generated_xcode_build_settings_path + ' must exist.'\",
+            \"    raise \\\"#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first\\\"\",
             \"  end\",
             \"  File.foreach(generated_xcode_build_settings_path) do |line|\",
-            \"    matches = line.match(/FLUTTER_ROOT\\\\=(.*)/)\" ,
+            \"    matches = line.match(/FLUTTER_ROOT\\\\=(.*)/)\",
             \"    return matches[1].strip if matches\",
             \"  end\",
-            \"  raise 'FLUTTER_ROOT not found'\",
+            \"  raise \\\"FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get\\\"\",
             \"end\",
             \"\",
             \"require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)\",
@@ -104,105 +112,127 @@ jobs:
             \"    target.build_configurations.each do |config|\",
             \"      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'\",
             \"      cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'\",
-            \"      config.build_settings['OTHER_CFLAGS'] = cflags.gsub(/(\\s*)-G(\\s*|$)/, '').strip\",
+            \"      config.build_settings['OTHER_CFLAGS'] = cflags.gsub(/(\\\\s*)-G(\\\\s*|$)/, '').strip\",
             \"      cpflags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'\",
-            \"      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cpflags.gsub(/(\\s*)-G(\\s*|$)/, '').strip\",
+            \"      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cpflags.gsub(/(\\\\s*)-G(\\\\s*|$)/, '').strip\",
             \"      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'\",
             \"      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'\",
-            \"      config.build_settings['CODE_SIGN_IDENTITY'] = ''\",
+            \"      config.build_settings[\"CODE_SIGN_IDENTITY\"] = ''\",
             \"    end\",
             \"  end\",
             \"end\",
           ]
           with open('ios/Podfile', 'w') as f:
-              f.write('\n'.join(lines) + '\n')
+              f.write('\\n'.join(lines) + '\\n')
           print('Podfile written')
           "
 
       - name: Configure code signing
         run: |
+          cd ios
+          PP_UUID=$PP_UUID
           python3 -c "
-          import re, plistlib, os
-          pp = os.environ['RUNNER_TEMP'] + '/build_pp.mobileprovision'
-          with open(pp,'rb') as f: raw=f.read()
-          s=raw.find(b'<?xml'); e=raw.find(b'</plist>')+8
-          pp_uuid = plistlib.loads(raw[s:e]).get('UUID','')
-          print('PP UUID:', pp_uuid)
-          pbx = 'ios/Runner.xcodeproj/project.pbxproj'
-          with open(pbx) as f: c = f.read()
-          c = c.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;')
-          c = c.replace('CODE_SIGN_IDENTITY = \"iPhone Developer\";', 'CODE_SIGN_IDENTITY = \"Apple Distribution\";')
-          c = c.replace('DEVELOPMENT_TEAM = \"\";', 'DEVELOPMENT_TEAM = VHF76Z663B;')
-          c = c.replace('DEVELOPMENT_TEAM = ;', 'DEVELOPMENT_TEAM = VHF76Z663B;')
-          c = re.sub(r'\s*PROVISIONING_PROFILE_SPECIFIER = [^;]*;', '', c)
-          c = re.sub(r'\s*PROVISIONING_PROFILE = [^;]*;', '', c)
+          import re
+          pp_uuid = '$PP_UUID'
+          with open('Runner.xcodeproj/project.pbxproj', 'r') as f:
+              c = f.read()
+          c = re.sub(r'CODE_SIGN_STYLE = Automatic', 'CODE_SIGN_STYLE = Manual', c)
+          c = re.sub(r'DEVELOPMENT_TEAM = [A-Z0-9]+', 'DEVELOPMENT_TEAM = VHF76Z663B', c)
           target = '97C147071CF9000F007C117D'
           idx = c.find(target)
-          if idx >= 0:
+          if idx != -1:
               block_end = c.find('name = Release;', idx)
               settings_end = c.rfind('};', idx, block_end)
-              pp_line = '\n\t\t\t\tPROVISIONING_PROFILE = \"' + pp_uuid + '\";'
-              c = c[:settings_end] + pp_line + c[settings_end:]
-              print('PP inserted')
-          with open(pbx, 'w') as f: f.write(c)
+              if settings_end != -1 and pp_uuid:
+                  pp_line = '
+				PROVISIONING_PROFILE = "' + pp_uuid + '";'
+                  pp_spec_line = '
+				PROVISIONING_PROFILE_SPECIFIER = "";'
+                  c = c[:settings_end] + pp_line + pp_spec_line + c[settings_end:]
+                  print('PP UUID inserted: ' + pp_uuid)
+          with open('Runner.xcodeproj/project.pbxproj', 'w') as f:
+              f.write(c)
+          print('Done')
           "
+          cd ..
 
       - name: Pod install
-        run: cd ios && pod install --repo-update
-
-      - name: Patch xcconfig files to remove -G flag
         run: |
-          echo 'Patching xcconfig files...'
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: Patch -G flag from all sources
+        run: |
+          echo "=== Patching xcconfig files ==="
           find ios/Pods -name '*.xcconfig' | while read f; do
-            if grep -q -- '-G' "$f"; then
+            if grep -q -- ' -G' "$f" 2>/dev/null; then
+              echo "Patching xcconfig: $f"
               sed -i '' 's/ -G / /g; s/ -G$//g; s/^-G //g; s/^-G$//g' "$f"
-              echo "Patched: $f"
             fi
           done
-          echo 'xcconfig patching done'
+          echo "=== Patching Pods project.pbxproj ==="
+          PODS_PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
+          if [ -f "$PODS_PBXPROJ" ]; then
+            python3 << 'PYEOF'
+          import re
+          path = 'ios/Pods/Pods.xcodeproj/project.pbxproj'
+          with open(path, 'r') as f:
+              c = f.read()
+          original_len = len(c)
+          c = re.sub(r'( -G )', ' ', c)
+          c = re.sub(r'( -G)', '', c)
+          with open(path, 'w') as f:
+              f.write(c)
+          print(f'pbxproj patched: {original_len} -> {len(c)} chars')
+          PYEOF
+          fi
+          echo "=== Done ==="
 
       - name: Build and archive iOS app
         run: |
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
             -archivePath build/ios/archive/Runner.xcarchive \
             -destination "generic/platform=iOS" \
-            OTHER_CFLAGS='$(inherited)' \
-            OTHER_CPLUSPLUSFLAGS='$(inherited)'
+            OTHER_CFLAGS='\$(inherited)' \
+            OTHER_CPLUSPLUSFLAGS='\$(inherited)' \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=VHF76Z663B \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE="$PP_UUID"
 
       - name: Export and sign IPA
         run: |
-          PP_UUID=$(python3 -c "
-          import plistlib, os
-          pp = os.environ['RUNNER_TEMP'] + '/build_pp.mobileprovision'
-          with open(pp,'rb') as f: raw=f.read()
-          s=raw.find(b'<?xml'); e=raw.find(b'</plist>')+8
-          print(plistlib.loads(raw[s:e]).get('UUID',''))
-          ")
-          python3 -c "
-          pp='$PP_UUID'
-          q=chr(34); n=chr(10)
-          c='<?xml version='+q+'1.0'+q+' encoding='+q+'UTF-8'+q+'?>'+n
-          c+='<!DOCTYPE plist PUBLIC '+q+'-//Apple//DTD PLIST 1.0//EN'+q+' '+q+'http://www.apple.com/DTDs/PropertyList-1.0.dtd'+q+'>'+n
-          c+='<plist version='+q+'1.0'+q+'><dict>'+n
-          c+='<key>method</key><string>app-store</string>'+n
-          c+='<key>teamID</key><string>VHF76Z663B</string>'+n
-          c+='<key>uploadBitcode</key><false/>'+n
-          c+='<key>signingStyle</key><string>manual</string>'+n
-          c+='<key>provisioningProfiles</key><dict>'+n
-          c+='<key>com.toolkeeper.app</key><string>'+pp+'</string>'+n
-          c+='</dict></dict></plist>'
-          open('ExportOptions.plist','w').write(c)
-          print('ExportOptions written')
-          "
+          PP_UUID=$PP_UUID
+          cat > /tmp/ExportOptions.plist << 'EXPORT_EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>VHF76Z663B</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.toolkeeper.app</key>
+              <string>PP_UUID_PLACEHOLDER</string>
+            </dict>
+          </dict>
+          </plist>
+          EXPORT_EOF
+          sed -i '' "s/PP_UUID_PLACEHOLDER/$PP_UUID/g" /tmp/ExportOptions.plist
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ExportOptions.plist
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath build/ios/ipa
 
       - name: Upload to TestFlight
         env:
@@ -214,7 +244,7 @@ jobs:
           key = os.environ['ASC_PRIVATE_KEY'].strip()
           try: decoded = base64.b64decode(key).decode('utf-8')
           except: decoded = key
-          open(os.path.expanduser('~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8'),'w').write(decoded)
+          open(os.path.expanduser('~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8'), 'w').write(decoded)
           print('Key written')
           "
           IPA=$(find build -name '*.ipa' | head -1)
@@ -222,7 +252,6 @@ jobs:
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: ios-ipa
           path: build/ios/ipa/*.ipa
