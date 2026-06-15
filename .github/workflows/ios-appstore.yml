@@ -29,19 +29,26 @@ jobs:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          echo -n "$P12_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security import $CERTIFICATE_PATH -P "$P12_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          python3 -c "
+          import base64, os
+          cert_b64 = os.environ['P12_CERTIFICATE_BASE64']
+          cert_data = base64.b64decode(cert_b64)
+          with open(os.environ['RUNNER_TEMP']+'/build_certificate.p12','wb') as f: f.write(cert_data)
+          print('Certificate size:', len(cert_data))
+          pp_b64 = os.environ['PROVISIONING_PROFILE_BASE64']
+          pp_data = base64.b64decode(pp_b64)
+          with open(os.environ['RUNNER_TEMP']+'/build_pp.mobileprovision','wb') as f: f.write(pp_data)
+          print('PP size:', len(pp_data))
+          "
+          security import $RUNNER_TEMP/build_certificate.p12 -P "$P12_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp $RUNNER_TEMP/build_pp.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Setup Google Services
         env:
