@@ -144,37 +144,32 @@ jobs:
           cd ios
           pod install --repo-update
 
-      - name: Remove -G flag from all build files
+      - name: Debug - find source of -G flag
         run: |
-          python3 << 'PYEOF'
-          import os, re, glob
+          echo "=== All xcconfig files with -G ==="
+          grep -r -- "-G" ios/Pods/ --include="*.xcconfig" -l 2>/dev/null || echo "None found"
+          echo "=== All xcconfig content with -G ==="
+          grep -r -- "-G" ios/Pods/ --include="*.xcconfig" 2>/dev/null | head -30 || echo "None found"
+          echo "=== BoringSSL xcconfig content ==="
+          find ios/Pods -name "BoringSSL*" -o -name "grpc*" -o -name "gRPC*" | grep -i "xcconfig" | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+          done
+          echo "=== project.pbxproj lines with -G ==="
+          grep -n -- " -G" ios/Pods/Pods.xcodeproj/project.pbxproj | head -10 || echo "None found in pbxproj"
+          echo "=== Total xcconfig files ==="
+          find ios/Pods -name "*.xcconfig" | wc -l
 
-          def remove_G(text):
-              return re.sub(r'(?<![\w])-G(?![\w])', '', text)
-
-          print('=== Searching ALL files for -G ===')
-          all_files = []
-          all_files += glob.glob('ios/Pods/**/*.xcconfig', recursive=True)
-          all_files += glob.glob('ios/Pods/**/*.pbxproj', recursive=True)
-          all_files += glob.glob('ios/Pods/**/*.xcodeproj', recursive=True)
-
-          for fpath in all_files:
-              if os.path.isfile(fpath):
-                  try:
-                      content = open(fpath).read()
-                      if '-G' in content:
-                          print('FOUND -G in:', fpath)
-                          for i, line in enumerate(content.splitlines()):
-                              if '-G' in line:
-                                  print(f'  line {i+1}: {line[:200]}')
-                          new_content = remove_G(content)
-                          open(fpath, 'w').write(new_content)
-                          print('  -> Patched')
-                  except Exception as e:
-                      print('Error:', fpath, e)
-
-          print('=== DONE ===')
-          PYEOF
+      - name: Remove -G flag
+        run: |
+          echo "=== Using sed to remove -G from ALL xcconfig files ==="
+          find ios/Pods -name "*.xcconfig" -exec sed -i '' 's/-G //g' {} \;
+          find ios/Pods -name "*.xcconfig" -exec sed -i '' 's/ -G//g' {} \;
+          echo "=== Using sed to remove -G from project.pbxproj ==="
+          sed -i '' 's/-G //g; s/ -G//g' ios/Pods/Pods.xcodeproj/project.pbxproj
+          echo "=== Verifying -G is gone ==="
+          grep -r -- " -G" ios/Pods/ --include="*.xcconfig" | head -5 || echo "No more -G in xcconfigs"
+          echo "=== Done ==="
 
       - name: Build and archive iOS app
         env:
