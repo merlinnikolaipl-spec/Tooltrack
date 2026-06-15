@@ -104,6 +104,9 @@ jobs:
             \"      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'\",
             \"      config.build_settings['OTHER_CFLAGS'] = '$(inherited)'\",
             \"      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited)'\",
+            \"      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'\",
+            \"      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'\",
+            \"      config.build_settings['CODE_SIGN_IDENTITY'] = ''\",
             \"      config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')\",
             \"    end\",
             \"  end\",
@@ -127,9 +130,7 @@ jobs:
               f.write(content)
           print('Code signing configured')
           "
-
-      - name: Remove PROVISIONING_PROFILE_SPECIFIER
-        run: sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj || true
+          sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' ios/Runner.xcodeproj/project.pbxproj || true
 
       - name: Pod install
         run: cd ios && pod install --repo-update
@@ -137,6 +138,15 @@ jobs:
       - name: Build and archive iOS app
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
+
+          PP_UUID=$(python3 -c "
+          import plistlib, os
+          pp = os.environ['RUNNER_TEMP'] + '/build_pp.mobileprovision'
+          with open(pp,'rb') as f: raw=f.read()
+          s=raw.find(b'<?xml'); e=raw.find(b'</plist>')+8
+          print(plistlib.loads(raw[s:e]).get('UUID',''))
+          ")
+          echo "PP UUID: $PP_UUID"
 
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
@@ -146,22 +156,19 @@ jobs:
             -destination "generic/platform=iOS" \
             OTHER_CFLAGS='$(inherited)' \
             OTHER_CPLUSPLUSFLAGS='$(inherited)' \
-            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
-            CODE_SIGN_IDENTITY="Apple Distribution"
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE="$PP_UUID"
 
       - name: Export and sign IPA
         run: |
           PP_UUID=$(python3 -c "
           import plistlib, os
-          d = os.path.expanduser('~/Library/MobileDevice/Provisioning Profiles')
-          for fn in os.listdir(d):
-              fp = os.path.join(d, fn)
-              with open(fp, 'rb') as fh: raw = fh.read()
-              s = raw.find(b'<?xml'); e = raw.find(b'</plist>') + 8
-              pl = plistlib.loads(raw[s:e])
-              print(pl.get('UUID', ''))
-              break
+          pp = os.environ['RUNNER_TEMP'] + '/build_pp.mobileprovision'
+          with open(pp,'rb') as f: raw=f.read()
+          s=raw.find(b'<?xml'); e=raw.find(b'</plist>')+8
+          print(plistlib.loads(raw[s:e]).get('UUID',''))
           ")
           python3 -c "
           pp='$PP_UUID'
