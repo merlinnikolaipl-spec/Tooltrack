@@ -114,18 +114,6 @@ jobs:
                 config.build_settings['CODE_SIGN_IDENTITY'] = ''
                 config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
                 config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-                if cflags.is_a?(Array)
-                  cflags = cflags.join(' ')
-                end
-                cflags = cflags.gsub(/ -G(s|$)/, ' ').gsub(/^-G(s|$)/, '')
-                config.build_settings['OTHER_CFLAGS'] = cflags
-                cxxflags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'
-                if cxxflags.is_a?(Array)
-                  cxxflags = cxxflags.join(' ')
-                end
-                cxxflags = cxxflags.gsub(/ -G(s|$)/, ' ').gsub(/^-G(s|$)/, '')
-                config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cxxflags
               end
             end
           end
@@ -155,6 +143,25 @@ jobs:
         run: |
           cd ios
           pod install --repo-update
+
+      - name: Remove -G flag from xcconfigs
+        run: |
+          echo "Searching for -G in xcconfig files..."
+          find ios/Pods -name "*.xcconfig" | while read f; do
+            if grep -q -- "-G" "$f"; then
+              echo "Found -G in: $f"
+              grep -- "-G" "$f"
+              sed -i '' 's/ -G / /g; s/ -G$//g; s/ -G	/ /g' "$f"
+              echo "After patch:"
+              grep -- "-G" "$f" || echo "  (no more -G)"
+            fi
+          done
+          echo "Also patching BoringSSL xcconfig specifically..."
+          find ios/Pods -name "BoringSSL*.xcconfig" -o -name "*grpc*.xcconfig" -o -name "*gRPC*.xcconfig" | while read f; do
+            echo "Checking: $f"
+            cat "$f" | grep -E "FLAGS|CFLAGS" || echo "  no FLAGS lines"
+          done
+          echo "Patch complete"
 
       - name: Build and archive iOS app
         env:
