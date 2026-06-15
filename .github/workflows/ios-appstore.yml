@@ -144,32 +144,15 @@ jobs:
           cd ios
           pod install --repo-update
 
-      - name: Debug - find source of -G flag
+      - name: Remove -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods pbxproj
         run: |
-          echo "=== All xcconfig files with -G ==="
-          grep -r -- "-G" ios/Pods/ --include="*.xcconfig" -l 2>/dev/null || echo "None found"
-          echo "=== All xcconfig content with -G ==="
-          grep -r -- "-G" ios/Pods/ --include="*.xcconfig" 2>/dev/null | head -30 || echo "None found"
-          echo "=== BoringSSL xcconfig content ==="
-          find ios/Pods -name "BoringSSL*" -o -name "grpc*" -o -name "gRPC*" | grep -i "xcconfig" | while read f; do
-            echo "--- $f ---"
-            cat "$f"
-          done
-          echo "=== project.pbxproj lines with -G ==="
-          grep -n -- " -G" ios/Pods/Pods.xcodeproj/project.pbxproj | head -10 || echo "None found in pbxproj"
-          echo "=== Total xcconfig files ==="
-          find ios/Pods -name "*.xcconfig" | wc -l
-
-      - name: Remove -G flag
-        run: |
-          echo "=== Using sed to remove -G from ALL xcconfig files ==="
-          find ios/Pods -name "*.xcconfig" -exec sed -i '' 's/-G //g' {} \;
-          find ios/Pods -name "*.xcconfig" -exec sed -i '' 's/ -G//g' {} \;
-          echo "=== Using sed to remove -G from project.pbxproj ==="
-          sed -i '' 's/-G //g; s/ -G//g' ios/Pods/Pods.xcodeproj/project.pbxproj
-          echo "=== Verifying -G is gone ==="
-          grep -r -- " -G" ios/Pods/ --include="*.xcconfig" | head -5 || echo "No more -G in xcconfigs"
-          echo "=== Done ==="
+          PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
+          echo "Before patch - occurrences:"
+          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" "$PBXPROJ" || echo "0"
+          sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$PBXPROJ"
+          echo "After patch - occurrences:"
+          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" "$PBXPROJ" || echo "0"
+          echo "Patch complete"
 
       - name: Build and archive iOS app
         env:
