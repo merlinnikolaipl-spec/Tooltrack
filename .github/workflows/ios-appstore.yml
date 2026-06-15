@@ -134,27 +134,31 @@ jobs:
       - name: Pod install
         run: cd ios && pod install --repo-update
 
-      - name: Patch -G flag in all xcconfig files
-        run: |
-          find ios/Pods -name "*.xcconfig" 2>/dev/null | while read f; do
-            if grep -q ' -G' "$f" 2>/dev/null; then
-              echo "Patching: $f"
-              sed -i '' 's/ -G / /g' "$f" 2>/dev/null || true
-              sed -i '' 's/ -G$//g' "$f" 2>/dev/null || true
-            fi
-          done
-          echo "xcconfig patching done"
-
-      - name: Build iOS app archive
+      - name: Build and archive iOS app
         run: |
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $RUNNER_TEMP/app-signing.keychain-db
-          flutter build ipa --release --no-codesign
-          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
-          echo "Archive: $ARCHIVE"
+
+          flutter build ios --release --no-codesign
+
+          mkdir -p build/ios/archive
+
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
+            OTHER_CFLAGS='\$(inherited)' \
+            OTHER_CPLUSPLUSFLAGS='\$(inherited)' \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=VHF76Z663B \
+            CODE_SIGN_IDENTITY="Apple Distribution"
+
+          echo "Archive result:"
+          ls build/ios/archive/ || echo "No archive found"
 
       - name: Export and sign IPA
         run: |
-          ARCHIVE=$(find build -name "*.xcarchive" | head -1)
           python3 -c "
           content = '<?xml version=\"1.0\" encoding=\"UTF-8\"?>' + chr(10)
           content += '<plist version=\"1.0\"><dict>' + chr(10)
@@ -167,7 +171,7 @@ jobs:
           "
           mkdir -p build/ios/ipa
           xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE" \
+            -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
             -exportOptionsPlist /tmp/ExportOptions.plist \
             -allowProvisioningUpdates
