@@ -146,31 +146,35 @@ jobs:
 
       - name: Remove -G flag from all build files
         run: |
-          echo "=== Patching xcconfig files ==="
-          find ios/Pods -name "*.xcconfig" | xargs grep -l -- " -G" 2>/dev/null | while read f; do
-            echo "Found -G in xcconfig: $f"
-            sed -i '' 's/ -G / /g; s/ -G$//g' "$f"
-            echo "Patched: $f"
-          done
-          echo "=== Patching Pods.xcodeproj/project.pbxproj ==="
-          PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
-          if [ -f "$PBXPROJ" ]; then
-            if grep -q -- "-G" "$PBXPROJ"; then
-              echo "Found -G in Pods.xcodeproj/project.pbxproj"
-              grep -n -- " -G" "$PBXPROJ" | head -20
-              sed -i '' 's/ -G / /g; s/ -G$//g; s/-G //g' "$PBXPROJ"
-              echo "Patched Pods.xcodeproj/project.pbxproj"
-              grep -n -- " -G" "$PBXPROJ" | head -5 || echo "No more -G found"
-            else
-              echo "No -G found in Pods.xcodeproj/project.pbxproj"
-            fi
-          fi
-          echo "=== Checking BoringSSL-GRPC settings ==="
-          find ios/Pods -name "*.xcconfig" | xargs grep -l "BoringSSL" 2>/dev/null | while read f; do
-            echo "BoringSSL xcconfig: $f"
-            cat "$f"
-          done
-          echo "=== Done ==="
+          python3 << 'PYEOF'
+          import os, re, glob
+
+          def remove_G(text):
+              return re.sub(r'(?<![\w])-G(?![\w])', '', text)
+
+          print('=== Searching ALL files for -G ===')
+          all_files = []
+          all_files += glob.glob('ios/Pods/**/*.xcconfig', recursive=True)
+          all_files += glob.glob('ios/Pods/**/*.pbxproj', recursive=True)
+          all_files += glob.glob('ios/Pods/**/*.xcodeproj', recursive=True)
+
+          for fpath in all_files:
+              if os.path.isfile(fpath):
+                  try:
+                      content = open(fpath).read()
+                      if '-G' in content:
+                          print('FOUND -G in:', fpath)
+                          for i, line in enumerate(content.splitlines()):
+                              if '-G' in line:
+                                  print(f'  line {i+1}: {line[:200]}')
+                          new_content = remove_G(content)
+                          open(fpath, 'w').write(new_content)
+                          print('  -> Patched')
+                  except Exception as e:
+                      print('Error:', fpath, e)
+
+          print('=== DONE ===')
+          PYEOF
 
       - name: Build and archive iOS app
         env:
