@@ -44,6 +44,7 @@ jobs:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
           PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
+          echo "Provisioning profile UUID: $PP_UUID"
 
       - name: Setup Google Services
         env:
@@ -128,31 +129,21 @@ jobs:
           "
 
       - name: Configure code signing
+        env:
+          PP_UUID: ${{ env.PP_UUID }}
         run: |
-          cd ios
-          PP_UUID=$PP_UUID
           python3 -c "
-          import re
-          pp_uuid = '$PP_UUID'
-          with open('Runner.xcodeproj/project.pbxproj', 'r') as f:
+          import re, os
+          pp_uuid = os.environ.get('PP_UUID', '')
+          print('Configuring code signing, PP_UUID: ' + pp_uuid)
+          with open('ios/Runner.xcodeproj/project.pbxproj', 'r') as f:
               c = f.read()
           c = re.sub(r'CODE_SIGN_STYLE = Automatic', 'CODE_SIGN_STYLE = Manual', c)
           c = re.sub(r'DEVELOPMENT_TEAM = [A-Z0-9]+', 'DEVELOPMENT_TEAM = VHF76Z663B', c)
-          target = '97C147071CF9000F007C117D'
-          idx = c.find(target)
-          if idx != -1:
-              block_end = c.find('name = Release;', idx)
-              settings_end = c.rfind('};', idx, block_end)
-              if settings_end != -1 and pp_uuid:
-                  pp_line = chr(10) + chr(9)*4 + 'PROVISIONING_PROFILE = "' + pp_uuid + '";'
-                  pp_spec = chr(10) + chr(9)*4 + 'PROVISIONING_PROFILE_SPECIFIER = "";'
-                  c = c[:settings_end] + pp_line + pp_spec + c[settings_end:]
-                  print('PP UUID inserted: ' + pp_uuid)
-          with open('Runner.xcodeproj/project.pbxproj', 'w') as f:
+          with open('ios/Runner.xcodeproj/project.pbxproj', 'w') as f:
               f.write(c)
-          print('Done')
+          print('Code sign style set to Manual')
           "
-          cd ..
 
       - name: Pod install
         run: |
@@ -199,11 +190,11 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE="$PP_UUID"
+            PROVISIONING_PROFILE="$PP_UUID" \
+            PROVISIONING_PROFILE_SPECIFIER=""
 
       - name: Export and sign IPA
         run: |
-          PP_UUID=$PP_UUID
           python3 -c "
           import os
           pp = os.environ.get('PP_UUID', '')
