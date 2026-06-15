@@ -53,12 +53,12 @@ jobs:
 
       - name: Write pubspec overrides
         run: |
-          cat > pubspec_overrides.yaml << 'PUBSPEC_EOF'
-          dependency_overrides:
-            win32: 5.5.4
-            pdf_widget_wrapper: 1.0.4
-            mobile_scanner: 5.2.3
-          PUBSPEC_EOF
+          python3 -c "
+          content = 'dependency_overrides:\n  win32: 5.5.4\n  pdf_widget_wrapper: 1.0.4\n  mobile_scanner: 5.2.3\n'
+          with open('pubspec_overrides.yaml', 'w') as f:
+              f.write(content)
+          print('pubspec_overrides.yaml written')
+          "
 
       - name: Flutter pub get
         run: flutter pub get
@@ -144,11 +144,9 @@ jobs:
               block_end = c.find('name = Release;', idx)
               settings_end = c.rfind('};', idx, block_end)
               if settings_end != -1 and pp_uuid:
-                  pp_line = '
-				PROVISIONING_PROFILE = "' + pp_uuid + '";'
-                  pp_spec_line = '
-				PROVISIONING_PROFILE_SPECIFIER = "";'
-                  c = c[:settings_end] + pp_line + pp_spec_line + c[settings_end:]
+                  pp_line = chr(10) + chr(9)*4 + 'PROVISIONING_PROFILE = "' + pp_uuid + '";'
+                  pp_spec = chr(10) + chr(9)*4 + 'PROVISIONING_PROFILE_SPECIFIER = "";'
+                  c = c[:settings_end] + pp_line + pp_spec + c[settings_end:]
                   print('PP UUID inserted: ' + pp_uuid)
           with open('Runner.xcodeproj/project.pbxproj', 'w') as f:
               f.write(c)
@@ -164,30 +162,29 @@ jobs:
 
       - name: Patch -G flag from all sources
         run: |
-          echo "=== Patching xcconfig files ==="
+          echo "Patching xcconfig files"
           find ios/Pods -name '*.xcconfig' | while read f; do
             if grep -q -- ' -G' "$f" 2>/dev/null; then
-              echo "Patching xcconfig: $f"
-              sed -i '' 's/ -G / /g; s/ -G$//g; s/^-G //g; s/^-G$//g' "$f"
+              echo "Patching: $f"
+              sed -i '' 's/ -G / /g; s/ -G$//g' "$f"
             fi
           done
-          echo "=== Patching Pods project.pbxproj ==="
+          echo "Patching Pods project.pbxproj"
           PODS_PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
           if [ -f "$PODS_PBXPROJ" ]; then
-            python3 << 'PYEOF'
+            python3 -c "
           import re
           path = 'ios/Pods/Pods.xcodeproj/project.pbxproj'
-          with open(path, 'r') as f:
+          with open(path) as f:
               c = f.read()
-          original_len = len(c)
-          c = re.sub(r'( -G )', ' ', c)
-          c = re.sub(r'( -G)', '', c)
+          orig = len(c)
+          c = re.sub(r' -G(?=[ \"\\);])', '', c)
           with open(path, 'w') as f:
               f.write(c)
-          print(f'pbxproj patched: {original_len} -> {len(c)} chars')
-          PYEOF
+          print('pbxproj patched: %d -> %d' % (orig, len(c)))
+          "
           fi
-          echo "=== Done ==="
+          echo "Done patching"
 
       - name: Build and archive iOS app
         run: |
@@ -207,28 +204,32 @@ jobs:
       - name: Export and sign IPA
         run: |
           PP_UUID=$PP_UUID
-          cat > /tmp/ExportOptions.plist << 'EXPORT_EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>VHF76Z663B</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.toolkeeper.app</key>
-              <string>PP_UUID_PLACEHOLDER</string>
-            </dict>
-          </dict>
-          </plist>
-          EXPORT_EOF
-          sed -i '' "s/PP_UUID_PLACEHOLDER/$PP_UUID/g" /tmp/ExportOptions.plist
+          python3 -c "
+          import os
+          pp = os.environ.get('PP_UUID', '')
+          lines = ['<?xml version=\"1.0\" encoding=\"UTF-8\"?>',
+            '<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">',
+            '<plist version=\"1.0\">',
+            '<dict>',
+            '  <key>method</key>',
+            '  <string>app-store</string>',
+            '  <key>teamID</key>',
+            '  <string>VHF76Z663B</string>',
+            '  <key>uploadBitcode</key>',
+            '  <false/>',
+            '  <key>uploadSymbols</key>',
+            '  <true/>',
+            '  <key>provisioningProfiles</key>',
+            '  <dict>',
+            '    <key>com.toolkeeper.app</key>',
+            '    <string>' + pp + '</string>',
+            '  </dict>',
+            '</dict>',
+            '</plist>']
+          with open('/tmp/ExportOptions.plist', 'w') as f:
+              f.write('\\n'.join(lines))
+          print('ExportOptions.plist written with PP: ' + pp)
+          "
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportOptionsPlist /tmp/ExportOptions.plist \
