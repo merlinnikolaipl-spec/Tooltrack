@@ -54,11 +54,12 @@ jobs:
 
       - name: Write pubspec overrides
         run: |
-          python3 -c "
-          content = 'dependency_overrides:\n  win32: 5.5.4\n  pdf_widget_wrapper: 1.0.4\n  mobile_scanner: 5.2.3\n'
-          with open('pubspec_overrides.yaml', 'w') as f:
-              f.write(content)
-          "
+          cat > pubspec_overrides.yaml << 'EOF'
+          dependency_overrides:
+            win32: 5.5.4
+            pdf_widget_wrapper: 1.0.4
+            mobile_scanner: 5.2.3
+          EOF
 
       - name: Flutter pub get
         run: flutter pub get
@@ -68,65 +69,60 @@ jobs:
 
       - name: Write Podfile
         run: |
-          python3 -c "
-          lines = []
-          lines.append(\"# Uncomment this line to define a global platform for your project\")
-          lines.append(\"platform :ios, '13.0'\")
-          lines.append(\"\")
-          lines.append(\"# CocoaPods analytics sends network stats synchronously affecting flutter build latency.\")
-          lines.append(\"ENV['COCOAPODS_DISABLE_STATS'] = 'true'\")
-          lines.append(\"\")
-          lines.append(\"project 'Runner', {\")
-          lines.append(\"  'Debug' => :debug,\")
-          lines.append(\"  'Profile' => :release,\")
-          lines.append(\"  'Release' => :release,\")
-          lines.append(\"}  \")
-          lines.append(\"\")
-          lines.append(\"def flutter_root\")
-          lines.append(\"  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)\")
-          lines.append(\"  unless File.exist?(generated_xcode_build_settings_path)\")
-          lines.append(\"    raise \\\"#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first\\\"\")
-          lines.append(\"  end\")
-          lines.append(\"  File.foreach(generated_xcode_build_settings_path) do |line|\")
-          lines.append(\"    matches = line.match(/FLUTTER_ROOT\\\\=(.*)/) \")
-          lines.append(\"    return matches[1].strip if matches\")
-          lines.append(\"  end\")
-          lines.append(\"  raise \\\"FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get again.\\\"\")
-          lines.append(\"end\")
-          lines.append(\"\")
-          lines.append(\"require File.expand_path(File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podhelper'), __FILE__)\")
-          lines.append(\"\")
-          lines.append(\"flutter_ios_podfile_setup\")
-          lines.append(\"\")
-          lines.append(\"target 'Runner' do\")
-          lines.append(\"  use_frameworks!\")
-          lines.append(\"  use_modular_headers!\")
-          lines.append(\"\")
-          lines.append(\"  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))\")
-          lines.append(\"  target 'RunnerTests' do\")
-          lines.append(\"    inherit! :search_paths\")
-          lines.append(\"  end\")
-          lines.append(\"end\")
-          lines.append(\"\")
-          lines.append(\"post_install do |installer|\")
-          lines.append(\"  installer.pods_project.targets.each do |target|\")
-          lines.append(\"    flutter_additional_ios_build_settings(target)\")
-          lines.append(\"    target.build_configurations.each do |config|\")
-          lines.append(\"      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'\")
-          lines.append(\"      config.build_settings['CODE_SIGN_IDENTITY'] = ''\")
-          lines.append(\"    end\")
-          lines.append(\"  end\")
-          lines.append(\"end\")
-          with open('ios/Podfile', 'w') as f:
-              f.write('\\n'.join(lines) + '\\n')
-          print('Podfile written successfully')
-          "
+          cat > ios/Podfile << 'PODEOF'
+          platform :ios, '13.0'
+
+          ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+          project 'Runner', {
+            'Debug' => :debug,
+            'Profile' => :release,
+            'Release' => :release,
+          }
+
+          def flutter_root
+            generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+            unless File.exist?(generated_xcode_build_settings_path)
+              raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+            end
+            File.foreach(generated_xcode_build_settings_path) do |line|
+              matches = line.match(/FLUTTER_ROOT=(.*)/)
+              return matches[1].strip if matches
+            end
+            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get again."
+          end
+
+          require File.expand_path(File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podhelper'), __FILE__)
+
+          flutter_ios_podfile_setup
+
+          target 'Runner' do
+            use_frameworks!
+            use_modular_headers!
+
+            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+            target 'RunnerTests' do
+              inherit! :search_paths
+            end
+          end
+
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              flutter_additional_ios_build_settings(target)
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+                config.build_settings['CODE_SIGN_IDENTITY'] = ''
+              end
+            end
+          end
+          PODEOF
+          echo "Podfile written"
 
       - name: Configure code signing
         env:
           PP_UUID: ${{ env.PP_UUID }}
         run: |
-          python3 -c "
+          python3 << 'PYEOF'
           import os, re
           pp_uuid = os.environ.get('PP_UUID', '')
           print('PP UUID:', pp_uuid)
@@ -138,7 +134,7 @@ jobs:
           with open(pbx, 'w') as f:
               f.write(c)
           print('Code signing configured')
-          "
+          PYEOF
 
       - name: Pod install
         run: |
@@ -147,58 +143,44 @@ jobs:
 
       - name: Patch -G flag from all sources
         run: |
-          echo "=== Searching for -G in all xcconfig and xcodeproj files ==="
-          python3 -c "
+          python3 << 'PYEOF'
           import os, re, glob
 
-          def remove_G_flag(text):
-              # Remove -G followed by whitespace or end of string or special chars
-              # This covers: '-G ', '-G$', '-G	', '-G
-', '-G;', '-G"'
-              result = re.sub(r'-G(?=[s\"\\`;\)\}]|$)', '', text)
-              return result
+          def remove_G(text):
+              return re.sub(r' -G(?= |-G|$)', ' ', text, flags=re.MULTILINE)
 
           patched = []
+          xcconfigs = glob.glob('ios/Pods/**/*.xcconfig', recursive=True)
+          xcconfigs += glob.glob('ios/Flutter/**/*.xcconfig', recursive=True)
+          xcconfigs += glob.glob('ios/*.xcconfig')
 
-          # Patch ALL xcconfig files (Pods AND Flutter)
-          all_xcconfig = []
-          all_xcconfig += glob.glob('ios/Pods/**/*.xcconfig', recursive=True)
-          all_xcconfig += glob.glob('ios/Flutter/**/*.xcconfig', recursive=True)
-          all_xcconfig += glob.glob('ios/*.xcconfig', recursive=False)
-
-          for f in all_xcconfig:
+          for f in xcconfigs:
               try:
-                  with open(f, 'r') as fh:
-                      content = fh.read()
+                  content = open(f).read()
                   if '-G' in content:
-                      new_content = remove_G_flag(content)
-                      if new_content != content:
-                          with open(f, 'w') as fh:
-                              fh.write(new_content)
+                      new = remove_G(content)
+                      if new != content:
+                          open(f, 'w').write(new)
                           patched.append(f)
-                          print(f'Patched xcconfig: {f}')
-                  # Also just print xcconfig content if it has OTHER_CFLAGS
+                          print('Patched xcconfig:', f)
                   if 'OTHER_CFLAGS' in content:
-                      for line in content.split(chr(10)):
+                      for line in content.splitlines():
                           if 'OTHER_CFLAGS' in line:
-                              print(f'  {f}: {line.strip()}')
+                              print('  OTHER_CFLAGS in', f, ':', line.strip())
               except Exception as e:
-                  print(f'Error processing {f}: {e}')
+                  print('Error:', f, e)
 
-          # Patch Pods project.pbxproj
-          pbxproj = 'ios/Pods/Pods.xcodeproj/project.pbxproj'
-          if os.path.exists(pbxproj):
-              with open(pbxproj, 'r') as fh:
-                  content = fh.read()
+          pbx = 'ios/Pods/Pods.xcodeproj/project.pbxproj'
+          if os.path.exists(pbx):
+              content = open(pbx).read()
               if '-G' in content:
-                  new_content = remove_G_flag(content)
-                  with open(pbxproj, 'w') as fh:
-                      fh.write(new_content)
-                  patched.append(pbxproj)
-                  print(f'Patched Pods pbxproj')
+                  new = remove_G(content)
+                  open(pbx, 'w').write(new)
+                  patched.append(pbx)
+                  print('Patched Pods pbxproj')
 
-          print(f'Patched {len(patched)} files total')
-          "
+          print('Total patched:', len(patched))
+          PYEOF
 
       - name: Build and archive iOS app
         env:
@@ -217,11 +199,10 @@ jobs:
             PROVISIONING_PROFILE="$PP_UUID" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             2>&1 | tee /tmp/xcodebuild.log | xcpretty --color; \
-          EXIT_CODE=${PIPESTATUS[0]}; \
-          if [ $EXIT_CODE -ne 0 ]; then \
-            echo "=== XCODEBUILD FAILED - showing errors ==="; \
-            grep -A5 "error:" /tmp/xcodebuild.log | head -100; \
-            exit $EXIT_CODE; \
+          EXIT=${PIPESTATUS[0]}; \
+          if [ $EXIT -ne 0 ]; then \
+            grep -E "error:" /tmp/xcodebuild.log | head -50; \
+            exit $EXIT; \
           fi
 
       - name: Export and sign IPA
@@ -229,32 +210,26 @@ jobs:
           PP_UUID: ${{ env.PP_UUID }}
         run: |
           mkdir -p ios/build/export
-          python3 -c "
+          python3 << 'PYEOF'
           import os
           pp_uuid = os.environ.get('PP_UUID', '')
-          plist = '''<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-          <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-          <plist version=\"1.0\">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>VHF76Z663B</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.toolkeeper.app</key>
-              <string>''' + pp_uuid + '''</string>
-            </dict>
-          </dict>
-          </plist>'''
+          plist = (
+              '<?xml version="1.0" encoding="UTF-8"?>\n'
+              '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+              '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+              '<plist version="1.0"><dict>\n'
+              '<key>method</key><string>app-store</string>\n'
+              '<key>teamID</key><string>VHF76Z663B</string>\n'
+              '<key>uploadSymbols</key><true/>\n'
+              '<key>compileBitcode</key><false/>\n'
+              '<key>provisioningProfiles</key><dict>\n'
+              '<key>com.toolkeeper.app</key><string>' + pp_uuid + '</string>\n'
+              '</dict></dict></plist>\n'
+          )
           with open('/tmp/ExportOptions.plist', 'w') as f:
               f.write(plist)
-          print('ExportOptions.plist written')
-          "
+          print('ExportOptions.plist written for UUID:', pp_uuid)
+          PYEOF
           xcodebuild -exportArchive \
             -archivePath ios/build/Runner.xcarchive \
             -exportOptionsPlist /tmp/ExportOptions.plist \
@@ -264,11 +239,9 @@ jobs:
       - name: Upload to TestFlight
         env:
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
-          ASC_KEY_ID: CACM4VT79N
-          ASC_ISSUER_ID: 84281d71-d333-4cf7-8580-3771c0b45e85
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
-          python3 -c "
+          python3 << 'PYEOF'
           import os, base64
           key = os.environ.get('ASC_PRIVATE_KEY', '')
           try:
@@ -279,7 +252,7 @@ jobs:
           with open(key_path, 'w') as f:
               f.write(decoded)
           print('Key written')
-          "
+          PYEOF
           xcrun altool --upload-app \
             -f ios/build/export/*.ipa \
             --type ios \
