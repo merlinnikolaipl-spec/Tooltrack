@@ -254,15 +254,16 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
-          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > /tmp/asc_key.p8
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
           IPA_PATH=$(find /tmp/Runner_export -name "*.ipa" | head -1)
           echo "Uploading IPA: $IPA_PATH"
+          echo "Using API Key: $ASC_KEY_ID"
           xcrun altool --upload-app \
             --type ios \
             --file "$IPA_PATH" \
             --apiKey "$ASC_KEY_ID" \
             --apiIssuer "$ASC_ISSUER_ID" \
-            --private-key-path /tmp/asc_key.p8 \
             2>&1 | tee /tmp/upload.log
           UPLOAD_RESULT=${PIPESTATUS[0]}
           if [ $UPLOAD_RESULT -ne 0 ]; then
