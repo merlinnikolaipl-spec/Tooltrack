@@ -149,12 +149,17 @@ jobs:
           else
             echo "Pods project.pbxproj not found, skipping"
           fi
+          # Diagnostics: show which files contain non-modular flag
+          echo "=== Files containing non-modular flag ==="
+          grep -rl "non-modular" ios/Pods/ 2>/dev/null | head -20 || true
           # Remove non-modular include warnings from all Pods files
           find ios/Pods -name "*.xcconfig" -o -name "*.pbxproj" | while read f; do
             sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
             sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
           done
-          echo "Removed non-modular warnings from all xcconfig/pbxproj files"
+          echo "=== After fix: files still containing non-modular flag ==="
+          grep -rl "non-modular" ios/Pods/ 2>/dev/null | head -10 || true
+          echo "Done removing non-modular warnings"
 
       - name: Configure code signing for Runner
         run: |
