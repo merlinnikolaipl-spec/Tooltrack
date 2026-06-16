@@ -31,21 +31,16 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH
-
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-
           PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
           echo "PP_PATH=$PP_PATH" >> $GITHUB_ENV
@@ -59,12 +54,12 @@ jobs:
 
       - name: Create pubspec_overrides.yaml
         run: |
-          cat > pubspec_overrides.yaml << 'OVERRIDESEOF'
+          cat > pubspec_overrides.yaml << 'PYEOF'
           dependency_overrides:
             win32: 5.5.4
             pdf_widget_wrapper: 1.0.4
             mobile_scanner: 5.2.3
-          OVERRIDESEOF
+          PYEOF
 
       - name: Flutter pub get
         run: flutter pub get
@@ -89,9 +84,8 @@ jobs:
             unless File.exist?(generated_xcode_build_settings_path)
               raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
             end
-
             File.foreach(generated_xcode_build_settings_path) do |line|
-              matches = line.match(/FLUTTER_ROOT\=(.*)/)
+              matches = line.match(/FLUTTER_ROOT\=(.*)/)  
               return matches[1].strip if matches
             end
             raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get"
@@ -121,15 +115,12 @@ jobs:
                 config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
                 config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
                 config.build_settings['SWIFT_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
-                config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+                config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
                 config.build_settings['CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE'] = 'NO'
-                # Fix gRPC-Core C++ template warning
-                if target.name == 'gRPC-Core' || target.name.start_with?('gRPC')
-                  config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-missing-template-arg-list-after-template-kw'
-                end
-                # Fix non-modular include in framework module for all targets
-                cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-                config.build_settings['OTHER_CFLAGS'] = cflags + ' -Wno-non-modular-include-in-framework-module'
+                config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+                config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-everything'
+                config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-everything'
+                config.build_settings['WARNING_CFLAGS'] = ''
               end
             end
           end
@@ -137,95 +128,99 @@ jobs:
       - name: Pod install
         run: |
           cd ios
-          pod install --repo-update
+          pod install --repo-update 2>&1 | tail -30
 
-      - name: Remove -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods project
+      - name: Patch warning flags from all project files
         run: |
-          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
-            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' ios/Pods/Pods.xcodeproj/project.pbxproj
-            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
-            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
-            echo "Removed warning flags from Pods project.pbxproj"
-          else
-            echo "Pods project.pbxproj not found, skipping"
+          PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
+          RUNNER_PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+
+          echo "=== Patching Pods pbxproj ==="
+          if [ -f "$PBXPROJ" ]; then
+            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$PBXPROJ"
+            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$PBXPROJ"
+            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$PBXPROJ"
+            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$PBXPROJ"
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$PBXPROJ"
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES;/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO;/g' "$PBXPROJ"
+            echo "CLANG_WARN in Pods pbxproj after patch:"
+            grep "CLANG_WARN_NON_MODULAR" "$PBXPROJ" | head -5 || echo "(none - good!)"
           fi
-          # Diagnostics: show which files contain non-modular flag
-          echo "=== Files containing non-modular flag ==="
-          grep -rl "non-modular" ios/Pods/ 2>/dev/null | head -20 || true
-          # Remove non-modular include warnings from all Pods files
-          find ios/Pods -name "*.xcconfig" -o -name "*.pbxproj" | while read f; do
+
+          echo "=== Patching Runner pbxproj ==="
+          if [ -f "$RUNNER_PBXPROJ" ]; then
+            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$RUNNER_PBXPROJ"
+            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
+            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
+            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$RUNNER_PBXPROJ"
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES;/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO;/g' "$RUNNER_PBXPROJ"
+            echo "CLANG_WARN in Runner pbxproj after patch:"
+            grep "CLANG_WARN_NON_MODULAR" "$RUNNER_PBXPROJ" | head -5 || echo "(none - good!)"
+          fi
+
+          echo "=== Patching all xcconfig files ==="
+          find ios/Pods -name "*.xcconfig" | while read f; do
             sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
+            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
             sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$f" 2>/dev/null || true
           done
-          echo "=== After fix: files still containing non-modular flag ==="
-          grep -rl "non-modular" ios/Pods/ 2>/dev/null | head -10 || true
-          echo "Done removing non-modular warnings"
+
+          echo "=== Files still containing non-modular ==="
+          grep -rl "non-modular" ios/ 2>/dev/null | head -20 || echo "(none - perfect!)"
 
       - name: Configure code signing for Runner
         run: |
-          python3 << 'PYEOF'
-          import os, re
-
-          pbxproj_path = 'ios/Runner.xcodeproj/project.pbxproj'
-          with open(pbxproj_path, 'r') as f:
-              content = f.read()
-
-          team_id = 'VHF76Z663B'
-          pp_uuid = os.environ.get('PP_UUID', '')
-          bundle_id = 'com.toolkeeper.app'
-
-          print(f'PP_UUID from env: {pp_uuid}')
-
-          content = re.sub(r'DEVELOPMENT_TEAM = [^;]*;', f'DEVELOPMENT_TEAM = {team_id};', content)
-          content = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER = [^;]*;', f'PRODUCT_BUNDLE_IDENTIFIER = {bundle_id};', content)
-          content = re.sub(r'CODE_SIGN_STYLE = [^;]*;', 'CODE_SIGN_STYLE = Manual;', content)
-
-          with open(pbxproj_path, 'w') as f:
-              f.write(content)
-
-          print('Updated project.pbxproj: DEVELOPMENT_TEAM, BUNDLE_IDENTIFIER, CODE_SIGN_STYLE')
-          PYEOF
+          RUNNER_PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$RUNNER_PBXPROJ"
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = VHF76Z663B;/g' "$RUNNER_PBXPROJ"
+          sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = VHF76Z663B/g' "$RUNNER_PBXPROJ"
+          echo "Code signing configured"
       - name: Build and archive iOS app
         run: |
+          echo "Using PP UUID: $PP_UUID"
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/Runner.xcarchive \
-            -destination 'generic/platform=iOS' \
+            -archivePath /tmp/Runner.xcarchive \
+            -sdk iphoneos \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
             CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
-            2>&1 | tee /tmp/xcodebuild.log | grep -A2 "error:"
+            CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
+            GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | tee /tmp/xcodebuild.log | grep -E '(error:|warning:|ARCHIVE|failed|succeeded)' | head -100
           BUILD_RESULT=${PIPESTATUS[0]}
-          echo "xcodebuild exit code: $BUILD_RESULT"
+          echo "Build result: $BUILD_RESULT"
           if [ $BUILD_RESULT -ne 0 ]; then
-            echo "=== BUILD FAILED - LAST 100 LINES ==="
-            tail -100 /tmp/xcodebuild.log
-            exit $BUILD_RESULT
+            echo "=== LAST 200 LINES OF BUILD LOG ==="
+            tail -200 /tmp/xcodebuild.log
+            exit 1
           fi
-          echo "=== BUILD SUCCEEDED ==="
+          echo "Archive created successfully!"
+          ls -la /tmp/Runner.xcarchive/
 
       - name: Export IPA
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << 'EXPORTEOF'
+          cat > /tmp/ExportOptions.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>app-store-connect</string>
             <key>teamID</key>
             <string>VHF76Z663B</string>
+            <key>uploadBitcode</key>
+            <false/>
             <key>uploadSymbols</key>
             <true/>
-            <key>compileBitcode</key>
-            <false/>
             <key>signingStyle</key>
             <string>manual</string>
             <key>provisioningProfiles</key>
@@ -235,29 +230,41 @@ jobs:
             </dict>
           </dict>
           </plist>
-          EXPORTEOF
-
+          EOF
           xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/Runner.xcarchive \
-            -exportPath $RUNNER_TEMP/export \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
+            -archivePath /tmp/Runner.xcarchive \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath /tmp/Runner_export \
+            2>&1 | tee /tmp/export.log | grep -E '(error:|exported|failed)' | head -30
+          EXPORT_RESULT=${PIPESTATUS[0]}
+          if [ $EXPORT_RESULT -ne 0 ]; then
+            echo "=== EXPORT LOG ==="
+            cat /tmp/export.log
+            exit 1
+          fi
+          echo "IPA exported:"
+          ls -la /tmp/Runner_export/
 
       - name: Upload to TestFlight
         env:
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
-          mkdir -p ~/.private_keys
-          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > ~/.private_keys/AuthKey_CACM4VT79N.p8
-
+          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > /tmp/asc_key.p8
+          IPA_PATH=$(find /tmp/Runner_export -name "*.ipa" | head -1)
+          echo "Uploading IPA: $IPA_PATH"
           xcrun altool --upload-app \
             --type ios \
-            --file $RUNNER_TEMP/export/ToolKeeper.ipa \
-            --apiKey CACM4VT79N \
-            --apiIssuer 84281d71-d333-4cf7-8580-3771c0b45e85 \
-            --verbose || \
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$(find $RUNNER_TEMP/export -name '*.ipa' | head -1)" \
-            --apiKey CACM4VT79N \
-            --apiIssuer 84281d71-d333-4cf7-8580-3771c0b45e85 \
-            --verbose
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID" \
+            --private-key-path /tmp/asc_key.p8 \
+            2>&1 | tee /tmp/upload.log
+          UPLOAD_RESULT=${PIPESTATUS[0]}
+          if [ $UPLOAD_RESULT -ne 0 ]; then
+            echo "=== UPLOAD LOG ==="
+            cat /tmp/upload.log
+            exit 1
+          fi
+          echo "Successfully uploaded to TestFlight!"
