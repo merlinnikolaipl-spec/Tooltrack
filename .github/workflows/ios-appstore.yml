@@ -190,6 +190,7 @@ jobs:
       - name: Build and archive iOS app
         run: |
           echo "Starting xcodebuild archive..."
+          set +e
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -209,14 +210,14 @@ jobs:
             COMPILER_INDEX_STORE_ENABLE=NO \
             > /tmp/xcodebuild.log 2>&1
           BUILD_RESULT=$?
+          set -e
           echo "xcodebuild exit code: $BUILD_RESULT"
-          echo "Log file size: $(wc -c < /tmp/xcodebuild.log 2>/dev/null || echo 'no file') bytes"
-          echo "Log line count: $(wc -l < /tmp/xcodebuild.log 2>/dev/null || echo 'no file') lines"
+          echo "Log size: $(wc -c < /tmp/xcodebuild.log 2>/dev/null || echo 0) bytes, $(wc -l < /tmp/xcodebuild.log 2>/dev/null || echo 0) lines"
           if [ $BUILD_RESULT -ne 0 ]; then
             echo "=== BUILD FAILED - LAST 100 LINES ==="
-            tail -100 /tmp/xcodebuild.log || echo "tail failed"
-            echo "=== SEARCHING FOR error: in log ==="
-            grep -i "error:" /tmp/xcodebuild.log | tail -20 || echo "no errors found in grep"
+            tail -100 /tmp/xcodebuild.log
+            echo "=== ERROR LINES ==="
+            grep -i "error:" /tmp/xcodebuild.log | tail -30 || echo "no error: lines found"
             exit 1
           fi
           echo "Build succeeded!"
