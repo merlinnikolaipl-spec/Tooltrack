@@ -189,7 +189,7 @@ jobs:
 
       - name: Build and archive iOS app
         run: |
-          set -o pipefail
+          echo "Starting xcodebuild archive..."
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -207,8 +207,9 @@ jobs:
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
             GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            2>&1 | tee /tmp/xcodebuild.log | grep -E "(error:|warning:|Build succeeded|FAILED|Compiling|Linking|Archive)"
-          BUILD_RESULT=${PIPESTATUS[0]}
+            > /tmp/xcodebuild.log 2>&1
+          BUILD_RESULT=$?
+          echo "xcodebuild exit code: $BUILD_RESULT"
           if [ $BUILD_RESULT -ne 0 ]; then
             echo "=== BUILD FAILED - LAST 200 LINES ==="
             tail -200 /tmp/xcodebuild.log
