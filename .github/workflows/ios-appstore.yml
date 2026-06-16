@@ -175,8 +175,7 @@ jobs:
             DEVELOPMENT_TEAM=VHF76Z663B \
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
-            | head -n 2000
+            PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store"
 
       - name: Export IPA
         run: |
