@@ -143,16 +143,18 @@ jobs:
         run: |
           if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
             sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' ios/Pods/Pods.xcodeproj/project.pbxproj
-            echo "Removed -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods project.pbxproj"
+            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            echo "Removed warning flags from Pods project.pbxproj"
           else
             echo "Pods project.pbxproj not found, skipping"
           fi
-          # Remove -Werror,-Wnon-modular-include-in-framework-module from xcconfig files
-          find ios/Pods -name "*.xcconfig" | xargs grep -l "non-modular" 2>/dev/null | while read f; do
-            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f"
-            sed -i '' 's/-Wnon-modular-include-in-framework-module//g' "$f"
-            echo "Fixed non-modular warning in: $f"
-          done || true
+          # Remove non-modular include warnings from all Pods files
+          find ios/Pods -name "*.xcconfig" -o -name "*.pbxproj" | while read f; do
+            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
+            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
+          done
+          echo "Removed non-modular warnings from all xcconfig/pbxproj files"
 
       - name: Configure code signing for Runner
         run: |
