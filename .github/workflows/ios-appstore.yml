@@ -145,6 +145,7 @@ jobs:
             sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' ios/Pods/Pods.xcodeproj/project.pbxproj
             sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
             sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
             echo "Removed warning flags from Pods project.pbxproj"
           else
             echo "Pods project.pbxproj not found, skipping"
@@ -156,6 +157,7 @@ jobs:
           find ios/Pods -name "*.xcconfig" -o -name "*.pbxproj" | while read f; do
             sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
             sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$f" 2>/dev/null || true
           done
           echo "=== After fix: files still containing non-modular flag ==="
           grep -rl "non-modular" ios/Pods/ 2>/dev/null | head -10 || true
