@@ -193,6 +193,7 @@ jobs:
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
             PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
+            CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
             2>&1 | tee /tmp/xcodebuild.log | grep -A2 "error:"
           BUILD_RESULT=${PIPESTATUS[0]}
           echo "xcodebuild exit code: $BUILD_RESULT"
