@@ -165,7 +165,6 @@ jobs:
           PYEOF
       - name: Build and archive iOS app
         run: |
-          set -o pipefail
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -177,16 +176,24 @@ jobs:
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
             PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
-            2>&1 | tee /tmp/xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
-          EXIT_CODE=${PIPESTATUS[0]}
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "=== LAST 50 LINES OF BUILD LOG ==="
-            tail -50 /tmp/xcodebuild.log
-            exit $EXIT_CODE
+            2>&1 | tee /tmp/xcodebuild.log | grep -A2 "error:"
+          BUILD_RESULT=${PIPESTATUS[0]}
+          echo "xcodebuild exit code: $BUILD_RESULT"
+          echo "RUNNER_TEMP: $RUNNER_TEMP"
+          echo "Archive path check:"
+          ls -la $RUNNER_TEMP/ | grep xcarchive || echo "NO xcarchive found in RUNNER_TEMP"
+          if [ $BUILD_RESULT -ne 0 ]; then
+            echo "=== BUILD FAILED - LAST 100 LINES ==="
+            tail -100 /tmp/xcodebuild.log
+            exit $BUILD_RESULT
           fi
+          echo "=== BUILD SUCCEEDED ==="
 
       - name: Export IPA
         run: |
+          echo "Checking archive at: $RUNNER_TEMP/Runner.xcarchive"
+          ls -la $RUNNER_TEMP/ | grep xcarchive || echo "NO xcarchive!"
+
           cat > $RUNNER_TEMP/ExportOptions.plist << 'EXPORTEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
