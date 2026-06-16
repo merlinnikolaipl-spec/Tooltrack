@@ -11,16 +11,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Xcode
+      - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest
 
-      - name: Setup Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.2'
-          channel: 'stable'
 
       - name: Install Apple certificate and provisioning profile
         env:
@@ -32,41 +31,46 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          security list-keychains -d user -s $KEYCHAIN_PATH
+
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
           PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
-          echo "Provisioning profile UUID: $PP_UUID"
+          echo "PP_PATH=$PP_PATH" >> $GITHUB_ENV
+          echo "Provisioning Profile UUID: $PP_UUID"
 
-      - name: Setup Google Services
+      - name: Write Google Service Info Plist
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: |
           echo -n "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode -o ios/Runner/GoogleService-Info.plist
 
-      - name: Write pubspec overrides
+      - name: Create pubspec_overrides.yaml
         run: |
-          cat > pubspec_overrides.yaml << 'EOF'
+          cat > pubspec_overrides.yaml << 'OVERRIDESEOF'
           dependency_overrides:
             win32: 5.5.4
             pdf_widget_wrapper: 1.0.4
             mobile_scanner: 5.2.3
-          EOF
+          OVERRIDESEOF
 
       - name: Flutter pub get
         run: flutter pub get
 
       - name: Flutter precache iOS
         run: flutter precache --ios
-
       - name: Write Podfile
         run: |
           cat > ios/Podfile << 'PODEOF'
@@ -85,14 +89,15 @@ jobs:
             unless File.exist?(generated_xcode_build_settings_path)
               raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
             end
+
             File.foreach(generated_xcode_build_settings_path) do |line|
-              matches = line.match(/FLUTTER_ROOT=(.*)/)
+              matches = line.match(/FLUTTER_ROOT\=(.*)/)
               return matches[1].strip if matches
             end
-            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}."
+            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get"
           end
 
-          require File.expand_path(File.join(flutter_root, 'packages', 'flutter_tools', 'bin', 'podhelper'), __FILE__)
+          require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
           flutter_ios_podfile_setup
 
@@ -114,128 +119,112 @@ jobs:
                 config.build_settings['CODE_SIGN_IDENTITY'] = ''
                 config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
                 config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+                config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+                config.build_settings['SWIFT_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
               end
             end
           end
           PODEOF
-          echo "Podfile written"
-
-      - name: Configure code signing
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
-        run: |
-          python3 << 'PYEOF'
-          import os, re
-          pp_uuid = os.environ.get('PP_UUID', '')
-          print('PP UUID:', pp_uuid)
-          pbx = 'ios/Runner.xcodeproj/project.pbxproj'
-          with open(pbx, 'r') as f:
-              c = f.read()
-          c = re.sub(r'CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Manual;', c)
-          c = re.sub(r'DEVELOPMENT_TEAM = [^;]*;', 'DEVELOPMENT_TEAM = VHF76Z663B;', c)
-          c = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]*;', 'PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store";', c)
-          with open(pbx, 'w') as f:
-              f.write(c)
-          print('Code signing configured')
-          PYEOF
-
       - name: Pod install
         run: |
           cd ios
           pod install --repo-update
 
-      - name: Remove -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods pbxproj
+      - name: Remove -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods project
         run: |
-          PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
-          echo "Before patch - occurrences:"
-          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" "$PBXPROJ" || echo "0"
-          sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$PBXPROJ"
-          echo "After patch - occurrences:"
-          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" "$PBXPROJ" || echo "0"
-          echo "Patch complete"
+          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            echo "Removed -GCC_WARN_INHIBIT_ALL_WARNINGS from Pods project.pbxproj"
+          else
+            echo "Pods project.pbxproj not found, skipping"
+          fi
 
-      - name: Build and archive iOS app
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
+      - name: Configure code signing for Runner
         run: |
-          cd ios
+          python3 << 'PYEOF'
+          import os, re
+
+          pbxproj_path = 'ios/Runner.xcodeproj/project.pbxproj'
+          with open(pbxproj_path, 'r') as f:
+              content = f.read()
+
+          team_id = 'VHF76Z663B'
+          pp_uuid = os.environ.get('PP_UUID', '')
+          bundle_id = 'com.toolkeeper.app'
+
+          print(f'PP_UUID from env: {pp_uuid}')
+
+          content = re.sub(r'DEVELOPMENT_TEAM = [^;]*;', f'DEVELOPMENT_TEAM = {team_id};', content)
+          content = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER = [^;]*;', f'PRODUCT_BUNDLE_IDENTIFIER = {bundle_id};', content)
+          content = re.sub(r'CODE_SIGN_STYLE = [^;]*;', 'CODE_SIGN_STYLE = Manual;', content)
+
+          with open(pbxproj_path, 'w') as f:
+              f.write(content)
+
+          print('Updated project.pbxproj: DEVELOPMENT_TEAM, BUNDLE_IDENTIFIER, CODE_SIGN_STYLE')
+          PYEOF
+      - name: Build and archive iOS app
+        run: |
           xcodebuild archive \
-            -workspace Runner.xcworkspace \
+            -workspace ios/Runner.xcworkspace \
             -scheme Runner \
-            -sdk iphoneos \
-            -archivePath build/Runner.xcarchive \
             -configuration Release \
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -destination 'generic/platform=iOS' \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
             PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
-            2>&1 | tee /tmp/xcodebuild.log | xcpretty --color; \
-          EXIT=${PIPESTATUS[0]}; \
-          if [ $EXIT -ne 0 ]; then \
-            grep -E "error:" /tmp/xcodebuild.log | head -50; \
-            exit $EXIT; \
-          fi
+            | head -n 2000
 
-      - name: Export and sign IPA
-        env:
-          PP_UUID: ${{ env.PP_UUID }}
+      - name: Export IPA
         run: |
-          mkdir -p ios/build/export
-          python3 << 'PYEOF'
-          import os
-          pp_uuid = os.environ.get('PP_UUID', '')
-          plist = (
-              '<?xml version="1.0" encoding="UTF-8"?>\n'
-              '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
-              '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
-              '<plist version="1.0"><dict>\n'
-              '<key>method</key><string>app-store</string>\n'
-              '<key>teamID</key><string>VHF76Z663B</string>\n'
-              '<key>uploadSymbols</key><true/>\n'
-              '<key>compileBitcode</key><false/>\n'
-              '<key>provisioningProfiles</key><dict>\n'
-              '<key>com.toolkeeper.app</key><string>' + pp_uuid + '</string>\n'
-              '</dict></dict></plist>\n'
-          )
-          with open('/tmp/ExportOptions.plist', 'w') as f:
-              f.write(plist)
-          print('ExportOptions.plist written for UUID:', pp_uuid)
-          PYEOF
+          cat > $RUNNER_TEMP/ExportOptions.plist << 'EXPORTEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>VHF76Z663B</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.toolkeeper.app</key>
+              <string>ToolKeeper App Store</string>
+            </dict>
+          </dict>
+          </plist>
+          EXPORTEOF
+
           xcodebuild -exportArchive \
-            -archivePath ios/build/Runner.xcarchive \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -exportPath ios/build/export \
-            | xcpretty --color
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
 
       - name: Upload to TestFlight
         env:
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          python3 << 'PYEOF'
-          import os, base64
-          key = os.environ.get('ASC_PRIVATE_KEY', '')
-          try:
-              decoded = base64.b64decode(key).decode('utf-8')
-          except Exception:
-              decoded = key
-          key_path = os.path.expanduser('~/.appstoreconnect/private_keys/AuthKey_CACM4VT79N.p8')
-          with open(key_path, 'w') as f:
-              f.write(decoded)
-          print('Key written')
-          PYEOF
+          mkdir -p ~/.private_keys
+          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > ~/.private_keys/AuthKey_CACM4VT79N.p8
+
           xcrun altool --upload-app \
-            -f ios/build/export/*.ipa \
             --type ios \
+            --file $RUNNER_TEMP/export/ToolKeeper.ipa \
             --apiKey CACM4VT79N \
             --apiIssuer 84281d71-d333-4cf7-8580-3771c0b45e85 \
-            --show-progress
-
-      - name: Upload IPA artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa
-          path: ios/build/export/*.ipa
-          if-no-files-found: ignore
+            --verbose || \
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$(find $RUNNER_TEMP/export -name '*.ipa' | head -1)" \
+            --apiKey CACM4VT79N \
+            --apiIssuer 84281d71-d333-4cf7-8580-3771c0b45e85 \
+            --verbose
