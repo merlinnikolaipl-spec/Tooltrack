@@ -126,11 +126,9 @@ jobs:
                 if target.name == 'gRPC-Core' || target.name.start_with?('gRPC')
                   config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-missing-template-arg-list-after-template-kw'
                 end
-                # Fix firebase_auth non-modular include error
-                if target.name.start_with?('firebase_auth') || target.name == 'firebase_auth'
-                  cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
-                  config.build_settings['OTHER_CFLAGS'] = cflags + ' -Wno-non-modular-include-in-framework-module -Wno-error=non-modular-include-in-framework-module'
-                end
+                # Fix non-modular include in framework module for all targets
+                cflags = config.build_settings['OTHER_CFLAGS'] || '$(inherited)'
+                config.build_settings['OTHER_CFLAGS'] = cflags + ' -Wno-non-modular-include-in-framework-module'
               end
             end
           end
