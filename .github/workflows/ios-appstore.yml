@@ -154,6 +154,26 @@ jobs:
           # Also patch any xcconfig files
           find ios -name "*.xcconfig" -exec sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' {} \;
 
+      - name: Fix BoringSSL-GRPC unsupported -G flag for Xcode 26
+        run: |
+          # Remove unsupported '-G' flag from BoringSSL-GRPC xcconfig/pbxproj
+          # The -G flag is a MIPS/GCC flag not supported by clang for ARM64 iOS
+          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+            # Remove -G0 and any -G<number> flags from OTHER_CFLAGS in Pods project
+            sed -i '' 's/ -G[0-9]* / /g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/"OTHER_CFLAGS[^"]*-G[0-9]*[^"]*"/"$(inherited) -Wno-everything"/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            echo "Patched -G flag in Pods.xcodeproj"
+          fi
+          # Also patch any .xcconfig files in Pods
+          find ios/Pods -name "*.xcconfig" -exec grep -l "\-G[0-9]" {} \; | while read f; do
+            echo "Patching $f"
+            sed -i '' 's/-G[0-9]* / /g' "$f"
+          done
+          # Patch BoringSSL-GRPC specifically
+          find ios/Pods -path "*BoringSSL*" -name "*.xcconfig" -exec sed -i '' 's/-G[0-9]* //g' {} \;
+          find ios/Pods -path "*BoringSSL*" -name "*.xcconfig" | head -5 | xargs grep "OTHER_CFLAGS" 2>/dev/null || echo "No BoringSSL xcconfig OTHER_CFLAGS found"
+          echo "Done patching -G flag"
+
       - name: Configure code signing for Runner
         run: |
           # Patch provisioning profile specifier
