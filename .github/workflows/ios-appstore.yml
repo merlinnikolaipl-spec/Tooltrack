@@ -210,9 +210,13 @@ jobs:
             > /tmp/xcodebuild.log 2>&1
           BUILD_RESULT=$?
           echo "xcodebuild exit code: $BUILD_RESULT"
+          echo "Log file size: $(wc -c < /tmp/xcodebuild.log 2>/dev/null || echo 'no file') bytes"
+          echo "Log line count: $(wc -l < /tmp/xcodebuild.log 2>/dev/null || echo 'no file') lines"
           if [ $BUILD_RESULT -ne 0 ]; then
-            echo "=== BUILD FAILED - LAST 200 LINES ==="
-            tail -200 /tmp/xcodebuild.log
+            echo "=== BUILD FAILED - LAST 100 LINES ==="
+            tail -100 /tmp/xcodebuild.log || echo "tail failed"
+            echo "=== SEARCHING FOR error: in log ==="
+            grep -i "error:" /tmp/xcodebuild.log | tail -20 || echo "no errors found in grep"
             exit 1
           fi
           echo "Build succeeded!"
