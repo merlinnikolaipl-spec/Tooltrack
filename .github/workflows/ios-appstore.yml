@@ -31,41 +31,45 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychains -d user -s $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-          PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
+
+          PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID xml1 -o - - | sed -n 's/.*<string>\(.*\)<\/string>.*/\1/p')
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
-          echo "PP_PATH=$PP_PATH" >> $GITHUB_ENV
-          echo "Provisioning Profile UUID: $PP_UUID"
 
       - name: Write Google Service Info Plist
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: |
-          echo -n "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode -o ios/Runner/GoogleService-Info.plist
+          echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
 
       - name: Create pubspec_overrides.yaml
         run: |
-          cat > pubspec_overrides.yaml << 'PYEOF'
+          cat > pubspec_overrides.yaml << 'OVEREOF'
           dependency_overrides:
             win32: 5.5.4
             pdf_widget_wrapper: 1.0.4
             mobile_scanner: 5.2.3
-          PYEOF
+          OVEREOF
 
       - name: Flutter pub get
         run: flutter pub get
 
       - name: Flutter precache iOS
         run: flutter precache --ios
+
       - name: Write Podfile
         run: |
           cat > ios/Podfile << 'PODEOF'
@@ -84,11 +88,12 @@ jobs:
             unless File.exist?(generated_xcode_build_settings_path)
               raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
             end
+
             File.foreach(generated_xcode_build_settings_path) do |line|
-              matches = line.match(/FLUTTER_ROOT\=(.*)/)  
+              matches = line.match(/FLUTTER_ROOT\=(.*)/)
               return matches[1].strip if matches
             end
-            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get"
+            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get again."
           end
 
           require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
@@ -98,7 +103,6 @@ jobs:
           target 'Runner' do
             use_frameworks!
             use_modular_headers!
-
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
             target 'RunnerTests' do
               inherit! :search_paths
@@ -125,62 +129,67 @@ jobs:
             end
           end
           PODEOF
+
       - name: Pod install
         run: |
           cd ios
-          pod install --repo-update 2>&1 | tail -30
+          pod install --repo-update
 
       - name: Patch warning flags from all project files
         run: |
-          PBXPROJ="ios/Pods/Pods.xcodeproj/project.pbxproj"
-          RUNNER_PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-
-          echo "=== Patching Pods pbxproj ==="
-          if [ -f "$PBXPROJ" ]; then
-            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$PBXPROJ"
-            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$PBXPROJ"
-            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$PBXPROJ"
-            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$PBXPROJ"
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$PBXPROJ"
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES;/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO;/g' "$PBXPROJ"
-            echo "CLANG_WARN in Pods pbxproj after patch:"
-            grep "CLANG_WARN_NON_MODULAR" "$PBXPROJ" | head -5 || echo "(none - good!)"
+          # Patch Pods project
+          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/GCC_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/GCC_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/SWIFT_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/SWIFT_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            echo "Patched Pods.xcodeproj"
           fi
-
-          echo "=== Patching Runner pbxproj ==="
-          if [ -f "$RUNNER_PBXPROJ" ]; then
-            sed -i '' 's/-GCC_WARN_INHIBIT_ALL_WARNINGS//g' "$RUNNER_PBXPROJ"
-            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
-            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
-            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$RUNNER_PBXPROJ"
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' "$RUNNER_PBXPROJ"
-            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES;/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO;/g' "$RUNNER_PBXPROJ"
-            echo "CLANG_WARN in Runner pbxproj after patch:"
-            grep "CLANG_WARN_NON_MODULAR" "$RUNNER_PBXPROJ" | head -5 || echo "(none - good!)"
+          # Patch Runner project
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            sed -i '' 's/GCC_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/GCC_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            sed -i '' 's/SWIFT_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/SWIFT_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            echo "Patched Runner.xcodeproj"
           fi
-
-          echo "=== Patching all xcconfig files ==="
-          find ios/Pods -name "*.xcconfig" | while read f; do
-            sed -i '' 's/-Werror,-Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
-            sed -i '' 's/-Werror=non-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
-            sed -i '' 's/ -Wnon-modular-include-in-framework-module//g' "$f" 2>/dev/null || true
-          done
-
-          echo "=== Files still containing non-modular ==="
-          grep -rl "non-modular" ios/ 2>/dev/null | head -20 || echo "(none - perfect!)"
+          # Also patch any xcconfig files
+          find ios -name "*.xcconfig" -exec sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' {} \;
 
       - name: Configure code signing for Runner
         run: |
-          RUNNER_PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$RUNNER_PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = VHF76Z663B;/g' "$RUNNER_PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = VHF76Z663B/g' "$RUNNER_PBXPROJ"
-                    sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Distribution"/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store"/g' "$RUNNER_PBXPROJ"
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Distribution";/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store";/g' "$RUNNER_PBXPROJ"
+          # Patch provisioning profile specifier
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Distribution"/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store"/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ToolKeeper Distribution/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store"/g' ios/Runner.xcodeproj/project.pbxproj
+          # Set manual code signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          plutil -replace CFBundleVersion -string $(cat pubspec.yaml | grep '^version:' | sed 's/version: [0-9.]*//' | tr -d '+') ios/Runner/Info.plist 2>/dev/null || true
           echo "Code signing configured"
+
+      - name: Fix BGTaskSchedulerPermittedIdentifiers in Info.plist
+        run: |
+          PLIST="ios/Runner/Info.plist"
+          # Check if UIBackgroundModes contains 'processing'
+          if /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST" 2>/dev/null | grep -q "processing"; then
+            echo "Found 'processing' in UIBackgroundModes - checking BGTaskSchedulerPermittedIdentifiers"
+            # Check if BGTaskSchedulerPermittedIdentifiers already exists
+            if ! /usr/libexec/PlistBuddy -c "Print :BGTaskSchedulerPermittedIdentifiers" "$PLIST" 2>/dev/null; then
+              echo "Adding BGTaskSchedulerPermittedIdentifiers key"
+              /usr/libexec/PlistBuddy -c "Add :BGTaskSchedulerPermittedIdentifiers array" "$PLIST"
+              /usr/libexec/PlistBuddy -c "Add :BGTaskSchedulerPermittedIdentifiers:0 string com.toolkeeper.app.refresh" "$PLIST"
+              echo "Added BGTaskSchedulerPermittedIdentifiers to Info.plist"
+            else
+              echo "BGTaskSchedulerPermittedIdentifiers already exists"
+            fi
+          else
+            echo "No 'processing' in UIBackgroundModes, no fix needed"
+          fi
+          echo "=== Info.plist UIBackgroundModes ==="
+          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST" 2>/dev/null || echo "UIBackgroundModes not found"
+          echo "=== BGTaskSchedulerPermittedIdentifiers ==="
+          /usr/libexec/PlistBuddy -c "Print :BGTaskSchedulerPermittedIdentifiers" "$PLIST" 2>/dev/null || echo "Not set"
+
       - name: Build and archive iOS app
         run: |
-          echo "Using PP UUID: $PP_UUID"
+          set -o pipefail
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -198,16 +207,14 @@ jobs:
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
             GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            2>&1 | tee /tmp/xcodebuild.log | grep -E '(error:|warning:|ARCHIVE|failed|succeeded)' | head -100
+            2>&1 | tee /tmp/xcodebuild.log | grep -E "(error:|warning:|Build succeeded|FAILED|Compiling|Linking|Archive)"
           BUILD_RESULT=${PIPESTATUS[0]}
-          echo "Build result: $BUILD_RESULT"
           if [ $BUILD_RESULT -ne 0 ]; then
-            echo "=== LAST 200 LINES OF BUILD LOG ==="
+            echo "=== BUILD FAILED - LAST 200 LINES ==="
             tail -200 /tmp/xcodebuild.log
             exit 1
           fi
-          echo "Archive created successfully!"
-          ls -la /tmp/Runner.xcarchive/
+          echo "Build succeeded!"
 
       - name: Export IPA
         run: |
@@ -220,33 +227,27 @@ jobs:
             <string>app-store-connect</string>
             <key>teamID</key>
             <string>VHF76Z663B</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
               <key>com.toolkeeper.app</key>
               <string>ToolKeeper App Store</string>
             </dict>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
           </dict>
           </plist>
           EOF
           xcodebuild -exportArchive \
             -archivePath /tmp/Runner.xcarchive \
             -exportOptionsPlist /tmp/ExportOptions.plist \
-            -exportPath /tmp/Runner_export \
-            2>&1 | tee /tmp/export.log | grep -E '(error:|exported|failed)' | head -30
-          EXPORT_RESULT=${PIPESTATUS[0]}
-          if [ $EXPORT_RESULT -ne 0 ]; then
-            echo "=== EXPORT LOG ==="
-            cat /tmp/export.log
-            exit 1
-          fi
-          echo "IPA exported:"
-          ls -la /tmp/Runner_export/
+            -exportPath /tmp/Runner_export
+          IPA_PATH=$(find /tmp/Runner_export -name "*.ipa" | head -1)
+          echo "IPA exported: $IPA_PATH"
+          ls -la "$IPA_PATH"
 
       - name: Upload to TestFlight
         env:
@@ -266,9 +267,9 @@ jobs:
             --apiIssuer "$ASC_ISSUER_ID" \
             2>&1 | tee /tmp/upload.log
           UPLOAD_RESULT=${PIPESTATUS[0]}
+          cat /tmp/upload.log
           if [ $UPLOAD_RESULT -ne 0 ]; then
-            echo "=== UPLOAD LOG ==="
-            cat /tmp/upload.log
+            echo "=== UPLOAD FAILED ==="
             exit 1
           fi
-          echo "Successfully uploaded to TestFlight!"
+          echo "Upload completed successfully!"
