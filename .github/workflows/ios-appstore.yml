@@ -165,6 +165,7 @@ jobs:
           PYEOF
       - name: Build and archive iOS app
         run: |
+          set -o pipefail
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -175,7 +176,14 @@ jobs:
             DEVELOPMENT_TEAM=VHF76Z663B \
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE="$PP_UUID" \
-            PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store"
+            PROVISIONING_PROFILE_SPECIFIER="ToolKeeper App Store" \
+            2>&1 | tee /tmp/xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "=== LAST 50 LINES OF BUILD LOG ==="
+            tail -50 /tmp/xcodebuild.log
+            exit $EXIT_CODE
+          fi
 
       - name: Export IPA
         run: |
