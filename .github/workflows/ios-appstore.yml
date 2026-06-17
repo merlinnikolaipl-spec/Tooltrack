@@ -148,6 +148,8 @@ jobs:
         run: |
           cd ios
           pod install
+          # Fix BoringSSL-GRPC: remove -G flag from xcconfig files (MIPS-only flag unsupported on arm64)
+          find Pods/Target\ Support\ Files/BoringSSL-GRPC -name '*.xcconfig' -exec sed -i '' 's/ -G[^ ]*//g' {} \; 2>/dev/null || true
 
       - name: Patch warning flags from all project files
         run: |
