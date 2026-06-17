@@ -148,13 +148,30 @@ jobs:
         run: |
           cd ios
           pod install
-          # Fix BoringSSL-GRPC: find and remove -G flag from xcconfig files
-          echo "=== BoringSSL xcconfig files ==="
-          ls -la 'Pods/Target Support Files/BoringSSL-GRPC/' 2>/dev/null || echo 'no BoringSSL dir'
-          grep -rn ' -G' 'Pods/Target Support Files/BoringSSL-GRPC/' 2>/dev/null || echo 'no -G found in xcconfig'
-          find 'Pods/Target Support Files/BoringSSL-GRPC' -name '*.xcconfig' 2>/dev/null | while IFS= read -r f; do
-            sed -i '' 's/ -G[[:space:]]/ /g; s/ -G$//g' "$f" && echo "Patched: $f"
+          echo "=== FULL BoringSSL xcconfig content ==="
+          for f in Pods/Target\ Support\ Files/BoringSSL-GRPC/*.xcconfig; do
+            echo "--- $f ---"
+            cat "$f" 2>/dev/null || echo "cannot read"
           done
+          echo "=== pbxproj -G occurrences ==="
+          grep -n "\-G" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null | head -30 || echo "no -G in pbxproj"
+          echo "=== Ruby xcodeproj fix for BoringSSL-GRPC ==="
+          ruby - <<'RUBYEOF'
+          require "xcodeproj"
+          project = Xcodeproj::Project.open("Pods/Pods.xcodeproj")
+          project.targets.each do |target|
+            next unless target.name == "BoringSSL-GRPC"
+            puts "Found: #{target.name}"
+            target.build_configurations.each do |config|
+              old = config.build_settings["OTHER_CFLAGS"]
+              config.build_settings["OTHER_CFLAGS"] = "-Wno-everything"
+              config.build_settings["OTHER_CPLUSPLUSFLAGS"] = "-Wno-everything"
+              puts "  #{config.name}: #{old.inspect} => fixed"
+            end
+          end
+          project.save
+          puts "Saved"
+          RUBYEOF
 
       - name: Patch warning flags from all project files
         run: |
