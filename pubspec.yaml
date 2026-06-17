@@ -31,15 +31,13 @@ dependencies:
   share_plus: ^7.2.2
   excel: ^4.0.6
   pdf: ^3.10.8
-  printing: ^5.12.0
+  printing: ^5.10.4
   connectivity_plus: ^5.0.2
   flutter_background_service: ^5.0.5
   http: ^1.2.0
   mobile_scanner: ^5.2.0
   flutter_launcher_icons: "^0.13.1"
 
-dependency_overrides:
-  win32: ^4.1.4
 
 dev_dependencies:
   flutter_test:
