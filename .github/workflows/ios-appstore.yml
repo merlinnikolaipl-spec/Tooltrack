@@ -140,8 +140,7 @@ jobs:
       - name: Pod install
         run: |
           cd ios
-          rm -f Podfile.lock
-          pod install --repo-update
+          pod install
 
       - name: Patch warning flags from all project files
         run: |
