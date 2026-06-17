@@ -100,6 +100,12 @@ jobs:
             use_modular_headers!
 
             flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+            # Pin pod versions to resolve CocoaPods CDN conflicts
+            pod 'AppAuth', '~> 1.7'
+            pod 'GoogleSignIn', '~> 7.0'
+            pod 'GTMSessionFetcher', '~> 3.4'
+
             target 'RunnerTests' do
               inherit! :search_paths
             end
