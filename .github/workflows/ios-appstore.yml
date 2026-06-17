@@ -103,9 +103,9 @@ jobs:
 
             # Pin pod versions to resolve CocoaPods CDN conflicts
             pod 'AppAuth', '~> 1.7'
-            pod 'GoogleSignIn', '~> 6.2'
-            pod 'GTMAppAuth', '~> 1.3'
-            pod 'GTMSessionFetcher', '~> 2.3'
+            pod 'GoogleSignIn', '~> 7.1'
+            pod 'GTMAppAuth', '~> 4.1'
+            pod 'GTMSessionFetcher', '~> 3.4'
 
             target 'RunnerTests' do
               inherit! :search_paths
