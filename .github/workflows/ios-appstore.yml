@@ -155,23 +155,11 @@ jobs:
           done
           echo "=== pbxproj -G occurrences ==="
           grep -n "\-G" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null | head -30 || echo "no -G in pbxproj"
-          echo "=== Ruby xcodeproj fix for BoringSSL-GRPC ==="
-          ruby - <<'RUBYEOF'
-          require "xcodeproj"
-          project = Xcodeproj::Project.open("Pods/Pods.xcodeproj")
-          project.targets.each do |target|
-            next unless target.name == "BoringSSL-GRPC"
-            puts "Found: #{target.name}"
-            target.build_configurations.each do |config|
-              old = config.build_settings["OTHER_CFLAGS"]
-              config.build_settings["OTHER_CFLAGS"] = "-Wno-everything"
-              config.build_settings["OTHER_CPLUSPLUSFLAGS"] = "-Wno-everything"
-              puts "  #{config.name}: #{old.inspect} => fixed"
-            end
-          end
-          project.save
-          puts "Saved"
-          RUBYEOF
+          echo "=== Fixing COMPILER_FLAGS -GCC_WARN_INHIBIT_ALL_WARNINGS in pbxproj ==="
+          sed -i '' 's/ -GCC_WARN_INHIBIT_ALL_WARNINGS//g' Pods/Pods.xcodeproj/project.pbxproj && echo "Fixed COMPILER_FLAGS" || echo "sed failed"
+          echo "=== Verify fix ==="
+          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null || echo "0 occurrences"
+          grep -n "\-GCC_WARN" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null | head -5 || echo "no -GCC_WARN left"
 
       - name: Patch warning flags from all project files
         run: |
