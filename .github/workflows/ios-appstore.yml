@@ -65,12 +65,29 @@ jobs:
 
       - name: Patch pdf_widget_wrapper Flutter 3.3 compatibility
         run: |
-          PDF_WIDGET_FILE=$(find ~/.pub-cache -path "*pdf_widget_wrapper-1.0.1*" -name "widget_wrapper.dart" 2>/dev/null | head -1)
+          PDF_WIDGET_FILE=$(find ~/.pub-cache -path '*pdf_widget_wrapper-1.0.1*' -name 'widget_wrapper.dart' 2>/dev/null | head -1)
           if [ -n "$PDF_WIDGET_FILE" ]; then
             echo "Found: $PDF_WIDGET_FILE"
-            # Delete 'size:' line and its value line using macOS sed N-command
-            sed -i '' '/^[[:space:]]*size:[[:space:]]*$/{N;/\n[[:space:]]*_scrollbarThickness,/d;}' "$PDF_WIDGET_FILE"
-            echo "Patch result: $?"
+            # Write Python script to temp file to avoid quoting issues
+            cat > /tmp/patch_widget.py << 'PYEOF'
+import sys
+f = sys.argv[1]
+with open(f, "r") as fp:
+    lines = fp.readlines()
+out = []
+i = 0
+while i < len(lines):
+    stripped = lines[i].strip().rstrip("\r")
+    if stripped == "size:" and i+1 < len(lines) and "_scrollbarThickness" in lines[i+1]:
+        i += 2  # skip both lines
+    else:
+        out.append(lines[i])
+        i += 1
+with open(f, "w") as fp:
+    fp.writelines(out)
+print("Patched", f)
+PYEOF
+            python3 /tmp/patch_widget.py "$PDF_WIDGET_FILE"
             grep -n "size:" "$PDF_WIDGET_FILE" && echo "WARNING: size: still found" || echo "SUCCESS: size: removed"
           else
             echo "pdf_widget_wrapper not found, skipping"
