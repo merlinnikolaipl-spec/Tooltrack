@@ -40,7 +40,6 @@ dependencies:
 
 dependency_overrides:
   win32: '5.5.3'
-  pdf_widget_wrapper: ^2.0.0
 
 dev_dependencies:
   flutter_test:
