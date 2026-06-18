@@ -151,9 +151,9 @@ class _AuthGate extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.data != null) {
-          return const CompanyProfilePage();
+          return CompanyProfilePage();
         }
-        return const LoginPage();
+        return LoginPage();
       },
     );
   }
