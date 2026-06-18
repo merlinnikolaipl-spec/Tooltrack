@@ -68,12 +68,12 @@ jobs:
           PDF_WIDGET_FILE=$(find ~/.pub-cache -path "*pdf_widget_wrapper-1.0.1*" -name "widget_wrapper.dart" 2>/dev/null | head -1)
           if [ -n "$PDF_WIDGET_FILE" ]; then
             echo "Found: $PDF_WIDGET_FILE"
-            # Remove size: named parameter from Scrollbar (removed in Flutter 3.3+)
-            perl -0777 -i -pe 's/\n(\s+)size:\n\s+_scrollbarThickness,//g' "$PDF_WIDGET_FILE"
-            echo "Patched pdf_widget_wrapper"
-            grep -n "size:" "$PDF_WIDGET_FILE" || echo "No size: found - patch successful"
+            # Delete 'size:' line and its value line using macOS sed N-command
+            sed -i '' '/^[[:space:]]*size:[[:space:]]*$/{N;/\n[[:space:]]*_scrollbarThickness,/d;}' "$PDF_WIDGET_FILE"
+            echo "Patch result: $?"
+            grep -n "size:" "$PDF_WIDGET_FILE" && echo "WARNING: size: still found" || echo "SUCCESS: size: removed"
           else
-            echo "pdf_widget_wrapper not found, skipping patch"
+            echo "pdf_widget_wrapper not found, skipping"
           fi
       - name: Flutter precache iOS
         run: flutter precache --ios
