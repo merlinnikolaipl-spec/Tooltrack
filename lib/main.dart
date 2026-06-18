@@ -158,3 +158,85 @@ class _AuthGate extends StatelessWidget {
     );
   }
 }
+
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _signIn() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() { _error = e.message; });
+    } finally {
+      setState(() { _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('ToolKeeper', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 32),
+              TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),
+              const SizedBox(height: 16),
+              TextField(controller: _passCtrl, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+              if (_error != null) ...[const SizedBox(height: 8), Text(_error!, style: const TextStyle(color: Colors.red))],
+              const SizedBox(height: 24),
+              _loading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(onPressed: _signIn, child: const Text('Sign In')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CompanyProfilePage extends StatefulWidget {
+  const CompanyProfilePage({super.key});
+  @override
+  State<CompanyProfilePage> createState() => _CompanyProfilePageState();
+}
+
+class _CompanyProfilePageState extends State<CompanyProfilePage> {
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ToolKeeper'),
+        actions: [
+          IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
+        ],
+      ),
+      body: Center(
+        child: Text('Welcome, ${user?.email ?? 'User'}'),
+      ),
+    );
+  }
+}
