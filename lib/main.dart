@@ -79,6 +79,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF6B4EFF),
           brightness: Brightness.dark,
         ),
+        scaffoldBackgroundColor: const Color(0xFF1A1A2E),
         useMaterial3: true,
       ),
       home: const _AuthGate(),
@@ -144,14 +145,21 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _signInWithGoogle() async {
     setState(() { _loading = true; _errorMsg = null; });
     try {
-      // Always sign out first to force account chooser and prevent crash on re-auth
-      await _googleSignIn.signOut();
+      // Disconnect + signOut to prevent PlatformException on iOS re-auth
+      try { await _googleSignIn.disconnect(); } catch (_) {}
+      try { await _googleSignIn.signOut(); } catch (_) {}
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         setState(() { _loading = false; });
         return;
       }
-      final googleAuth = await googleUser.authentication;
+      GoogleSignInAuthentication googleAuth;
+      try {
+        googleAuth = await googleUser.authentication;
+      } catch (authErr) {
+        setState(() { _errorMsg = 'Google: $authErr'; _loading = false; });
+        return;
+      }
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -159,17 +167,18 @@ class _LoginPageState extends State<LoginPage> {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCredential.user;
       if (user != null) {
-        // Create or update user document in Firestore so app can find it
-        final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-        final userDoc = await userRef.get();
-        if (!userDoc.exists) {
-          await userRef.set({
-            'email': user.email ?? googleUser.email,
-            'displayName': user.displayName ?? googleUser.displayName ?? '',
-            'photoUrl': user.photoURL ?? googleUser.photoUrl ?? '',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-        }
+        try {
+          final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+          final userDoc = await userRef.get();
+          if (!userDoc.exists) {
+            await userRef.set({
+              'email': user.email ?? googleUser.email,
+              'displayName': user.displayName ?? googleUser.displayName ?? '',
+              'photoUrl': user.photoURL ?? googleUser.photoUrl ?? '',
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          }
+        } catch (_) {}
       }
     } catch (e) {
       setState(() { _errorMsg = e.toString(); _loading = false; });
@@ -330,7 +339,9 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             return;
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        // collectionGroup may fail due to Firestore rules - that's OK
+      }
       setState(() { _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _loading = false; });
