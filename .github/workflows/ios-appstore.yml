@@ -57,12 +57,19 @@ jobs:
 
       - name: Add Google Sign-In URL scheme to Info.plist
         run: |
-          REVERSED_CLIENT_ID=$(plutil -extract REVERSED_CLIENT_ID raw ios/Runner/GoogleService-Info.plist 2>/dev/null || echo "")
-          if [ -n "$REVERSED_CLIENT_ID" ]; then
-            plutil -replace CFBundleURLTypes -json '[{"CFBundleURLSchemes":["'"$REVERSED_CLIENT_ID"'"]}]' ios/Runner/Info.plist 2>/dev/null || true
+          set +e
+          REVERSED=$(/usr/libexec/PlistBuddy -c "Print :REVERSED_CLIENT_ID" ios/Runner/GoogleService-Info.plist 2>/dev/null)
+          set -e
+          if [ -n "$REVERSED" ]; then
+            /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" ios/Runner/Info.plist 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $REVERSED" ios/Runner/Info.plist
+            echo "Added Google Sign-In URL scheme: $REVERSED"
+          else
+            echo "REVERSED_CLIENT_ID not found in GoogleService-Info.plist, skipping"
           fi
-
-
       - name: Create pubspec_overrides.yaml
         run: |
           touch pubspec_overrides.yaml
