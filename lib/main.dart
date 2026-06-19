@@ -131,16 +131,17 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       setState(() { _error = e.message; });
     } finally {
-      setState(() { _loading = false; });
+      if (mounted) setState(() { _loading = false; });
     }
   }
 
   Future<void> _signInWithGoogle() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final googleUser = await GoogleSignIn().signIn();
+      final googleSignIn = GoogleSignIn();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        setState(() { _loading = false; });
+        if (mounted) setState(() { _loading = false; });
         return;
       }
       final googleAuth = await googleUser.authentication;
@@ -150,11 +151,11 @@ class _LoginPageState extends State<LoginPage> {
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
-      setState(() { _error = e.message; });
+      if (mounted) setState(() { _error = e.message; });
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      if (mounted) setState(() { _error = e.toString(); });
     } finally {
-      setState(() { _loading = false; });
+      if (mounted) setState(() { _loading = false; });
     }
   }
 
@@ -168,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       setState(() { _error = e.message; });
     } finally {
-      setState(() { _loading = false; });
+      if (mounted) setState(() { _loading = false; });
     }
   }
 
@@ -279,53 +280,68 @@ class CompanyProfilePage extends StatefulWidget {
 }
 
 class _CompanyProfilePageState extends State<CompanyProfilePage> {
-  int _tab = 0;
   String? _companyId;
   String? _role;
   bool _loading = true;
+  String? _userName;
 
   @override
   void initState() {
     super.initState();
-    _loadUserCompany();
+    _loadUserData();
   }
 
-  Future<void> _loadUserCompany() async {
+  Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) setState(() { _loading = false; });
+      return;
+    }
     try {
-      // Find company where user is a member
-      final companiesSnap = await companiesRef.get();
-      for (final doc in companiesSnap.docs) {
-        final personSnap = await peopleRef(doc.id)
-            .where('uid', isEqualTo: user.uid)
-            .limit(1)
-            .get();
-        if (personSnap.docs.isNotEmpty) {
-          final personData = personSnap.docs.first.data();
-          setState(() {
-            _companyId = doc.id;
-            _role = personData['role'] ?? 'employee';
+      // Primary: read users/{uid} which has companyId and role
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data()!;
+        final cid = data['companyId'] as String?;
+        final role = data['role'] as String?;
+        final name = data['name'] as String?;
+        if (cid != null && cid.isNotEmpty) {
+          if (mounted) setState(() {
+            _companyId = cid;
+            _role = role ?? 'worker';
+            _userName = name ?? user.displayName ?? user.email;
             _loading = false;
           });
           return;
         }
       }
-      // Check if user owns a company
-      final ownedSnap = await companiesRef
-          .where('ownerUid', isEqualTo: user.uid)
-          .limit(1)
-          .get();
-      if (ownedSnap.docs.isNotEmpty) {
-        setState(() {
-          _companyId = ownedSnap.docs.first.id;
-          _role = 'owner';
-          _loading = false;
-        });
-        return;
+
+      // Fallback: search companies/*/people for this uid
+      final companiesSnap = await companiesRef.limit(50).get();
+      for (final compDoc in companiesSnap.docs) {
+        final personSnap = await peopleRef(compDoc.id)
+            .where('uid', isEqualTo: user.uid)
+            .limit(1)
+            .get();
+        if (personSnap.docs.isNotEmpty) {
+          final pd = personSnap.docs.first.data();
+          if (mounted) setState(() {
+            _companyId = compDoc.id;
+            _role = pd['role'] ?? 'worker';
+            _userName = pd['name'] ?? user.displayName ?? user.email;
+            _loading = false;
+          });
+          return;
+        }
       }
-    } catch (_) {}
-    setState(() { _loading = false; });
+    } catch (e) {
+      // ignore errors, show no-company screen
+    }
+    if (mounted) setState(() { _loading = false; });
   }
 
   @override
@@ -366,13 +382,13 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
         ),
         body: TabBarView(
           children: [
-            _ToolsTab(companyId: _companyId!, role: _role ?? 'employee'),
+            _ToolsTab(companyId: _companyId!, role: _role ?? 'worker'),
             IssueTab(
               companyId: _companyId!,
-              role: _role ?? 'employee',
+              role: _role ?? 'worker',
               t: (k) => k,
             ),
-            _PeopleTab(companyId: _companyId!, role: _role ?? 'employee'),
+            _PeopleTab(companyId: _companyId!, role: _role ?? 'worker'),
           ],
         ),
       ),
@@ -380,9 +396,114 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
   }
 }
 
-class _NoCompanyPage extends StatelessWidget {
+// ==================== NO COMPANY PAGE ====================
+
+class _NoCompanyPage extends StatefulWidget {
   final User? user;
   const _NoCompanyPage({this.user});
+  @override
+  State<_NoCompanyPage> createState() => _NoCompanyPageState();
+}
+
+class _NoCompanyPageState extends State<_NoCompanyPage> {
+  final _companyNameCtrl = TextEditingController();
+  final _inviteCodeCtrl = TextEditingController();
+  bool _loading = false;
+  String? _error;
+  String? _success;
+
+  Future<void> _createCompany() async {
+    final user = widget.user;
+    if (user == null) return;
+    final name = _companyNameCtrl.text.trim();
+    if (name.isEmpty) {
+      setState(() { _error = 'Enter company name'; });
+      return;
+    }
+    setState(() { _loading = true; _error = null; });
+    try {
+      final companyRef = await companiesRef.add({
+        'name': name,
+        'ownerUid': user.uid,
+        'plan': 'free',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      final personRef = await peopleRef(companyRef.id).add({
+        'uid': user.uid,
+        'email': user.email,
+        'name': user.displayName ?? user.email,
+        'role': 'owner',
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'companyId': companyRef.id,
+        'role': 'owner',
+        'name': user.displayName ?? user.email,
+        'email': user.email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      setState(() { _success = 'Company created! Reloading...'; _loading = false; });
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => CompanyProfilePage()),
+      );
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  Future<void> _joinWithCode() async {
+    final user = widget.user;
+    if (user == null) return;
+    final code = _inviteCodeCtrl.text.trim();
+    if (code.isEmpty) {
+      setState(() { _error = 'Enter invite code'; });
+      return;
+    }
+    setState(() { _loading = true; _error = null; });
+    try {
+      final codeDoc = await FirebaseFirestore.instance
+          .collection('inviteCodes')
+          .doc(code)
+          .get();
+      if (!codeDoc.exists) {
+        setState(() { _error = 'Invalid invite code'; _loading = false; });
+        return;
+      }
+      final companyId = codeDoc.data()!['companyId'] as String;
+      final expiry = codeDoc.data()!['expiry'];
+      if (expiry != null) {
+        final expiryDate = (expiry as dynamic).toDate() as DateTime;
+        if (DateTime.now().isAfter(expiryDate)) {
+          setState(() { _error = 'Invite code expired'; _loading = false; });
+          return;
+        }
+      }
+      await peopleRef(companyId).add({
+        'uid': user.uid,
+        'email': user.email,
+        'name': user.displayName ?? user.email,
+        'role': 'worker',
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'companyId': companyId,
+        'role': 'worker',
+        'name': user.displayName ?? user.email,
+        'email': user.email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      setState(() { _success = 'Joined company! Reloading...'; _loading = false; });
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => CompanyProfilePage()),
+      );
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -398,24 +519,73 @@ class _NoCompanyPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.business, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text('Welcome, ${user?.email ?? ''}',
-                style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            const Text('No company found. Contact your administrator.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey)),
+            Text('Welcome, ${widget.user?.displayName ?? widget.user?.email ?? ''}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => FirebaseAuth.instance.signOut(),
-              icon: const Icon(Icons.logout),
-              label: const Text('Sign Out'),
+            const Text('Create a new company', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _companyNameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Company name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.business),
+              ),
             ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _createCompany,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Create Company'),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text('Join existing company', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _inviteCodeCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Invite code',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.vpn_key),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _loading ? null : _joinWithCode,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Join with Invite Code'),
+              ),
+            ),
+            if (_loading) ...[
+              const SizedBox(height: 16),
+              const Center(child: CircularProgressIndicator()),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+            ],
+            if (_success != null) ...[
+              const SizedBox(height: 16),
+              Text(_success!, style: const TextStyle(color: Colors.green)),
+            ],
           ],
         ),
       ),
@@ -476,13 +646,13 @@ class _ToolsTabState extends State<_ToolsTab> {
               if (_search.isNotEmpty) {
                 docs = docs.where((d) {
                   final name = (d.data()['name'] ?? '').toString().toLowerCase();
-                  final inv = (d.data()['inventoryNumber'] ?? '').toString().toLowerCase();
+                  final inv = (d.data()['inventoryNo'] ?? d.data()['inventoryNumber'] ?? '').toString().toLowerCase();
                   return name.contains(_search) || inv.contains(_search);
                 }).toList();
               }
               if (docs.isEmpty) {
                 return const Center(
-                  child: Text('No tools found', style: TextStyle(color: Colors.grey)),
+                  child: Text('No tools yet', style: TextStyle(color: Colors.grey)),
                 );
               }
               return ListView.builder(
@@ -490,12 +660,13 @@ class _ToolsTabState extends State<_ToolsTab> {
                 itemBuilder: (_, i) {
                   final data = docs[i].data();
                   final name = data['name'] ?? 'Unknown';
-                  final inv = data['inventoryNumber'] ?? '';
+                  final inv = data['inventoryNo'] ?? data['inventoryNumber'] ?? '';
                   final status = data['status'] ?? 'available';
-                  final assignedTo = data['assignedTo'] ?? '';
+                  final assignedTo = data['assignedTo'] ?? data['personName'] ?? '';
                   Color statusColor = Colors.green;
                   if (status == 'issued') statusColor = Colors.orange;
                   if (status == 'repair') statusColor = Colors.red;
+                  if (status == 'lost') statusColor = Colors.red.shade900;
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: ListTile(
@@ -595,7 +766,7 @@ class _ToolsTabState extends State<_ToolsTab> {
               if (nameCtrl.text.trim().isEmpty) return;
               await toolsRef(widget.companyId).add({
                 'name': nameCtrl.text.trim(),
-                'inventoryNumber': invCtrl.text.trim(),
+                'inventoryNo': invCtrl.text.trim(),
                 'status': 'available',
                 'createdAt': FieldValue.serverTimestamp(),
               });
@@ -627,7 +798,7 @@ class _PeopleTab extends StatelessWidget {
         final docs = snap.data!.docs;
         if (docs.isEmpty) {
           return const Center(
-            child: Text('No people found', style: TextStyle(color: Colors.grey)),
+            child: Text('No people yet', style: TextStyle(color: Colors.grey)),
           );
         }
         return ListView.builder(
@@ -635,7 +806,7 @@ class _PeopleTab extends StatelessWidget {
           itemBuilder: (_, i) {
             final data = docs[i].data();
             final name = data['name'] ?? data['email'] ?? 'Unknown';
-            final r = data['role'] ?? 'employee';
+            final r = data['role'] ?? 'worker';
             Color roleColor = Colors.blue;
             if (r == 'owner') roleColor = Colors.purple;
             if (r == 'admin') roleColor = Colors.orange;
