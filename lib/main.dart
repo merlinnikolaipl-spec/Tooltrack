@@ -16,7 +16,7 @@ import 'firebase_options.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:excel/excel.dart';
+// import 'package:excel/excel.dart'; // removed - causes Border conflict
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:url_launcher/url_launcher.dart';
@@ -355,7 +355,7 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
         body: TabBarView(
           children: [
             _ToolsTab(companyId: _companyId!, isOwnerOrAdmin: isOwnerOrAdmin),
-            IssueTab(companyId: _companyId!, role: _role ?? 'worker'),
+            _IssueReturnTab(companyId: _companyId!, role: _role ?? 'worker'),
             _PeopleTab(companyId: _companyId!, isOwnerOrAdmin: isOwnerOrAdmin),
           ],
         ),
@@ -748,6 +748,207 @@ class _ToolsTabState extends State<_ToolsTab> {
             child: const Text('Save'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ──────────────────── ISSUE/RETURN TAB ────────────────────────────────────
+
+class _IssueReturnTab extends StatefulWidget {
+  final String companyId;
+  final String role;
+  const _IssueReturnTab({required this.companyId, required this.role});
+  @override
+  State<_IssueReturnTab> createState() => _IssueReturnTabState();
+}
+
+class _IssueReturnTabState extends State<_IssueReturnTab> {
+  final bool get _canIssue => widget.role == 'owner' || widget.role == 'admin' || widget.role == 'foreman';
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('companies')
+          .doc(widget.companyId)
+          .collection('moves')
+          .orderBy('issuedAt', descending: true)
+          .limit(50)
+          .snapshots(),
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.swap_horiz, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text('No issues/returns yet', style: TextStyle(color: Colors.grey)),
+                if (_canIssue) ...[
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _showIssueDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Issue Tool'),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: docs.length,
+                itemBuilder: (ctx, i) {
+                  final d = docs[i].data() as Map<String, dynamic>;
+                  final isReturned = d['returnedAt'] != null;
+                  final toolId = d['toolId'] as String? ?? '';
+                  final personId = d['personId'] as String? ?? '';
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isReturned ? Colors.green.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                      child: Icon(
+                        isReturned ? Icons.check_circle : Icons.pending,
+                        color: isReturned ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                    title: Text(d['toolName'] as String? ?? toolId),
+                    subtitle: Text(d['personName'] as String? ?? personId),
+                    trailing: isReturned
+                        ? const Text('Returned', style: TextStyle(color: Colors.green, fontSize: 12))
+                        : _canIssue
+                            ? TextButton(
+                                onPressed: () async {
+                                  await FirebaseFirestore.instance
+                                      .collection('companies')
+                                      .doc(widget.companyId)
+                                      .collection('moves')
+                                      .doc(docs[i].id)
+                                      .update({'returnedAt': FieldValue.serverTimestamp()});
+                                  // Update tool status
+                                  if (toolId.isNotEmpty) {
+                                    await FirebaseFirestore.instance
+                                        .collection('companies')
+                                        .doc(widget.companyId)
+                                        .collection('tools')
+                                        .doc(toolId)
+                                        .update({'status': 'available'});
+                                  }
+                                },
+                                child: const Text('Return'),
+                              )
+                            : const Text('Issued', style: TextStyle(color: Colors.orange, fontSize: 12)),
+                  );
+                },
+              ),
+            ),
+            if (_canIssue)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showIssueDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Issue Tool'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showIssueDialog(BuildContext context) async {
+    // Load tools and people for selection
+    final toolsSnap = await FirebaseFirestore.instance
+        .collection('companies')
+        .doc(widget.companyId)
+        .collection('tools')
+        .where('status', isEqualTo: 'available')
+        .get();
+    final peopleSnap = await FirebaseFirestore.instance
+        .collection('companies')
+        .doc(widget.companyId)
+        .collection('people')
+        .where('status', isEqualTo: 'active')
+        .get();
+    if (!context.mounted) return;
+    String? selectedToolId;
+    String? selectedPersonId;
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          title: const Text('Issue Tool'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Tool'),
+                items: toolsSnap.docs.map((d) => DropdownMenuItem(
+                  value: d.id,
+                  child: Text(d['name'] as String? ?? d.id),
+                )).toList(),
+                onChanged: (v) => setDlgState(() => selectedToolId = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Person'),
+                items: peopleSnap.docs.map((d) => DropdownMenuItem(
+                  value: d.id,
+                  child: Text(d['name'] as String? ?? d.id),
+                )).toList(),
+                onChanged: (v) => setDlgState(() => selectedPersonId = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: selectedToolId != null && selectedPersonId != null
+                  ? () async {
+                      final toolDoc = toolsSnap.docs.firstWhere((d) => d.id == selectedToolId!);
+                      final personDoc = peopleSnap.docs.firstWhere((d) => d.id == selectedPersonId!);
+                      await FirebaseFirestore.instance
+                          .collection('companies')
+                          .doc(widget.companyId)
+                          .collection('moves')
+                          .add({
+                        'toolId': selectedToolId,
+                        'toolName': toolDoc['name'],
+                        'personId': selectedPersonId,
+                        'personName': personDoc['name'],
+                        'issuedAt': FieldValue.serverTimestamp(),
+                        'returnedAt': null,
+                      });
+                      await FirebaseFirestore.instance
+                          .collection('companies')
+                          .doc(widget.companyId)
+                          .collection('tools')
+                          .doc(selectedToolId)
+                          .update({'status': 'issued'});
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    }
+                  : null,
+              child: const Text('Issue'),
+            ),
+          ],
+        ),
       ),
     );
   }
