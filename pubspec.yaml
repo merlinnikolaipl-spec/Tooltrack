@@ -1,7 +1,7 @@
 name: tooltrack
 description: ToolTrack app for construction crews.
 publish_to: 'none'
-version: 1.1.0+111
+version: 1.1.0+112
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
