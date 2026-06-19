@@ -764,7 +764,7 @@ class _IssueReturnTab extends StatefulWidget {
 }
 
 class _IssueReturnTabState extends State<_IssueReturnTab> {
-  final bool get _canIssue => widget.role == 'owner' || widget.role == 'admin' || widget.role == 'foreman';
+  bool get _canIssue => widget.role == 'owner' || widget.role == 'admin' || widget.role == 'foreman';
 
   @override
   Widget build(BuildContext context) {
