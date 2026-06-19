@@ -57,10 +57,8 @@ jobs:
 
       - name: Add Google Sign-In URL scheme to Info.plist
         run: |
-          set +e
-          REVERSED=$(/usr/libexec/PlistBuddy -c "Print :REVERSED_CLIENT_ID" ios/Runner/GoogleService-Info.plist 2>/dev/null)
-          set -e
-          if [ -n "$REVERSED" ]; then
+          REVERSED=$(grep -A1 'REVERSED_CLIENT_ID' ios/Runner/GoogleService-Info.plist | grep '<string>' | sed 's/.*<string>\(.*\)<\/string>.*/\1/' | head -1 || echo "")
+          if [ -n "$REVERSED" ] && echo "$REVERSED" | grep -qE '^[a-zA-Z]'; then
             /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" ios/Runner/Info.plist 2>/dev/null || true
             /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" ios/Runner/Info.plist
             /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" ios/Runner/Info.plist
@@ -68,7 +66,7 @@ jobs:
             /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $REVERSED" ios/Runner/Info.plist
             echo "Added Google Sign-In URL scheme: $REVERSED"
           else
-            echo "REVERSED_CLIENT_ID not found in GoogleService-Info.plist, skipping"
+            echo "REVERSED_CLIENT_ID not found or invalid, skipping"
           fi
       - name: Create pubspec_overrides.yaml
         run: |
