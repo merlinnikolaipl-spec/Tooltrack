@@ -59,15 +59,9 @@ Future<void> _initLocalNotifications() async {
   } catch (_) {}
 }
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await _initLocalNotifications();
   runApp(const MyApp());
 }
@@ -98,16 +92,18 @@ class _AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        if (snapshot.data != null) {
-          return CompanyProfilePage();
+        if (snapshot.hasData && snapshot.data != null) {
+          return const CompanyProfilePage();
         }
-        return LoginPage();
+        return const LoginPage();
       },
     );
   }
 }
 
-// ==================== LOGIN PAGE ====================
+// ─────────────────────────────── LOGIN PAGE ───────────────────────────────
+
+final _googleSignIn = GoogleSignIn(scopes: ['email']);
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -119,29 +115,36 @@ class _LoginPageState extends State<LoginPage> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
-  String? _error;
+  bool _isRegister = false;
+  String? _errorMsg;
 
   Future<void> _signIn() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() { _loading = true; _errorMsg = null; });
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      );
+      if (_isRegister) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailCtrl.text.trim(),
+          password: _passCtrl.text.trim(),
+        );
+      } else {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailCtrl.text.trim(),
+          password: _passCtrl.text.trim(),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      setState(() { _error = e.message; });
-    } finally {
-      if (mounted) setState(() { _loading = false; });
+      setState(() { _errorMsg = e.message; _loading = false; });
     }
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() { _loading = true; _errorMsg = null; });
     try {
-      final googleSignIn = GoogleSignIn();
-      final googleUser = await googleSignIn.signIn();
+      // Always sign out first to force account chooser and prevent crash on re-auth
+      await _googleSignIn.signOut();
+      final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        if (mounted) setState(() { _loading = false; });
+        setState(() { _loading = false; });
         return;
       }
       final googleAuth = await googleUser.authentication;
@@ -149,73 +152,62 @@ class _LoginPageState extends State<LoginPage> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      if (mounted) setState(() { _error = e.message; });
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = userCredential.user;
+      if (user != null) {
+        // Create or update user document in Firestore so app can find it
+        final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+        final userDoc = await userRef.get();
+        if (!userDoc.exists) {
+          await userRef.set({
+            'email': user.email ?? googleUser.email,
+            'displayName': user.displayName ?? googleUser.displayName ?? '',
+            'photoUrl': user.photoURL ?? googleUser.photoUrl ?? '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); });
-    } finally {
-      if (mounted) setState(() { _loading = false; });
-    }
-  }
-
-  Future<void> _register() async {
-    setState(() { _loading = true; _error = null; });
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passCtrl.text,
-      );
-    } on FirebaseAuthException catch (e) {
-      setState(() { _error = e.message; });
-    } finally {
-      if (mounted) setState(() { _loading = false; });
+      setState(() { _errorMsg = e.toString(); _loading = false; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.construction, size: 72, color: Colors.blue),
-                const SizedBox(height: 16),
-                const Text('ToolKeeper',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 32),
-                TextField(
-                  controller: _emailCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _passCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  obscureText: true,
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
-                ],
-                const SizedBox(height: 16),
-                if (_loading)
-                  const CircularProgressIndicator()
-                else ...[
-                  SizedBox(
+      appBar: AppBar(title: const Text('ToolKeeper'), centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _emailCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+              obscureText: true,
+            ),
+            if (_errorMsg != null) ...[
+              const SizedBox(height: 8),
+              Text(_errorMsg!, style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: 16),
+            _loading
+                ? const CircularProgressIndicator()
+                : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _signIn,
@@ -223,55 +215,39 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
-                      child: const Text('Sign In', style: TextStyle(fontSize: 16)),
+                      child: Text(_isRegister ? 'Create Account' : 'Sign In'),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: _register,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text('Create Account', style: TextStyle(fontSize: 16)),
-                    ),
+            const SizedBox(height: 12),
+            if (!_loading)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _signInWithGoogle,
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign in with Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  const SizedBox(height: 16),
-                  const Row(children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('OR'),
-                    ),
-                    Expanded(child: Divider()),
-                  ]),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _signInWithGoogle,
-                      icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.red),
-                      label: const Text('Sign in with Google',
-                          style: TextStyle(fontSize: 16)),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            if (!_loading)
+              TextButton(
+                onPressed: () => setState(() => _isRegister = !_isRegister),
+                child: Text(_isRegister ? 'Already have account? Sign In' : 'No account? Create one'),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ==================== COMPANY PROFILE PAGE ====================
+// ──────────────────────── COMPANY PROFILE PAGE ────────────────────────────
 
 class CompanyProfilePage extends StatefulWidget {
   const CompanyProfilePage({super.key});
@@ -281,9 +257,9 @@ class CompanyProfilePage extends StatefulWidget {
 
 class _CompanyProfilePageState extends State<CompanyProfilePage> {
   String? _companyId;
+  String? _companyName;
   String? _role;
   bool _loading = true;
-  String? _userName;
 
   @override
   void initState() {
@@ -293,88 +269,84 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
 
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      if (mounted) setState(() { _loading = false; });
-      return;
-    }
+    if (user == null) return;
     try {
-      // Primary: read users/{uid} which has companyId and role
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
-
+      if (!mounted) return;
       if (userDoc.exists) {
         final data = userDoc.data()!;
         final cid = data['companyId'] as String?;
-        final role = data['role'] as String?;
-        final name = data['name'] as String?;
         if (cid != null && cid.isNotEmpty) {
-          if (mounted) setState(() {
+          final compDoc = await FirebaseFirestore.instance
+              .collection('companies')
+              .doc(cid)
+              .get();
+          if (!mounted) return;
+          setState(() {
             _companyId = cid;
-            _role = role ?? 'worker';
-            _userName = name ?? user.displayName ?? user.email;
+            _companyName = compDoc.data()?['name'] as String? ?? 'Company';
+            _role = data['role'] as String? ?? 'worker';
             _loading = false;
           });
           return;
         }
+      } else {
+        // Create user document if missing (e.g. new Google Sign-In user)
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': user.email ?? '',
+          'displayName': user.displayName ?? '',
+          'photoUrl': user.photoURL ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
-
-      // Fallback: search companies/*/people for this uid
-      final companiesSnap = await companiesRef.limit(50).get();
-      for (final compDoc in companiesSnap.docs) {
-        final personSnap = await peopleRef(compDoc.id)
-            .where('uid', isEqualTo: user.uid)
-            .limit(1)
-            .get();
-        if (personSnap.docs.isNotEmpty) {
-          final pd = personSnap.docs.first.data();
-          if (mounted) setState(() {
-            _companyId = compDoc.id;
-            _role = pd['role'] ?? 'worker';
-            _userName = pd['name'] ?? user.displayName ?? user.email;
-            _loading = false;
-          });
-          return;
-        }
-      }
+      setState(() { _loading = false; });
     } catch (e) {
-      // ignore errors, show no-company screen
+      if (mounted) setState(() { _loading = false; });
     }
-    if (mounted) setState(() { _loading = false; });
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
     if (_companyId == null) {
-      return _NoCompanyPage(user: user);
+      return _NoCompanyPage(
+        user: user!,
+        onCompanyJoined: () => setState(() {
+          _loading = true;
+          _loadUserData();
+        }),
+      );
     }
-
+    final isOwnerOrAdmin = _role == 'owner' || _role == 'admin';
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('ToolKeeper'),
+          title: Text(_companyName ?? 'ToolKeeper'),
+          centerTitle: true,
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           actions: [
             IconButton(
               icon: const Icon(Icons.logout),
-              onPressed: () => FirebaseAuth.instance.signOut(),
-              tooltip: 'Sign Out',
+              onPressed: () async {
+                await _googleSignIn.signOut().catchError((_) {});
+                await FirebaseAuth.instance.signOut();
+              },
             ),
           ],
           bottom: const TabBar(
             labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             tabs: [
-              Tab(icon: Icon(Icons.construction), text: 'Tools'),
+              Tab(icon: Icon(Icons.build), text: 'Tools'),
               Tab(icon: Icon(Icons.swap_horiz), text: 'Issue/Return'),
               Tab(icon: Icon(Icons.people), text: 'People'),
             ],
@@ -382,13 +354,9 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
         ),
         body: TabBarView(
           children: [
-            _ToolsTab(companyId: _companyId!, role: _role ?? 'worker'),
-            IssueTab(
-              companyId: _companyId!,
-              role: _role ?? 'worker',
-              t: (k) => k,
-            ),
-            _PeopleTab(companyId: _companyId!, role: _role ?? 'worker'),
+            _ToolsTab(companyId: _companyId!, isOwnerOrAdmin: isOwnerOrAdmin),
+            IssueTab(companyId: _companyId!, role: _role ?? 'worker'),
+            _PeopleTab(companyId: _companyId!, isOwnerOrAdmin: isOwnerOrAdmin),
           ],
         ),
       ),
@@ -396,11 +364,12 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
   }
 }
 
-// ==================== NO COMPANY PAGE ====================
+// ────────────────────── NO COMPANY PAGE ──────────────────────────────────
 
 class _NoCompanyPage extends StatefulWidget {
-  final User? user;
-  const _NoCompanyPage({this.user});
+  final User user;
+  final VoidCallback onCompanyJoined;
+  const _NoCompanyPage({required this.user, required this.onCompanyJoined});
   @override
   State<_NoCompanyPage> createState() => _NoCompanyPageState();
 }
@@ -408,100 +377,92 @@ class _NoCompanyPage extends StatefulWidget {
 class _NoCompanyPageState extends State<_NoCompanyPage> {
   final _companyNameCtrl = TextEditingController();
   final _inviteCodeCtrl = TextEditingController();
-  bool _loading = false;
-  String? _error;
-  String? _success;
+  bool _creating = false;
+  bool _joining = false;
+  String? _errorMsg;
+
+  String get _displayName {
+    final user = widget.user;
+    if (user.displayName != null && user.displayName!.isNotEmpty) return user.displayName!;
+    if (user.email != null) return user.email!;
+    return 'User';
+  }
 
   Future<void> _createCompany() async {
-    final user = widget.user;
-    if (user == null) return;
     final name = _companyNameCtrl.text.trim();
-    if (name.isEmpty) {
-      setState(() { _error = 'Enter company name'; });
-      return;
-    }
-    setState(() { _loading = true; _error = null; });
+    if (name.isEmpty) return;
+    setState(() { _creating = true; _errorMsg = null; });
     try {
-      final companyRef = await companiesRef.add({
+      final compRef = FirebaseFirestore.instance.collection('companies').doc();
+      await compRef.set({
         'name': name,
-        'ownerUid': user.uid,
+        'ownerId': widget.user.uid,
         'plan': 'free',
         'createdAt': FieldValue.serverTimestamp(),
       });
-      final personRef = await peopleRef(companyRef.id).add({
-        'uid': user.uid,
-        'email': user.email,
-        'name': user.displayName ?? user.email,
+      // Add owner to people subcollection
+      await compRef.collection('people').add({
+        'name': _displayName,
+        'email': widget.user.email ?? '',
+        'uid': widget.user.uid,
         'role': 'owner',
         'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
+        'joinedAt': FieldValue.serverTimestamp(),
       });
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'companyId': companyRef.id,
+      // Update user document
+      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set({
+        'companyId': compRef.id,
         'role': 'owner',
-        'name': user.displayName ?? user.email,
-        'email': user.email,
-        'updatedAt': FieldValue.serverTimestamp(),
+        'email': widget.user.email ?? '',
+        'displayName': _displayName,
       }, SetOptions(merge: true));
-      setState(() { _success = 'Company created! Reloading...'; _loading = false; });
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => CompanyProfilePage()),
-      );
+      widget.onCompanyJoined();
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+      setState(() { _errorMsg = e.toString(); _creating = false; });
     }
   }
 
-  Future<void> _joinWithCode() async {
-    final user = widget.user;
-    if (user == null) return;
+  Future<void> _joinCompany() async {
     final code = _inviteCodeCtrl.text.trim();
-    if (code.isEmpty) {
-      setState(() { _error = 'Enter invite code'; });
-      return;
-    }
-    setState(() { _loading = true; _error = null; });
+    if (code.isEmpty) return;
+    setState(() { _joining = true; _errorMsg = null; });
     try {
-      final codeDoc = await FirebaseFirestore.instance
-          .collection('inviteCodes')
-          .doc(code)
+      // Search for invite code across all companies
+      final codesQuery = await FirebaseFirestore.instance
+          .collectionGroup('inviteCodes')
+          .where(FieldPath.documentId, isEqualTo: code)
           .get();
-      if (!codeDoc.exists) {
-        setState(() { _error = 'Invalid invite code'; _loading = false; });
+      if (codesQuery.docs.isEmpty) {
+        setState(() { _errorMsg = 'Invalid invite code.'; _joining = false; });
         return;
       }
-      final companyId = codeDoc.data()!['companyId'] as String;
-      final expiry = codeDoc.data()!['expiry'];
-      if (expiry != null) {
-        final expiryDate = (expiry as dynamic).toDate() as DateTime;
-        if (DateTime.now().isAfter(expiryDate)) {
-          setState(() { _error = 'Invite code expired'; _loading = false; });
-          return;
-        }
+      final codeDoc = codesQuery.docs.first;
+      final expiry = (codeDoc.data()['expiry'] as Timestamp?)?.toDate();
+      if (expiry != null && expiry.isBefore(DateTime.now())) {
+        setState(() { _errorMsg = 'Invite code expired.'; _joining = false; });
+        return;
       }
-      await peopleRef(companyId).add({
-        'uid': user.uid,
-        'email': user.email,
-        'name': user.displayName ?? user.email,
+      final companyId = codeDoc.data()['companyId'] as String? ?? codeDoc.reference.parent.parent!.id;
+      final compRef = FirebaseFirestore.instance.collection('companies').doc(companyId);
+      // Add user to people
+      await compRef.collection('people').add({
+        'name': _displayName,
+        'email': widget.user.email ?? '',
+        'uid': widget.user.uid,
         'role': 'worker',
         'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
+        'joinedAt': FieldValue.serverTimestamp(),
       });
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+      // Update user document
+      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).set({
         'companyId': companyId,
         'role': 'worker',
-        'name': user.displayName ?? user.email,
-        'email': user.email,
-        'updatedAt': FieldValue.serverTimestamp(),
+        'email': widget.user.email ?? '',
+        'displayName': _displayName,
       }, SetOptions(merge: true));
-      setState(() { _success = 'Joined company! Reloading...'; _loading = false; });
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => CompanyProfilePage()),
-      );
+      widget.onCompanyJoined();
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+      setState(() { _errorMsg = e.toString(); _joining = false; });
     }
   }
 
@@ -510,81 +471,80 @@ class _NoCompanyPageState extends State<_NoCompanyPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('ToolKeeper'),
+        centerTitle: true,
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => FirebaseAuth.instance.signOut(),
+            onPressed: () async {
+              await _googleSignIn.signOut().catchError((_) {});
+              await FirebaseAuth.instance.signOut();
+            },
           ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Welcome, ${widget.user?.displayName ?? widget.user?.email ?? ''}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Text(
+              'Welcome, $_displayName',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 24),
-            const Text('Create a new company', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const Text('Create a new company', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
             TextField(
               controller: _companyNameCtrl,
               decoration: const InputDecoration(
-                labelText: 'Company name',
+                hintText: 'Company name',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.business),
               ),
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _createCompany,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Create Company'),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            _creating
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: _createCompany,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: const Text('Create Company'),
+                  ),
+            const SizedBox(height: 32),
             const Divider(),
-            const SizedBox(height: 16),
-            const Text('Join existing company', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            const Text('Join existing company', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
             TextField(
               controller: _inviteCodeCtrl,
               decoration: const InputDecoration(
-                labelText: 'Invite code',
+                hintText: 'Invite code',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.vpn_key),
               ),
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: _loading ? null : _joinWithCode,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Join with Invite Code'),
-              ),
-            ),
-            if (_loading) ...[
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator()),
-            ],
-            if (_error != null) ...[
-              const SizedBox(height: 16),
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            ],
-            if (_success != null) ...[
-              const SizedBox(height: 16),
-              Text(_success!, style: const TextStyle(color: Colors.green)),
+            const SizedBox(height: 12),
+            _joining
+                ? const Center(child: CircularProgressIndicator())
+                : OutlinedButton(
+                    onPressed: _joinCompany,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: const Text('Join with Invite Code'),
+                  ),
+            if (_errorMsg != null) ...[
+              const SizedBox(height: 12),
+              Text(_errorMsg!, style: const TextStyle(color: Colors.red)),
             ],
           ],
         ),
@@ -593,134 +553,111 @@ class _NoCompanyPageState extends State<_NoCompanyPage> {
   }
 }
 
-// ==================== TOOLS TAB ====================
+// ──────────────────────── TOOLS TAB ──────────────────────────────────────
 
 class _ToolsTab extends StatefulWidget {
   final String companyId;
-  final String role;
-  const _ToolsTab({required this.companyId, required this.role});
+  final bool isOwnerOrAdmin;
+  const _ToolsTab({required this.companyId, required this.isOwnerOrAdmin});
   @override
   State<_ToolsTab> createState() => _ToolsTabState();
 }
 
 class _ToolsTabState extends State<_ToolsTab> {
-  final _searchCtrl = TextEditingController();
   String _search = '';
-
-  bool get _canEdit =>
-      widget.role == 'owner' || widget.role == 'admin';
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           child: TextField(
-            controller: _searchCtrl,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Search tools...',
-              prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(),
-              suffixIcon: _search.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchCtrl.clear();
-                        setState(() => _search = '');
-                      },
-                    )
-                  : null,
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(vertical: 8),
             ),
             onChanged: (v) => setState(() => _search = v.toLowerCase()),
           ),
         ),
         Expanded(
-          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: toolsRef(widget.companyId).snapshots(),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('companies')
+                .doc(widget.companyId)
+                .collection('tools')
+                .orderBy('name')
+                .snapshots(),
             builder: (ctx, snap) {
-              if (!snap.hasData) {
+              if (snap.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              var docs = snap.data!.docs;
-              if (_search.isNotEmpty) {
-                docs = docs.where((d) {
-                  final name = (d.data()['name'] ?? '').toString().toLowerCase();
-                  final inv = (d.data()['inventoryNo'] ?? d.data()['inventoryNumber'] ?? '').toString().toLowerCase();
-                  return name.contains(_search) || inv.contains(_search);
-                }).toList();
-              }
+              final docs = (snap.data?.docs ?? []).where((d) {
+                final name = (d['name'] as String? ?? '').toLowerCase();
+                final inv = (d['inventoryNo'] as String? ?? '').toLowerCase();
+                return name.contains(_search) || inv.contains(_search);
+              }).toList();
               if (docs.isEmpty) {
-                return const Center(
-                  child: Text('No tools yet', style: TextStyle(color: Colors.grey)),
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text('No tools yet', style: TextStyle(color: Colors.grey)),
+                      if (widget.isOwnerOrAdmin) ...[
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => _showAddTool(context),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Tool'),
+                        ),
+                      ],
+                    ],
+                  ),
                 );
               }
               return ListView.builder(
                 itemCount: docs.length,
-                itemBuilder: (_, i) {
-                  final data = docs[i].data();
-                  final name = data['name'] ?? 'Unknown';
-                  final inv = data['inventoryNo'] ?? data['inventoryNumber'] ?? '';
-                  final status = data['status'] ?? 'available';
-                  final assignedTo = data['assignedTo'] ?? data['personName'] ?? '';
-                  Color statusColor = Colors.green;
-                  if (status == 'issued') statusColor = Colors.orange;
-                  if (status == 'repair') statusColor = Colors.red;
-                  if (status == 'lost') statusColor = Colors.red.shade900;
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity(0.2),
-                        child: Icon(Icons.construction, color: statusColor),
-                      ),
-                      title: Text(name,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (inv.isNotEmpty) Text('# $inv'),
-                          Row(children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(status,
-                                  style: TextStyle(
-                                      color: statusColor, fontSize: 12)),
-                            ),
-                            if (assignedTo.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Text(assignedTo,
-                                    style: const TextStyle(fontSize: 12)),
-                              ),
-                          ]),
-                        ],
-                      ),
-                      isThreeLine: true,
+                itemBuilder: (ctx, i) {
+                  final d = docs[i].data() as Map<String, dynamic>;
+                  final status = d['status'] as String? ?? 'available';
+                  final statusColor = status == 'available' ? Colors.green : Colors.orange;
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: statusColor.withOpacity(0.2),
+                      child: Icon(Icons.build, color: statusColor),
                     ),
+                    title: Text(d['name'] as String? ?? 'Tool'),
+                    subtitle: Text('No: ${d['inventoryNo'] ?? '-'} · ${status}'),
+                    trailing: widget.isOwnerOrAdmin
+                        ? IconButton(
+                            icon: const Icon(Icons.edit, size: 18),
+                            onPressed: () => _showEditTool(context, docs[i].id, d),
+                          )
+                        : null,
                   );
                 },
               );
             },
           ),
         ),
-        if (_canEdit)
+        if (widget.isOwnerOrAdmin)
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _showAddToolDialog(context),
+                onPressed: () => _showAddTool(context),
                 icon: const Icon(Icons.add),
                 label: const Text('Add Tool'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -729,7 +666,7 @@ class _ToolsTabState extends State<_ToolsTab> {
     );
   }
 
-  void _showAddToolDialog(BuildContext context) {
+  void _showAddTool(BuildContext context) {
     final nameCtrl = TextEditingController();
     final invCtrl = TextEditingController();
     showDialog(
@@ -739,32 +676,20 @@ class _ToolsTabState extends State<_ToolsTab> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Tool name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: invCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Inventory number',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Tool name')),
+            TextField(controller: invCtrl, decoration: const InputDecoration(labelText: 'Inventory No')),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              if (nameCtrl.text.trim().isEmpty) return;
-              await toolsRef(widget.companyId).add({
+              if (nameCtrl.text.isEmpty) return;
+              await FirebaseFirestore.instance
+                  .collection('companies')
+                  .doc(widget.companyId)
+                  .collection('tools')
+                  .add({
                 'name': nameCtrl.text.trim(),
                 'inventoryNo': invCtrl.text.trim(),
                 'status': 'available',
@@ -778,56 +703,124 @@ class _ToolsTabState extends State<_ToolsTab> {
       ),
     );
   }
+
+  void _showEditTool(BuildContext context, String toolId, Map<String, dynamic> data) {
+    final nameCtrl = TextEditingController(text: data['name'] as String? ?? '');
+    final invCtrl = TextEditingController(text: data['inventoryNo'] as String? ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Tool'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Tool name')),
+            TextField(controller: invCtrl, decoration: const InputDecoration(labelText: 'Inventory No')),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('companies')
+                  .doc(widget.companyId)
+                  .collection('tools')
+                  .doc(toolId)
+                  .delete();
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('companies')
+                  .doc(widget.companyId)
+                  .collection('tools')
+                  .doc(toolId)
+                  .update({
+                'name': nameCtrl.text.trim(),
+                'inventoryNo': invCtrl.text.trim(),
+              });
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ==================== PEOPLE TAB ====================
+// ──────────────────────── PEOPLE TAB ──────────────────────────────────────
 
-class _PeopleTab extends StatelessWidget {
+class _PeopleTab extends StatefulWidget {
   final String companyId;
-  final String role;
-  const _PeopleTab({required this.companyId, required this.role});
+  final bool isOwnerOrAdmin;
+  const _PeopleTab({required this.companyId, required this.isOwnerOrAdmin});
+  @override
+  State<_PeopleTab> createState() => _PeopleTabState();
+}
 
+class _PeopleTabState extends State<_PeopleTab> {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: peopleRef(companyId).snapshots(),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('companies')
+          .doc(widget.companyId)
+          .collection('people')
+          .where('status', isEqualTo: 'active')
+          .orderBy('name')
+          .snapshots(),
       builder: (ctx, snap) {
-        if (!snap.hasData) {
+        if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        final docs = snap.data!.docs;
+        final docs = snap.data?.docs ?? [];
         if (docs.isEmpty) {
           return const Center(
-            child: Text('No people yet', style: TextStyle(color: Colors.grey)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text('No people yet', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
           );
         }
         return ListView.builder(
           itemCount: docs.length,
-          itemBuilder: (_, i) {
-            final data = docs[i].data();
-            final name = data['name'] ?? data['email'] ?? 'Unknown';
-            final r = data['role'] ?? 'worker';
-            Color roleColor = Colors.blue;
-            if (r == 'owner') roleColor = Colors.purple;
-            if (r == 'admin') roleColor = Colors.orange;
-            if (r == 'foreman') roleColor = Colors.teal;
+          itemBuilder: (ctx, i) {
+            final d = docs[i].data() as Map<String, dynamic>;
+            final role = d['role'] as String? ?? 'worker';
+            final roleColor = role == 'owner'
+                ? Colors.purple
+                : role == 'admin'
+                    ? Colors.blue
+                    : role == 'foreman'
+                        ? Colors.orange
+                        : Colors.grey;
             return ListTile(
               leading: CircleAvatar(
-                backgroundColor: roleColor.withOpacity(0.15),
+                backgroundColor: roleColor.withOpacity(0.2),
                 child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                  (d['name'] as String? ?? '?').substring(0, 1).toUpperCase(),
                   style: TextStyle(color: roleColor, fontWeight: FontWeight.bold),
                 ),
               ),
-              title: Text(name),
-              subtitle: Text(r),
+              title: Text(d['name'] as String? ?? 'Person'),
+              subtitle: Text(d['email'] as String? ?? ''),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: roleColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: roleColor.withOpacity(0.3)),
                 ),
-                child: Text(r, style: TextStyle(color: roleColor, fontSize: 12)),
+                child: Text(role, style: TextStyle(color: roleColor, fontSize: 12)),
               ),
             );
           },
