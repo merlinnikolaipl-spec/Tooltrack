@@ -74,7 +74,11 @@ class MyApp extends StatelessWidget {
       title: 'ToolKeeper',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6B4EFF),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const _AuthGate(),
@@ -175,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ToolKeeper'), centerTitle: true),
+      appBar: AppBar(title: const Text('Вход'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -194,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               controller: _passCtrl,
               decoration: const InputDecoration(
-                labelText: 'Password',
+                labelText: 'Пароль',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.lock),
               ),
@@ -217,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
-                      child: Text(_isRegister ? 'Create Account' : 'Sign In'),
+                      child: Text(_isRegister ? 'Регистрация' : 'Войти'),
                     ),
                   ),
             const SizedBox(height: 12),
@@ -227,7 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: OutlinedButton.icon(
                   onPressed: _signInWithGoogle,
                   icon: const Icon(Icons.login),
-                  label: const Text('Sign in with Google'),
+                  label: const Text('Войти через Google'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -238,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
             if (!_loading)
               TextButton(
                 onPressed: () => setState(() => _isRegister = !_isRegister),
-                child: Text(_isRegister ? 'Already have account? Sign In' : 'No account? Create one'),
+                child: Text(_isRegister ? 'Есть аккаунт? Войти' : 'Нет аккаунта? Создать'),
               ),
           ],
         ),
@@ -302,6 +306,31 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
+      // Fallback: search via collectionGroup in case user is in people but has no companyId in users doc
+      try {
+        final peopleQuery = await FirebaseFirestore.instance
+            .collectionGroup('people')
+            .where('uid', isEqualTo: user.uid)
+            .get();
+        if (peopleQuery.docs.isNotEmpty && mounted) {
+          final pDoc = peopleQuery.docs.first;
+          final cid = pDoc.reference.parent.parent!.id;
+          final compDoc = await FirebaseFirestore.instance.collection('companies').doc(cid).get();
+          if (compDoc.exists && mounted) {
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+              'companyId': cid,
+              'role': pDoc.data()['role'] ?? 'worker',
+            }, SetOptions(merge: true));
+            setState(() {
+              _companyId = cid;
+              _companyName = compDoc.data()?['name'] ?? 'Компания';
+              _role = pDoc.data()['role'] ?? 'worker';
+              _loading = false;
+            });
+            return;
+          }
+        }
+      } catch (_) {}
       setState(() { _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _loading = false; });
@@ -346,9 +375,9 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             tabs: [
-              Tab(icon: Icon(Icons.build), text: 'Tools'),
-              Tab(icon: Icon(Icons.swap_horiz), text: 'Issue/Return'),
-              Tab(icon: Icon(Icons.people), text: 'People'),
+              Tab(icon: Icon(Icons.build), text: 'Инструменты'),
+              Tab(icon: Icon(Icons.swap_horiz), text: 'Выдача'),
+              Tab(icon: Icon(Icons.people), text: 'Сотрудники'),
             ],
           ),
         ),
