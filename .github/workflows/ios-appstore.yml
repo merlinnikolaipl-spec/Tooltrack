@@ -55,6 +55,14 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
 
+      - name: Add Google Sign-In URL scheme to Info.plist
+        run: |
+          REVERSED_CLIENT_ID=$(plutil -extract REVERSED_CLIENT_ID raw ios/Runner/GoogleService-Info.plist 2>/dev/null || echo "")
+          if [ -n "$REVERSED_CLIENT_ID" ]; then
+            plutil -replace CFBundleURLTypes -json '[{"CFBundleURLSchemes":["'"$REVERSED_CLIENT_ID"'"]}]' ios/Runner/Info.plist 2>/dev/null || true
+          fi
+
+
       - name: Create pubspec_overrides.yaml
         run: |
           touch pubspec_overrides.yaml
