@@ -288,10 +288,11 @@ jobs:
             -scheme Runner \
             -configuration Release \
             -archivePath /tmp/Runner.xcarchive \
-            -sdk iphoneos  \
-                        -skipPackageSignatureValidation \
+            -sdk iphoneos \
+            -skipPackageSignatureValidation \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
             DEVELOPMENT_TEAM=VHF76Z663B \
-                        CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
+            CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
             CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
             GCC_TREAT_WARNINGS_AS_ERRORS=NO \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
