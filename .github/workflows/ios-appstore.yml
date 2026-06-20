@@ -96,7 +96,10 @@ jobs:
           if [ ! -s pubspec_overrides.yaml ]; then touch pubspec_overrides.yaml; fi
 
       - name: Flutter pub get
-        run: flutter pub get
+        run: |
+          rm -f ios/Runner/GeneratedPluginRegistrant.m
+          rm -f ios/Runner/GeneratedPluginRegistrant.h
+          flutter pub get
 
 
       - name: Patch pdf_widget_wrapper Flutter 3.3 compatibility
