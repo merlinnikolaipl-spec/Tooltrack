@@ -288,7 +288,8 @@ jobs:
             -scheme Runner \
             -configuration Release \
             -archivePath /tmp/Runner.xcarchive \
-            -sdk iphoneos \
+            -sdk iphoneos  \
+                        -skipPackageSignatureValidation \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=VHF76Z663B \
             PROVISIONING_PROFILE="$PP_UUID" \
