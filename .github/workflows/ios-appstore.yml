@@ -20,7 +20,7 @@ jobs:
           echo "Original main.dart restored, lines:"
           wc -l lib/main.dart
           # Downgrade packages incompatible with original code
-          printf 'dependency_overrides:\n  win32: 5.10.1\n' > pubspec_overrides.yaml
+          printf 'dependency_overrides:\n  win32: 5.10.1\n  mobile_scanner: 5.2.3\n' > pubspec_overrides.yaml
           echo "pubspec_overrides.yaml with downgrades created"
           # Bump build number
           BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
