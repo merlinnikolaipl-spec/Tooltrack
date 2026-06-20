@@ -291,8 +291,7 @@ jobs:
             -sdk iphoneos  \
                         -skipPackageSignatureValidation \
             DEVELOPMENT_TEAM=VHF76Z663B \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
+                        CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
             CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
             GCC_TREAT_WARNINGS_AS_ERRORS=NO \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
