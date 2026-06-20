@@ -291,7 +291,7 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
       if (!mounted) return;
       if (userDoc.exists) {
         final data = userDoc.data()!;
-        final cid = data['companyId'] as String?;
+        final cid = (data['activeCompanyId'] ?? data['companyId']) as String?;
         if (cid != null && cid.isNotEmpty) {
           final compDoc = await FirebaseFirestore.instance
               .collection('companies')
@@ -317,23 +317,53 @@ class _CompanyProfilePageState extends State<CompanyProfilePage> {
       }
       // Fallback: search via collectionGroup in case user is in people but has no companyId in users doc
       try {
-        final peopleQuery = await FirebaseFirestore.instance
-            .collectionGroup('people')
-            .where('uid', isEqualTo: user.uid)
-            .get();
+        // Search in 'members' subcollection (used in original app for accounts) by uid
+        QuerySnapshot<Map<String, dynamic>> peopleQuery;
+        try {
+          peopleQuery = await FirebaseFirestore.instance
+              .collectionGroup('members')
+              .where('uid', isEqualTo: user.uid)
+              .get();
+          // Also try 'people' if members found nothing
+          if (peopleQuery.docs.isEmpty) {
+            peopleQuery = await FirebaseFirestore.instance
+                .collectionGroup('people')
+                .where('uid', isEqualTo: user.uid)
+                .get();
+          }
+          // Also try by email if still nothing
+          if (peopleQuery.docs.isEmpty && user.email != null) {
+            peopleQuery = await FirebaseFirestore.instance
+                .collectionGroup('members')
+                .where('email', isEqualTo: user.email)
+                .get();
+          }
+          if (peopleQuery.docs.isEmpty && user.email != null) {
+            peopleQuery = await FirebaseFirestore.instance
+                .collectionGroup('people')
+                .where('email', isEqualTo: user.email)
+                .get();
+          }
+        } catch (_) {
+          peopleQuery = await FirebaseFirestore.instance
+              .collectionGroup('people')
+              .where('uid', isEqualTo: user.uid)
+              .get();
+        }
         if (peopleQuery.docs.isNotEmpty && mounted) {
           final pDoc = peopleQuery.docs.first;
-          final cid = pDoc.reference.parent.parent!.id;
-          final compDoc = await FirebaseFirestore.instance.collection('companies').doc(cid).get();
+          final cid2 = pDoc.reference.parent.parent!.id;
+          final compDoc = await FirebaseFirestore.instance.collection('companies').doc(cid2).get();
           if (compDoc.exists && mounted) {
             await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-              'companyId': cid,
-              'role': pDoc.data()['role'] ?? 'worker',
+              'activeCompanyId': cid2,
+              'companyId': cid2,
+              'role': (pDoc.data() as Map<String, dynamic>)['role'] ?? 'worker',
             }, SetOptions(merge: true));
             setState(() {
-              _companyId = cid;
+              _companyId = cid2;
               _companyName = compDoc.data()?['name'] ?? 'Компания';
-              _role = pDoc.data()['role'] ?? 'worker';
+              _role = (pDoc.data() as Map<String, dynamic>)['role'] ?? 'worker';
               _loading = false;
             });
             return;
