@@ -16,11 +16,7 @@ jobs:
       - name: Restore original main.dart from git history
         run: |
           # Restore the original main.dart (correct UI architecture)
-          git checkout e459a5fea5d13af6e6093ed91fc951e85e0ad0dc -- lib/main.dart
-          # Update package versions to match original main.dart requirements
-          sed -i '' 's|share_plus: .*|share_plus: ^10.0.2|' pubspec.yaml
-          sed -i '' 's|connectivity_plus: .*|connectivity_plus: ^6.0.0|' pubspec.yaml
-          sed -i '' 's|geolocator: .*|geolocator: ^13.0.1|' pubspec.yaml
+          git checkout e459a5fea5d13af6e6093ed91fc951e85e0ad0dc -- lib/main.dart pubspec.yaml
           echo "Original main.dart restored, lines:"
           wc -l lib/main.dart
           # Downgrade packages incompatible with original code
@@ -45,7 +41,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
+          channel: stable
 
       - name: Install Apple certificate and provisioning profile
         env:
