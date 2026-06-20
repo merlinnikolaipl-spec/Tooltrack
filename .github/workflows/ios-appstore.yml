@@ -124,6 +124,11 @@ jobs:
       - name: Flutter precache iOS
         run: flutter precache --ios
 
+      - name: Configure iOS project
+        run: |
+          flutter build ios --no-codesign --config-only
+          echo "iOS project configured"
+
       - name: Write Podfile
         run: |
           cat > ios/Podfile << 'PODEOF'
