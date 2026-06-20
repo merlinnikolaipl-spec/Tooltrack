@@ -19,6 +19,14 @@ jobs:
           git checkout e459a5fea5d13af6e6093ed91fc951e85e0ad0dc -- lib/main.dart
           echo "Original main.dart restored, lines:"
           wc -l lib/main.dart
+          # Downgrade packages incompatible with original code
+          cat > pubspec_overrides.yaml << 'OVEREOF'
+dependency_overrides:
+  connectivity_plus: "4.0.2"
+  share_plus: "6.3.4"
+  geolocator: "10.1.0"
+OVEREOF
+          echo "pubspec_overrides.yaml with downgrades created"
           # Bump build number
           BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
           NEWBUILD=$((BUILD + 1))
@@ -89,7 +97,8 @@ jobs:
           fi
       - name: Create pubspec_overrides.yaml
         run: |
-          touch pubspec_overrides.yaml
+          # Only create if not already created by restore step
+          if [ ! -s pubspec_overrides.yaml ]; then touch pubspec_overrides.yaml; fi
 
       - name: Flutter pub get
         run: flutter pub get
