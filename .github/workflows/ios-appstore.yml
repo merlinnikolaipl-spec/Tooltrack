@@ -22,9 +22,8 @@ jobs:
           # Downgrade packages incompatible with original code
           printf 'dependency_overrides:\n  win32: 5.10.1\n  mobile_scanner: 5.2.3\n' > pubspec_overrides.yaml
           echo "pubspec_overrides.yaml with downgrades created"
-          # Bump build number
-          BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
-          NEWBUILD=$((BUILD + 1))
+          # Bump build number using GitHub run number (always unique and increasing)
+          NEWBUILD=${{ github.run_number }}
           if [[ "$(uname)" == "Darwin" ]]; then
             sed -i '' "s/^version:.*/version: 1.1.0+${NEWBUILD}/" pubspec.yaml
           else
