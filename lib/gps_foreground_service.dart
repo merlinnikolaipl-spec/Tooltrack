@@ -56,7 +56,7 @@ void gpsServiceMain(ServiceInstance service) {
       try {
         await http.post(
           Uri.parse(
-            'https://us-central1-tooltrack-f5a6a.cloudfunctions.net/updateGpsLocation',
+            'https://us-central1-tooltrack-ee0aa.cloudfunctions.net/updateGpsLocation',
           ),
           headers: {
             'Content-Type': 'application/json',
