@@ -1,7 +1,7 @@
 # CLAUDE KNOWLEDGE BASE — Tooltrack / ToolKeeper iOS App
 
 Purpose: This file preserves all critical knowledge for Claude AI so it can resume work in a new chat session without losing context.
-Last Updated: Build #123 SUCCEEDED ✅ — App running on TestFlight. Bug fixes applied (Jun 21, 2026).
+Last Updated: Build #126 SUCCEEDED ✅ — All 3 bugs fixed + 2 compile errors fixed. IPA uploaded to TestFlight (Jun 21, 2026).
 
 ## 1. PROJECT OVERVIEW
 GitHub Repo: merlinnikolaipl-spec/Tooltrack
@@ -180,3 +180,27 @@ Latest successful build: #123 (8m 1s) — Jun 21, 2026
 1. Run new build (#124) to include bug fixes
 2. Test on TestFlight: Google Sign-In, GPS tracking, PDF reports
 3. Submit to App Store when testing passes
+
+## 5. BUG FIXES APPLIED (Jun 21, 2026)
+
+### Fix 1: Google Sign-In crash
+- Added `try { await googleSignIn.disconnect(); } catch (_) {}` before signIn() in main.dart
+- Added REVERSED_CLIENT_ID to CFBundleURLSchemes in ios/Runner/Info.plist
+
+### Fix 2: PDF/Excel Cyrillic hieroglyphs
+- Font loading in `_pdfTheme()` function using rootBundle.load('assets/fonts/Roboto-Regular.ttf')
+- The Roboto font covers Cyrillic characters
+
+### Fix 3: GPS tracking not working
+- Fixed Cloud Functions URL: tooltrack-f5a6a → tooltrack-ee0aa in gps_foreground_service.dart
+- `_initBackgroundService()` is called when shift starts
+
+### Fix 4: Build compile errors (Build #126)
+- Added `iosBackgroundHandler` function (was referenced but not defined in main.dart)
+- Fixed `StreamSubscription<List<ConnectivityResult>>` → `StreamSubscription<ConnectivityResult>` 
+- Fixed listener callback: `(results)` → `(result)`, simplified offline check
+
+## 6. WORKFLOW NOTE
+- Workflow `ios-appstore.yml` has step "Restore original main.dart from git history"
+- Current SHA: `55e0904e30c6b246e1c9b829994303b1512a7547` (fixed version with all bug fixes)
+- If main.dart is changed again, update this SHA in the workflow!
