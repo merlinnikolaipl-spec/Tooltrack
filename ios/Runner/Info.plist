@@ -34,6 +34,14 @@
 				<string>com.googleusercontent.apps.242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.toolkeeper.app</string>
+			</array>
+		</dict>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -64,5 +72,7 @@
 	<string>This app needs access to location when in the background.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to location when in the background.</string>
+	<key>GIDClientID</key>
+	<string>242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com</string>
 </dict>
 </plist>
