@@ -4614,7 +4614,10 @@ class _LoginPageState extends State<LoginPage> {
       error = null;
     });
 
-    final GoogleSignIn googleSignIn = GoogleSignIn(scopes: const ['email']);
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      clientId: '242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com',
+      scopes: const ['email'],
+    );
 
     try {
       try { await googleSignIn.disconnect(); } catch (_) {}
@@ -7468,7 +7471,7 @@ class _ToolsPageState extends State<ToolsPage> {
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes == null) return;
 
-    final doc = pw.Document();
+    final doc = pw.Document(theme: await _pdfTheme());
     final qrImage = pw.MemoryImage(bytes.buffer.asUint8List());
     doc.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4,
@@ -7508,6 +7511,7 @@ class _ToolsPageState extends State<ToolsPage> {
             await Share.shareXFiles(
                         [XFile(file.path)],
                         subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
+                        sharePositionOrigin: Rect.zero,
                       );
   }
 
@@ -7527,7 +7531,7 @@ class _ToolsPageState extends State<ToolsPage> {
 
     const labelW = 57.0 * PdfPageFormat.mm;
     const labelH = 32.0 * PdfPageFormat.mm;
-    final doc = pw.Document();
+    final doc = pw.Document(theme: await _pdfTheme());
     doc.addPage(pw.Page(
       pageFormat: const PdfPageFormat(labelW, labelH, marginAll: 2 * PdfPageFormat.mm),
       build: (ctx) => pw.Row(
@@ -7555,7 +7559,7 @@ class _ToolsPageState extends State<ToolsPage> {
 
   // A4 grid — all tools, 3 per row
   Future<void> _printAllQrA4(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) async {
-    final doc = pw.Document();
+    final doc = pw.Document(theme: await _pdfTheme());
     const cols = 3;
     const cellW = (210 - 20) / cols * PdfPageFormat.mm;
     const cellH = 80.0 * PdfPageFormat.mm;
@@ -8095,7 +8099,7 @@ class _HistoryTabState extends State<HistoryTab> {
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл сохранён: ${file.path}')));
@@ -8425,7 +8429,7 @@ class _ReportsTabState extends State<ReportsTab> with SingleTickerProviderStateM
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -9950,6 +9954,16 @@ class _ShiftButtonState extends State<ShiftButton> {
         final capturedShift = shiftRef.id;
         final capturedInterval = siteGpsInterval;
         await prefs.setInt('shift_gpsInterval', capturedInterval);
+        // Save Firebase auth token for GPS background service
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final idToken = await user.getIdToken();
+            if (idToken != null) await prefs.setString('shift_idToken', idToken);
+          }
+        } catch (e) {
+          print('[GPS] Token save error: $e');
+        }
         Future(() async {
           try {
             await _initBackgroundService();
@@ -10237,7 +10251,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)]);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
