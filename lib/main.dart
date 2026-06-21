@@ -84,6 +84,12 @@ Future<void> _scheduleShiftNotif(int id, Duration delay, String title, String bo
   } catch (_) {}
 }
 
+
+@pragma('vm:entry-point')
+Future<bool> iosBackgroundHandler(ServiceInstance service) async {
+  return true;
+}
+
 Future<void> _initBackgroundService() async {
   final service = FlutterBackgroundService();
   await service.configure(
@@ -4385,14 +4391,13 @@ class _OfflineBanner extends StatefulWidget {
 
 class _OfflineBannerState extends State<_OfflineBanner> {
   bool _isOffline = false;
-  late final StreamSubscription<List<ConnectivityResult>> _sub;
+  late final StreamSubscription<ConnectivityResult> _sub;
 
   @override
   void initState() {
     super.initState();
-    _sub = Connectivity().onConnectivityChanged.listen((results) {
-      final offline = results.isNotEmpty &&
-          results.every((r) => r == ConnectivityResult.none);
+    _sub = Connectivity().onConnectivityChanged.listen((result) {
+      final offline = result == ConnectivityResult.none;
       if (offline != _isOffline) setState(() => _isOffline = offline);
     });
   }
