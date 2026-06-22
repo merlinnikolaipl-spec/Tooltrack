@@ -7511,7 +7511,7 @@ class _ToolsPageState extends State<ToolsPage> {
             await Share.shareXFiles(
                         [XFile(file.path)],
                         subject: inv.isNotEmpty ? '$toolName — $inv' : toolName,
-                        sharePositionOrigin: Rect.zero,
+                        sharePositionOrigin: Rect.fromLTWH(0, 400, 100, 50),
                       );
   }
 
@@ -8099,7 +8099,7 @@ class _HistoryTabState extends State<HistoryTab> {
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 400, 100, 50));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл сохранён: ${file.path}')));
@@ -8429,7 +8429,7 @@ class _ReportsTabState extends State<ReportsTab> with SingleTickerProviderStateM
       if (Platform.isWindows) {
         await _openOnWindows(file.path);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 400, 100, 50));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -9955,11 +9955,12 @@ class _ShiftButtonState extends State<ShiftButton> {
         final capturedInterval = siteGpsInterval;
         await prefs.setInt('shift_gpsInterval', capturedInterval);
         // Save Firebase auth token for GPS background service
+        String? capturedIdToken;
         try {
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
-            final idToken = await user.getIdToken();
-            if (idToken != null) await prefs.setString('shift_idToken', idToken);
+            capturedIdToken = await user.getIdToken(true);
+            if (idToken != null) await prefs.setString('shift_idToken', capturedIdToken!);
           }
         } catch (e) {
           print('[GPS] Token save error: $e');
@@ -9974,6 +9975,7 @@ class _ShiftButtonState extends State<ShiftButton> {
               'companyId': capturedCompany,
               'shiftId': capturedShift,
               'interval': capturedInterval,
+              'idToken': capturedIdToken ?? '',
             });
           } catch (e) {
             print('[GPS] Launch error: $e');
@@ -10251,7 +10253,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       if (Platform.isWindows) {
         await Process.run('cmd', ['/c', 'start', '', file.path], runInShell: true);
       } else {
-        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.zero);
+        await Share.shareXFiles([XFile(file.path, mimeType: mimeType)], sharePositionOrigin: Rect.fromLTWH(0, 400, 100, 50));
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
