@@ -16,7 +16,7 @@ jobs:
       - name: Restore original main.dart from git history
         run: |
           # Restore the original main.dart (correct UI architecture)
-          git checkout d7ab4f4ac00fdd977a448bcdd49cafc4bba00d5e -- lib/main.dart pubspec.yaml
+          git checkout 62f96ac070352a800e710d5600cca0d35c5fca5e -- lib/main.dart pubspec.yaml
           echo "Original main.dart restored, lines:"
           wc -l lib/main.dart
           # Downgrade packages incompatible with original code
@@ -370,4 +370,5 @@ jobs:
             exit 1
           fi
           echo "Upload completed successfully!"
+ 
  
