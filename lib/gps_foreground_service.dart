@@ -12,7 +12,6 @@ import 'firebase_options.dart';
 @pragma('vm:entry-point')
 void gpsServiceMain(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
 
   StreamSubscription<Position>? posStream;
 
