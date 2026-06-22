@@ -20,7 +20,7 @@ void gpsServiceMain(ServiceInstance service) {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    String? idToken = prefs.getString('shift_idToken');
+    String? idToken = event?['idToken'] as String? ?? prefs.getString('shift_idToken');
     String? refreshToken = prefs.getString('shift_refreshToken');
     final String? shiftIdFromEvent = event?['shiftId'] as String?;
     if (shiftIdFromEvent != null) {
