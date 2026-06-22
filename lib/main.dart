@@ -9960,7 +9960,7 @@ class _ShiftButtonState extends State<ShiftButton> {
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
             capturedIdToken = await user.getIdToken(true);
-            if (idToken != null) await prefs.setString('shift_idToken', capturedIdToken!);
+            if (capturedIdToken != null) await prefs.setString('shift_idToken', capturedIdToken!);
           }
         } catch (e) {
           print('[GPS] Token save error: $e');
