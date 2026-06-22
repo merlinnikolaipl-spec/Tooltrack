@@ -1,21 +1,39 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
+// Called by iOS in background fetch mode
 @pragma('vm:entry-point')
-void gpsServiceMain(ServiceInstance service) {
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  return true;
+}
+
+@pragma('vm:entry-point')
+void gpsServiceMain(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+
+  StreamSubscription<Position>? posStream;
+
   service.on('startTracking').listen((event) async {
+    await posStream?.cancel();
+    posStream = null;
+
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e) {
-      // Firebase already initialized
+      // already initialized
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -23,17 +41,28 @@ void gpsServiceMain(ServiceInstance service) {
     if (shiftIdFromEvent != null) {
       await prefs.setString('shift_shiftId', shiftIdFromEvent);
     }
-    final companyId = event?['companyId'] as String? ?? prefs.getString('shift_companyId') ?? '';
-    final shiftId = prefs.getString('shift_shiftId') ?? '';
+    final companyId = event?['companyId'] as String? ??
+        prefs.getString('shift_companyId') ?? '';
+    final shiftId = shiftIdFromEvent ??
+        prefs.getString('shift_shiftId') ?? '';
 
     if (shiftId.isEmpty || companyId.isEmpty) return;
 
-    StreamSubscription<Position>? posStream;
+    // AppleSettings with allowBackgroundLocationUpdates is CRITICAL for iOS background
+    final LocationSettings locationSettings = Platform.isIOS
+        ? AppleSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+            allowBackgroundLocationUpdates: true,
+            showBackgroundLocationIndicator: false,
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          );
+
     posStream = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 0,
-      ),
+      locationSettings: locationSettings,
     ).listen((Position position) async {
       try {
         await FirebaseFirestore.instance
@@ -50,13 +79,14 @@ void gpsServiceMain(ServiceInstance service) {
           'createdAt': FieldValue.serverTimestamp(),
         });
       } catch (e) {
-        // ignore
+        // write error
       }
     });
+  });
 
-    service.on('stopTracking').listen((_) async {
-      await posStream?.cancel();
-      await service.stopSelf();
-    });
+  service.on('stopTracking').listen((_) async {
+    await posStream?.cancel();
+    posStream = null;
+    await service.stopSelf();
   });
 }
