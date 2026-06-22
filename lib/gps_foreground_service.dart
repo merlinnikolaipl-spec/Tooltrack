@@ -9,14 +9,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
-// Called by iOS in background fetch mode
-@pragma('vm:entry-point')
-Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-  return true;
-}
-
 @pragma('vm:entry-point')
 void gpsServiceMain(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +40,7 @@ void gpsServiceMain(ServiceInstance service) async {
 
     if (shiftId.isEmpty || companyId.isEmpty) return;
 
-    // AppleSettings with allowBackgroundLocationUpdates is CRITICAL for iOS background
+    // AppleSettings with allowBackgroundLocationUpdates is required for iOS background GPS
     final LocationSettings locationSettings = Platform.isIOS
         ? AppleSettings(
             accuracy: LocationAccuracy.high,
@@ -79,7 +71,7 @@ void gpsServiceMain(ServiceInstance service) async {
           'createdAt': FieldValue.serverTimestamp(),
         });
       } catch (e) {
-        // write error
+        // write error - silently continue
       }
     });
   });
