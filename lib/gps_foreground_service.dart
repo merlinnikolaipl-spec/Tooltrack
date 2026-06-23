@@ -13,44 +13,25 @@ import 'firebase_options.dart';
 void gpsServiceMain(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // CRITICAL: keep service alive in background on iOS
   if (service is AndroidServiceInstance) {
     await service.setAsForegroundService();
   }
 
   StreamSubscription<Position>? posStream;
+  String? _currentShiftId;
+  String? _currentCompanyId;
 
-  service.on('startTracking').listen((event) async {
-    await posStream?.cancel();
-    posStream = null;
+  Future<void> _startGps(String companyId, String shiftId) async {
+    if (posStream != null) return; // already running
+    _currentCompanyId = companyId;
+    _currentShiftId = shiftId;
 
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-    } catch (e) {
-      // already initialized
-    }
+    } catch (_) {}
 
-    final prefs = await SharedPreferences.getInstance();
-    final shiftIdFromEvent = event?['shiftId'] as String?;
-    final companyIdFromEvent = event?['companyId'] as String?;
-
-    if (shiftIdFromEvent != null) {
-      await prefs.setString('shift_shiftId', shiftIdFromEvent);
-    }
-    if (companyIdFromEvent != null) {
-      await prefs.setString('shift_companyId', companyIdFromEvent);
-    }
-
-    final companyId = companyIdFromEvent ??
-        prefs.getString('shift_companyId') ?? '';
-    final shiftId = shiftIdFromEvent ??
-        prefs.getString('shift_shiftId') ?? '';
-
-    if (shiftId.isEmpty || companyId.isEmpty) return;
-
-    // AppleSettings with allowBackgroundLocationUpdates is required for iOS background GPS
     final LocationSettings locationSettings = Platform.isIOS
         ? AppleSettings(
             accuracy: LocationAccuracy.high,
@@ -80,15 +61,58 @@ void gpsServiceMain(ServiceInstance service) async {
           'timestamp': position.timestamp.toIso8601String(),
           'createdAt': FieldValue.serverTimestamp(),
         });
-      } catch (e) {
-        // write error - silently continue
+      } catch (_) {}
+    });
+  }
+
+  // On iOS: invoke() events are unreliable.
+  // Read shiftId/companyId directly from SharedPreferences.
+  // The main app saves them before calling startService().
+  if (Platform.isIOS) {
+    // Poll SharedPreferences every 3s until we get valid IDs, then start GPS
+    Timer.periodic(const Duration(seconds: 3), (timer) async {
+      if (posStream != null) {
+        timer.cancel();
+        return;
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final companyId = prefs.getString('shift_companyId') ?? '';
+      final shiftId = prefs.getString('shift_shiftId') ?? '';
+      if (companyId.isNotEmpty && shiftId.isNotEmpty) {
+        timer.cancel();
+        await _startGps(companyId, shiftId);
       }
     });
+  }
+
+  // Event-driven (works reliably on Android, also kept for iOS as backup)
+  service.on('startTracking').listen((event) async {
+    await posStream?.cancel();
+    posStream = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    final companyId = event?['companyId'] as String? ??
+        prefs.getString('shift_companyId') ?? '';
+    final shiftId = event?['shiftId'] as String? ??
+        prefs.getString('shift_shiftId') ?? '';
+
+    if (companyId.isNotEmpty) {
+      await prefs.setString('shift_companyId', companyId);
+    }
+    if (shiftId.isNotEmpty) {
+      await prefs.setString('shift_shiftId', shiftId);
+    }
+
+    if (shiftId.isEmpty || companyId.isEmpty) return;
+    await _startGps(companyId, shiftId);
   });
 
   service.on('stopTracking').listen((_) async {
     await posStream?.cancel();
     posStream = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('shift_shiftId');
+    await prefs.remove('shift_companyId');
     await service.stopSelf();
   });
 }
