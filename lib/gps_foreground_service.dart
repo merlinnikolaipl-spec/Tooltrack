@@ -94,7 +94,7 @@ Future<void> _httpWriteLocation(
 Future<void> gpsServiceMain(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await _log('SERVICE', 'gpsServiceMain started isolate=${Isolate.current.debugName}');
+  await _log('SERVICE', 'gpsServiceMain started ios=' + Platform.isIOS.toString());
 
   // Initialize Firebase
   try {
