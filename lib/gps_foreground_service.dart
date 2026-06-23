@@ -13,6 +13,11 @@ import 'firebase_options.dart';
 void gpsServiceMain(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // CRITICAL: keep service alive in background on iOS
+  if (service is AndroidServiceInstance) {
+    await service.setAsForegroundService();
+  }
+
   StreamSubscription<Position>? posStream;
 
   service.on('startTracking').listen((event) async {
@@ -29,10 +34,16 @@ void gpsServiceMain(ServiceInstance service) async {
 
     final prefs = await SharedPreferences.getInstance();
     final shiftIdFromEvent = event?['shiftId'] as String?;
+    final companyIdFromEvent = event?['companyId'] as String?;
+
     if (shiftIdFromEvent != null) {
       await prefs.setString('shift_shiftId', shiftIdFromEvent);
     }
-    final companyId = event?['companyId'] as String? ??
+    if (companyIdFromEvent != null) {
+      await prefs.setString('shift_companyId', companyIdFromEvent);
+    }
+
+    final companyId = companyIdFromEvent ??
         prefs.getString('shift_companyId') ?? '';
     final shiftId = shiftIdFromEvent ??
         prefs.getString('shift_shiftId') ?? '';
