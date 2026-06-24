@@ -59,8 +59,9 @@ Future<String?> _refreshToken(String refreshToken) async {
                         _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn));
                         // Save refreshed token back to prefs
                         final prefs = await SharedPreferences.getInstance();
-                        if (_cachedToken != null) await prefs.setString('auth_idToken', _cachedToken!);
-                        if (_cachedRefreshToken != null) await prefs.setString('auth_refreshToken', _cachedRefreshToken!);
+                        if (_cachedToken != null) await prefs.setString('shift_idToken', _cachedToken!);
+                        if (_cachedRefreshToken != null) await prefs.setString('shift_refreshToken', _cachedRefreshToken!);
+                                  await prefs.setString('shift_tokenExpiry', DateTime.now().add(Duration(seconds: expiresIn)).toIso8601String());
                         return _cachedToken;
               }
       } catch (_) {}
@@ -177,9 +178,9 @@ Future<void> gpsServiceMain(ServiceInstance service) async {
       // Load tokens from SharedPreferences (saved by main isolate)
       try {
               final prefs = await SharedPreferences.getInstance();
-              _cachedToken = prefs.getString('auth_idToken');
-              _cachedRefreshToken = prefs.getString('auth_refreshToken');
-              final expiryStr = prefs.getString('auth_tokenExpiry');
+              _cachedToken = prefs.getString('shift_idToken');
+              _cachedRefreshToken = prefs.getString('shift_refreshToken');
+              final expiryStr = prefs.getString('shift_tokenExpiry');
               if (expiryStr != null) _tokenExpiry = DateTime.tryParse(expiryStr);
               await _log('AUTH', 'token_len=${_cachedToken?.length ?? 0} has_refresh=${_cachedRefreshToken != null} expiry=$expiryStr');
       } catch (e) {
@@ -284,11 +285,11 @@ Future<void> gpsServiceMain(ServiceInstance service) async {
               if (idToken != null && idToken.isNotEmpty) {
                         _cachedToken = idToken;
                         _tokenExpiry = DateTime.now().add(const Duration(minutes: 55));
-                        await prefs.setString('auth_idToken', idToken);
+                        await prefs.setString('shift_idToken', idToken);
               }
               if (refreshToken != null && refreshToken.isNotEmpty) {
                         _cachedRefreshToken = refreshToken;
-                        await prefs.setString('auth_refreshToken', refreshToken);
+                        await prefs.setString('shift_refreshToken', refreshToken);
               }
 
               if (shiftId.isEmpty || companyId.isEmpty) {
