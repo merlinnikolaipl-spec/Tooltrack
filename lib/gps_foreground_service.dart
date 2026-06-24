@@ -162,6 +162,7 @@ Future<void> _writeLocation(
 
 // ── Main service entry point ──────────────────────────────────
 
+@pragma('vm:entry-point')
 Future<void> gpsServiceMain(ServiceInstance service) async {
       WidgetsFlutterBinding.ensureInitialized();
 
