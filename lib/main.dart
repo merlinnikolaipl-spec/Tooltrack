@@ -9915,7 +9915,7 @@ class _ShiftButtonState extends State<ShiftButton> {
     );
 
     // Запустить foreground service GPS-трекинга (только если разрешение выдано)
-    if (Platform.isAndroid &&
+    if (gpsPermission != LocationPermission.denied &&
         gpsPermission != LocationPermission.denied &&
         gpsPermission != LocationPermission.deniedForever) {
 
