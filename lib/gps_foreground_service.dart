@@ -24,6 +24,7 @@ const _firestoreBase =
 String? _cachedToken;
 String? _cachedRefreshToken;
 DateTime? _tokenExpiry;
+DateTime? _lastWriteTime;
 
 // ── Token management ──────────────────────────────────────────
 
@@ -113,6 +114,14 @@ Future<void> _log(String tag, String msg, {String? err}) async {
 
 Future<void> _writeLocation(
         String companyId, String shiftId, Position pos) async {
+          // Throttle: only write if gpsIntervalMinutes have elapsed
+          final tPrefs = await SharedPreferences.getInstance();
+          final intervalMin = tPrefs.getInt('shift_gpsInterval') ?? 60;
+          final now0 = DateTime.now();
+          if (_lastWriteTime != null && now0.difference(_lastWriteTime!).inMinutes < intervalMin) {
+                      return;
+          }
+          _lastWriteTime = now0;
       final now = DateTime.now().toIso8601String();
       final body = jsonEncode({
               'fields': {
