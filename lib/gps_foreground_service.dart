@@ -116,8 +116,8 @@ Future<void> _writeLocation(
       final now = DateTime.now().toIso8601String();
       final body = jsonEncode({
               'fields': {
-                        'latitude': {'doubleValue': pos.latitude},
-                        'longitude': {'doubleValue': pos.longitude},
+                        'lat': {'doubleValue': pos.latitude},
+                        'lng': {'doubleValue': pos.longitude},
                         'accuracy': {'doubleValue': pos.accuracy},
                         'timestamp': {'stringValue': pos.timestamp.toIso8601String()},
                         'createdAt': {'stringValue': now},
