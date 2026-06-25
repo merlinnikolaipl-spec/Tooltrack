@@ -205,7 +205,7 @@ class _IssueTabState extends State<IssueTab> {
         _personExpanded = true;
         _toolExpanded = false;
       });
-      await _refreshMoves();
+      _refreshMoves();
     } catch (e) {
       _toast('Ошибка: $e');
     } finally {
