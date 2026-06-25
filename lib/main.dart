@@ -10337,7 +10337,10 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       };
     }).toList();
 
-    final violations = pings.where((p) => p['outside'] == true).length;
+    int violations = 0;
+    for (int vi = 1; vi < pings.length; vi++) {
+            if (pings[vi]['outside'] == true && pings[vi - 1]['outside'] != true) violations++;
+    }
 
     if (!mounted) return;
     showDialog(
