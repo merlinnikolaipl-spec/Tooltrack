@@ -10113,11 +10113,14 @@ class _ShiftButtonState extends State<ShiftButton> {
                     try {
                       FlutterBackgroundService().invoke('stopService');
                       await Future.delayed(const Duration(milliseconds: 500));
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove('shift_companyId');
-                      await prefs.remove('shift_shiftId');
                     } catch (_) {}
                   }
+                  // Очистить prefs смены (iOS + Android)
+                  try {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('shift_companyId');
+                    await prefs.remove('shift_shiftId');
+                  } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
                   if (mounted) {
