@@ -10109,12 +10109,12 @@ class _ShiftButtonState extends State<ShiftButton> {
                   await _localNotifs.cancel(102);
 
                   // Остановить foreground service GPS-трекинга
-                  if (Platform.isAndroid) {
-                    try {
-                      FlutterBackgroundService().invoke('stopService');
-                      await Future.delayed(const Duration(milliseconds: 500));
-                    } catch (_) {}
-                  }
+                  
+                  try {
+                    FlutterBackgroundService().invoke(
+                      Platform.isAndroid ? 'stopService' : 'stopTracking');
+                    await Future.delayed(const Duration(milliseconds: 500));
+                  } catch (_) {}
                   // Очистить prefs смены (iOS + Android)
                   try {
                     final prefs = await SharedPreferences.getInstance();
