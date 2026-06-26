@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 // ============================================================
-// GPS Service v3 â idToken from SharedPreferences + HTTP REST
+// GPS Service v3 Ã¢ÂÂ idToken from SharedPreferences + HTTP REST
 // No dependency on Firebase Auth in background isolate
 // Firestore rules: ios_debug_logs open, locations open (if true)
 // ============================================================
@@ -26,7 +26,7 @@ String? _cachedRefreshToken;
 DateTime? _tokenExpiry;
 DateTime? _lastWriteTime;
 
-// ââ Token management ââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Token management Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
 Future<String?> _getToken() async {
       // Return cached token if still valid (5 min buffer)
@@ -76,10 +76,10 @@ Map<String, String> _authHeaders({String? token}) {
       return headers;
 }
 
-// ââ Logging âââââââââââââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Logging Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
 Future<void> _log(String tag, String msg, {String? err}) async {
-      final now = DateTime.now().toIso8601String();
+      final now = DateTime.now().toUtc().toIso8601String();
       // 1) Always write to SharedPreferences
       try {
               final prefs = await SharedPreferences.getInstance();
@@ -89,7 +89,7 @@ Future<void> _log(String tag, String msg, {String? err}) async {
               await prefs.setStringList('debug_log', logs);
       } catch (_) {}
 
-      // 2) Write to Firestore ios_debug_logs via HTTP (rules open â no auth needed)
+      // 2) Write to Firestore ios_debug_logs via HTTP (rules open Ã¢ÂÂ no auth needed)
       try {
               final body = jsonEncode({
                         'fields': {
@@ -110,7 +110,7 @@ Future<void> _log(String tag, String msg, {String? err}) async {
       } catch (_) {}
 }
 
-// ââ GPS location write ââââââââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ GPS location write Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
 Future<void> _writeLocation(
         String companyId, String shiftId, Position pos) async {
@@ -128,8 +128,8 @@ Future<void> _writeLocation(
                         'lat': {'doubleValue': pos.latitude},
                         'lng': {'doubleValue': pos.longitude},
                         'accuracy': {'doubleValue': pos.accuracy},
-                        'timestamp': {'stringValue': (pos.timestamp ?? DateTime.now()).toIso8601String()},
-                        'createdAt': {'stringValue': now},
+                        'timestamp': {'timestampValue': (pos.timestamp ?? DateTime.now()).toUtc().toIso8601String()},
+                        'createdAt': {'timestampValue': now},
                         'source': {'stringValue': 'http_v3'},
               }
       });
@@ -152,7 +152,7 @@ Future<void> _writeLocation(
               await _log('GPS_WRITE', 'AUTH_EXCEPTION', err: e.toString());
       }
 
-      // Try 2: without auth (rules open â allow create: if true)
+      // Try 2: without auth (rules open Ã¢ÂÂ allow create: if true)
       try {
               final resp = await http
                           .post(Uri.parse(url),
@@ -169,7 +169,7 @@ Future<void> _writeLocation(
       }
 }
 
-// ââ Main service entry point ââââââââââââââââââââââââââââââââââ
+// Ã¢ÂÂÃ¢ÂÂ Main service entry point Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
 @pragma('vm:entry-point')
 Future<void> gpsServiceMain(ServiceInstance service) async {
