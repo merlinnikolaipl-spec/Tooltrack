@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 // ============================================================
-// GPS Service v3 — idToken from SharedPreferences + HTTP REST
+// GPS Service v3 â idToken from SharedPreferences + HTTP REST
 // No dependency on Firebase Auth in background isolate
 // Firestore rules: ios_debug_logs open, locations open (if true)
 // ============================================================
@@ -26,7 +26,7 @@ String? _cachedRefreshToken;
 DateTime? _tokenExpiry;
 DateTime? _lastWriteTime;
 
-// ── Token management ──────────────────────────────────────────
+// ââ Token management ââââââââââââââââââââââââââââââââââââââââââ
 
 Future<String?> _getToken() async {
       // Return cached token if still valid (5 min buffer)
@@ -76,7 +76,7 @@ Map<String, String> _authHeaders({String? token}) {
       return headers;
 }
 
-// ── Logging ───────────────────────────────────────────────────
+// ââ Logging âââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 Future<void> _log(String tag, String msg, {String? err}) async {
       final now = DateTime.now().toIso8601String();
@@ -89,7 +89,7 @@ Future<void> _log(String tag, String msg, {String? err}) async {
               await prefs.setStringList('debug_log', logs);
       } catch (_) {}
 
-      // 2) Write to Firestore ios_debug_logs via HTTP (rules open — no auth needed)
+      // 2) Write to Firestore ios_debug_logs via HTTP (rules open â no auth needed)
       try {
               final body = jsonEncode({
                         'fields': {
@@ -110,7 +110,7 @@ Future<void> _log(String tag, String msg, {String? err}) async {
       } catch (_) {}
 }
 
-// ── GPS location write ────────────────────────────────────────
+// ââ GPS location write ââââââââââââââââââââââââââââââââââââââââ
 
 Future<void> _writeLocation(
         String companyId, String shiftId, Position pos) async {
@@ -128,7 +128,7 @@ Future<void> _writeLocation(
                         'lat': {'doubleValue': pos.latitude},
                         'lng': {'doubleValue': pos.longitude},
                         'accuracy': {'doubleValue': pos.accuracy},
-                        'timestamp': {'stringValue': pos.timestamp.toIso8601String()},
+                        'timestamp': {'stringValue': (pos.timestamp ?? DateTime.now()).toIso8601String()},
                         'createdAt': {'stringValue': now},
                         'source': {'stringValue': 'http_v3'},
               }
@@ -152,7 +152,7 @@ Future<void> _writeLocation(
               await _log('GPS_WRITE', 'AUTH_EXCEPTION', err: e.toString());
       }
 
-      // Try 2: without auth (rules open — allow create: if true)
+      // Try 2: without auth (rules open â allow create: if true)
       try {
               final resp = await http
                           .post(Uri.parse(url),
@@ -169,7 +169,7 @@ Future<void> _writeLocation(
       }
 }
 
-// ── Main service entry point ──────────────────────────────────
+// ââ Main service entry point ââââââââââââââââââââââââââââââââââ
 
 @pragma('vm:entry-point')
 Future<void> gpsServiceMain(ServiceInstance service) async {
