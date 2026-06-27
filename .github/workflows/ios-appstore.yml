@@ -42,6 +42,18 @@ jobs:
           python3 scripts/patch_apple_signin.py
           echo "Apple Sign-In patch step complete"
 
+      - name: Configure Sign in with Apple entitlements
+        run: |
+          # Add entitlements file reference to Xcode project
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          if grep -q "CODE_SIGN_ENTITLEMENTS" "$PBXPROJ"; then
+            echo "CODE_SIGN_ENTITLEMENTS already set"
+          else
+            sed -i '' 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ" || \
+            sed -i 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ"
+            echo "Added CODE_SIGN_ENTITLEMENTS to pbxproj"
+          fi
+
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
