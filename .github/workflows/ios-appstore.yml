@@ -20,7 +20,7 @@ jobs:
           echo "Original main.dart restored, lines:"
           wc -l lib/main.dart
           # Downgrade packages incompatible with original code
-          printf 'dependency_overrides:\n  win32: 5.10.1\n  mobile_scanner: 5.2.3\n' > pubspec_overrides.yaml
+          printf 'dependency_overrides:\n  win32: 5.10.1\n  mobile_scanner: 5.2.3\n  sign_in_with_apple: ^6.1.0\n' > pubspec_overrides.yaml
           echo "pubspec_overrides.yaml with downgrades created"
           # Bump build number using GitHub run number (always unique and increasing)
           NEWBUILD=${{ github.run_number }}
@@ -36,6 +36,11 @@ jobs:
         run: |
           python3 scripts/patch_gps_dialog.py
           echo "GPS dialog patch step complete"
+
+      - name: Add Sign in with Apple to LoginPage
+        run: |
+          python3 scripts/patch_apple_signin.py
+          echo "Apple Sign-In patch step complete"
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
