@@ -1,10 +1,7 @@
 import sys, re
 
 # Patch main.dart: add Sign in with Apple alongside Google Sign-In
-# Strategy:
-#   1. Add sign_in_with_apple import to main.dart
-#   2. Add _signInWithApple() method after _signInWithGoogle()
-#   3. Add "Sign in with Apple" button in build() after Google button
+# v2: use GoogleSignIn().signIn() as anchor (not function name, which may vary)
 
 with open('lib/main.dart', 'r', encoding='utf-8') as f:
     src = f.read()
@@ -26,52 +23,69 @@ else:
 if '_signInWithApple' in src:
     print('_signInWithApple already present, skipping method step')
 else:
-    # Find end of _signInWithGoogle method to insert after it
-    anchor = '_signInWithGoogle() async {'
-    anchor_idx = src.find(anchor)
-    if anchor_idx < 0:
-        print('ERROR: _signInWithGoogle not found!')
+    # Find the async function that calls GoogleSignIn().signIn()
+    # Anchor: the line with GoogleSignIn().signIn() 
+    google_call = 'GoogleSignIn().signIn()'
+    call_idx = src.find(google_call)
+    if call_idx < 0:
+        print('ERROR: GoogleSignIn().signIn() not found!')
         sys.exit(1)
-    # Find the closing brace of the method (look for "  }" at correct indent level)
-    # The method is inside a State class, so it's indented with 2 spaces
-    # Find "  Future<void> _sign" pattern to locate method start line
-    line_start = src.rfind('\n', 0, anchor_idx) + 1
-    indent = src[line_start:anchor_idx].replace('_signInWithGoogle() async {', '').rstrip()
-    # Find closing } of the method: look for \n + indent + }
-    close_pattern = '\n' + indent + '}'
-    close_idx = src.find(close_pattern, anchor_idx)
+    print(f'GoogleSignIn().signIn() found at {call_idx}')
+    
+    # Find the closing } of this async function
+    # The function body ends with: \n + indent + } where indent matches the function def
+    # Look backward from call_idx to find the function definition line
+    func_start = src.rfind('\nasync {', 0, call_idx)
+    if func_start < 0:
+        func_start = src.rfind('async {', 0, call_idx)
+    print(f'async {{ found at {func_start}')
+    
+    # Find the function's indent: go to start of that line
+    func_line_start = src.rfind('\n', 0, func_start) + 1
+    func_indent = ''
+    for ch in src[func_line_start:]:
+        if ch in (' ', '\t'):
+            func_indent += ch
+        else:
+            break
+    print(f'Function indent: {repr(func_indent)}')
+    
+    # Find closing } of the function after the call
+    close_pattern = '\n' + func_indent + '}'
+    close_idx = src.find(close_pattern, call_idx)
     if close_idx < 0:
-        print('ERROR: closing brace of _signInWithGoogle not found!')
+        print('ERROR: closing brace of Google function not found!')
         sys.exit(1)
     insert_pos = close_idx + len(close_pattern)
     print(f'Inserting _signInWithApple after pos {insert_pos}')
     
-    apple_method = '''
+    inner_indent = func_indent + '  '
+    apple_method = f"""
 
-  Future<void> _signInWithApple() async {
-    setState(() { _loading = true; _errorMsg = null; });
-    try {
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-      final oauthCredential = OAuthProvider('apple.com').credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
-      await FirebaseAuth.instance.signInWithCredential(oauthCredential);
-    } on SignInWithAppleAuthorizationException catch (e) {
-      if (e.code != AuthorizationErrorCode.canceled) {
-        setState(() { _errorMsg = e.message; });
-      }
-    } catch (e) {
-      setState(() { _errorMsg = e.toString(); });
-    } finally {
-      setState(() { _loading = false; });
-    }
-  }'''
+{func_indent}Future<void> _signInWithApple() async {{
+{inner_indent}setState(() {{ _loading = true; _errorMsg = null; }});
+{inner_indent}try {{
+{inner_indent}  final appleCredential = await SignInWithApple.getAppleIDCredential(
+{inner_indent}    scopes: [
+{inner_indent}      AppleIDAuthorizationScopes.email,
+{inner_indent}      AppleIDAuthorizationScopes.fullName,
+{inner_indent}    ],
+{inner_indent}  );
+{inner_indent}  final oauthCredential = OAuthProvider('apple.com').credential(
+{inner_indent}    idToken: appleCredential.identityToken,
+{inner_indent}    accessToken: appleCredential.authorizationCode,
+{inner_indent}  );
+{inner_indent}  await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+{inner_indent}}} on SignInWithAppleAuthorizationException catch (e) {{
+{inner_indent}  if (e.code != AuthorizationErrorCode.canceled) {{
+{inner_indent}    setState(() {{ _errorMsg = e.message; }});
+{inner_indent}  }}
+{inner_indent}}} catch (e) {{
+{inner_indent}  setState(() {{ _errorMsg = e.toString(); }});
+{inner_indent}}} finally {{
+{inner_indent}  setState(() {{ _loading = false; }});
+{inner_indent}}}
+{func_indent}}}"""
     src = src[:insert_pos] + apple_method + src[insert_pos:]
     print('Added _signInWithApple() method')
 
@@ -79,32 +93,31 @@ else:
 if 'Sign in with Apple' in src:
     print('Apple button already present, skipping UI step')
 else:
-    # Find the Google Sign-In ElevatedButton by its onPressed
-    google_btn_anchor = 'onPressed: _loading ? null : _signInWithGoogle,'
-    btn_idx = src.find(google_btn_anchor)
-    if btn_idx < 0:
-        # Try alternative
-        google_btn_anchor = 'onPressed: _loading ? null : _signInWithGoogle'
-        btn_idx = src.find(google_btn_anchor)
-    if btn_idx < 0:
+    # Find the onPressed that calls the Google sign-in function
+    # Pattern: onPressed: _loading ? null : _signInWith...Google... 
+    # Use regex to find it regardless of exact function name
+    import re
+    google_btn_match = re.search(r'onPressed:\s*_loading\s*\?\s*null\s*:\s*_\w*[Gg]oogle\w*,?', src)
+    if not google_btn_match:
         print('ERROR: Google Sign-In button onPressed not found!')
+        # Show context around GoogleSignIn().signIn() for debugging
+        ci = src.find('GoogleSignIn().signIn()')
+        print('Context:', repr(src[max(0,ci-200):ci+100]))
         sys.exit(1)
     
-    # Find the closing ) or ); of the ElevatedButton widget after the anchor
-    # Look for the pattern that ends the button widget
-    after_btn = src[btn_idx:]
-    # Find next ); that closes ElevatedButton
-    # ElevatedButton ends with its closing );
+    btn_anchor_end = google_btn_match.end()
+    print(f'Google button onPressed found at {google_btn_match.start()}')
+    
+    # Find the closing ); of the ElevatedButton widget 
+    after_btn = src[btn_anchor_end:]
     close_btn = after_btn.find(');')
     if close_btn < 0:
         print('ERROR: Could not find end of Google button!')
         sys.exit(1)
-    insert_after = btn_idx + close_btn + len(');')
+    insert_after = btn_anchor_end + close_btn + len(');')
     
-    # Detect indentation from button line
-    btn_line_start = src.rfind('\n', 0, btn_idx) + 1
-    # Go back further to find the ElevatedButton( line
-    elevated_idx = src.rfind('ElevatedButton(', 0, btn_idx)
+    # Detect indentation from ElevatedButton line
+    elevated_idx = src.rfind('ElevatedButton(', 0, btn_anchor_end)
     elevated_line_start = src.rfind('\n', 0, elevated_idx) + 1
     btn_indent = src[elevated_line_start:elevated_idx]
     
