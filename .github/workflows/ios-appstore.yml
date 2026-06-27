@@ -34,45 +34,8 @@ jobs:
 
       - name: Patch GPS dialog string timestamp support
         run: |
-          python3 - << 'PYEOF'
-import sys
-
-with open('lib/main.dart', 'r', encoding='utf-8') as f:
-    src = f.read()
-
-# Find the GPS dialog timestamp code
-marker = "String timeStr = '';"
-idx = src.find(marker)
-if idx < 0:
-    print('ERROR: marker not found!')
-    sys.exit(1)
-
-# Get indentation of the marker line
-line_start = src.rfind('\n', 0, idx) + 1
-indent = src[line_start:idx]  # spaces before 'String timeStr'
-
-inner = indent + '  '  # 2 more spaces for inside if block
-
-old1 = indent + "String timeStr = '';"
-new1 = indent + "String timeStr = '';\n" + indent + "DateTime? dt;"
-
-old2 = inner + "final dt = ts.toDate();"
-new2 = inner + "dt = ts.toDate();\n" + indent + "} else if (ts is String) {\n" + inner + "dt = DateTime.tryParse(ts);\n" + indent + "}\n" + indent + "if (dt != null) {"
-
-if old2 not in src:
-    print('ERROR: inner pattern not found! Looking for: ' + repr(old2))
-    idx2 = src.find('final dt = ts.toDate')
-    if idx2 >= 0:
-        print('Found similar at:', repr(src[max(0,idx2-100):idx2+100]))
-    sys.exit(1)
-
-src = src.replace(old1, new1, 1)
-src = src.replace(old2, new2, 1)
-
-with open('lib/main.dart', 'w', encoding='utf-8') as f:
-    f.write(src)
-print('Patch applied! indent=' + repr(indent) + ' inner=' + repr(inner))
-PYEOF
+          python3 scripts/patch_gps_dialog.py
+          echo "GPS dialog patch step complete"
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
