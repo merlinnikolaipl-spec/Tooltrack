@@ -16,16 +16,13 @@ else:
 
 # Step 2: Add _signInWithApple method to _LoginPageState class
 if '_signInWithApple' not in src:
-    # Find _LoginPageState class
     login_class = src.find('class _LoginPageState')
     if login_class < 0:
         print('ERROR: _LoginPageState not found!')
         sys.exit(1)
     print('_LoginPageState at', login_class)
-    # Find @override\n  Widget build inside this class
     build_marker = src.find('@override', login_class)
     while build_marker >= 0:
-        # Check if next non-whitespace is Widget build
         rest = src[build_marker:]
         if 'Widget build' in rest[:100]:
             break
@@ -34,7 +31,6 @@ if '_signInWithApple' not in src:
         print('ERROR: Widget build not found in _LoginPageState!')
         sys.exit(1)
     print('@override Widget build at', build_marker)
-    # Determine indentation (2 spaces for class method)
     fi = '  '
     NL = chr(10)
     ii = fi + '  '
@@ -52,8 +48,6 @@ if '_signInWithApple' not in src:
        + ii + '  setState(() { _loading = false; });' + NL
        + ii + '}' + NL
        + fi + '}' + NL)
-    # Insert before @override
-    # Find the newline before @override
     ins_pos = src.rfind(chr(10), 0, build_marker) + 1
     src = src[:ins_pos] + m + src[ins_pos:]
     print('Added _signInWithApple method before build()')
@@ -62,7 +56,6 @@ else:
 
 # Step 3: Add Apple button after Google sign-in button
 if 'Sign in with Apple' not in src:
-    # Find googleSignIn.signIn() call position
     signin_call = src.find('googleSignIn.signIn()')
     if signin_call < 0:
         signin_call = src.find('GoogleSignIn().signIn()')
@@ -70,17 +63,21 @@ if 'Sign in with Apple' not in src:
         print('ERROR: googleSignIn.signIn() not found!')
         sys.exit(1)
     print('googleSignIn.signIn() at', signin_call)
-    # Find the button widget containing this call
-    # Search backwards from signin_call for button types
-    btn_types = ['OutlinedButton(', 'TextButton(', 'ElevatedButton(', 'GestureDetector(', 'InkWell(']
+    # Find the onPressed: before this call
+    onpressed_pos = src.rfind('onPressed:', 0, signin_call)
+    if onpressed_pos < 0:
+        print('ERROR: onPressed not found before signIn call!')
+        sys.exit(1)
+    print('onPressed: at', onpressed_pos)
+    # Find widget containing this onPressed - search backwards for any widget
+    btn_types = ['OutlinedButton(', 'TextButton(', 'ElevatedButton(', 'GestureDetector(', 
+                 'InkWell(', 'Container(', 'FilledButton(', 'MaterialButton(', 'SignInButton(']
     btn_start = -1
     btn_end = -1
     best_dist = 999999
     for btype in btn_types:
-        # Find last occurrence of this button type before the signIn call
-        pos = src.rfind(btype, 0, signin_call)
-        if pos >= 0 and (signin_call - pos) < best_dist:
-            # Verify this button contains the signIn call by finding its end
+        pos = src.rfind(btype, 0, onpressed_pos)
+        if pos >= 0 and (onpressed_pos - pos) < best_dist:
             dep = 0
             cp = -1
             idx = pos
@@ -93,15 +90,63 @@ if 'Sign in with Apple' not in src:
                         cp = idx
                         break
                 idx += 1
-            if cp >= 0 and cp > signin_call:
-                best_dist = signin_call - pos
+            if cp >= 0 and cp > onpressed_pos:
+                best_dist = onpressed_pos - pos
                 btn_start = pos
                 btn_end = cp
-                print('Found button', repr(btype), 'at', pos, '..', cp, '(dist', signin_call - pos, ')')
+                print('Found button', repr(btype), 'at', pos, '..', cp)
     if btn_start < 0:
-        print('ERROR: No button containing googleSignIn.signIn() found!')
+        # Try finding any widget at the line of onPressed
+        line_start = src.rfind(chr(10), 0, onpressed_pos) + 1
+        line_indent = ''
+        for ch in src[line_start:]:
+            if ch == ' ':
+                line_indent += ch
+            else:
+                break
+        print('onPressed indent:', repr(line_indent))
+        # Try to find parent by going up lines with less indent
+        search_up = onpressed_pos
+        while search_up > 0:
+            prev_nl = src.rfind(chr(10), 0, search_up - 1)
+            if prev_nl < 0:
+                break
+            line = src[prev_nl+1:search_up]
+            curr_indent = ''
+            for ch in line:
+                if ch == ' ':
+                    curr_indent += ch
+                else:
+                    break
+            if len(curr_indent) < len(line_indent) and line.strip().endswith('('):
+                # Found a line with less indent ending with (
+                btn_start = prev_nl + 1 + len(curr_indent)
+                # This widget name starts here - find its (
+                paren_pos = src.find('(', btn_start)
+                if paren_pos < 0:
+                    break
+                dep = 0
+                cp = -1
+                idx = paren_pos
+                while idx < len(src):
+                    if src[idx] == '(':
+                        dep += 1
+                    elif src[idx] == ')':
+                        dep -= 1
+                        if dep == 0:
+                            cp = idx
+                            break
+                    idx += 1
+                if cp >= 0 and cp > onpressed_pos:
+                    btn_end = cp
+                    print('Found parent widget via indent at', btn_start, '..', btn_end)
+                    break
+            search_up = prev_nl
+    if btn_start < 0:
+        print('ERROR: Cannot find Google sign-in button widget!')
+        print('Context around onPressed:')
+        print(repr(src[max(0,onpressed_pos-300):onpressed_pos+300]))
         sys.exit(1)
-    # Insert Apple button after btn_end
     ia = btn_end + 1
     if ia < len(src) and src[ia] == ',':
         ia += 1
