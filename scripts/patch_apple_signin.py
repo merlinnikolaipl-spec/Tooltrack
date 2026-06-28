@@ -105,6 +105,11 @@ if 'Sign in with Apple' not in src:
             print('Added Apple button')
             break
     else:
+            # Fallback: find last ElevatedButton before ins position
+            el2 = src.rfind('ElevatedButton(', 0, ins)
+            print('Last ElevatedButton before ins:', el2)
+            if el2 >= 0:
+                        print('Context:', repr(src[el2-50:el2+200]))
         print('ERROR: Google button not found!')
         sys.exit(1)
 else:
