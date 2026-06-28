@@ -67,37 +67,39 @@ else:
     print('_signInWithApple already present')
 
 # Step 3: Add Apple button after Google button
+# Find GoogleSignIn( anchor, then find ElevatedButton AFTER end of method
 if 'Sign in with Apple' not in src:
     google_anchor = src.find('GoogleSignIn(')
-        if google_anchor < 0:
-                    print('ERROR: Google anchor not found!')
-                    sys.exit(1)
-                print('Google anchor at', google_anchor)
+    if google_anchor < 0:
+        print('ERROR: Google anchor not found!')
+        sys.exit(1)
+    print('Google anchor at', google_anchor)
     fa = src.rfind('async {', 0, google_anchor)
     if fa < 0:
-                fa = google_anchor
-            fls = src.rfind(chr(10), 0, fa) + 1
+        fa = google_anchor
+    fls = src.rfind(chr(10), 0, fa) + 1
     fi2 = ''
     for ch in src[fls:]:
-                if ch == ' ':
-                                fi2 += ch
-                else:
-                                break
-                        if not fi2:
-                                    fi2 = '  '
-                                mclose = src.find(chr(10) + fi2 + '}', google_anchor)
+        if ch == ' ':
+            fi2 += ch
+        else:
+            break
+    if not fi2:
+        fi2 = '  '
+    mclose = src.find(chr(10) + fi2 + '}', google_anchor)
     search_from = mclose if mclose >= 0 else google_anchor
     print('ElevatedButton search from pos', search_from)
     el = src.find('ElevatedButton(', search_from)
-        el = src.rfind('OutlinedButton(', 0, google_text_idx)
+    if el < 0:
+        el = src.find('OutlinedButton(', search_from)
         if el < 0:
-            el = src.rfind('TextButton(', 0, google_text_idx)
+            el = src.find('TextButton(', search_from)
         if el < 0:
-            print('ERROR: No button widget found before Google text!')
-            print(repr(src[max(0,google_text_idx-500):google_text_idx+100]))
+            print('ERROR: No button widget found after Google method!')
+            print(repr(src[search_from:search_from+500]))
             sys.exit(1)
         else:
-            print('TextButton/OutlinedButton at', el)
+            print('OutlinedButton/TextButton at', el)
     else:
         print('ElevatedButton at', el)
     depth = 0
