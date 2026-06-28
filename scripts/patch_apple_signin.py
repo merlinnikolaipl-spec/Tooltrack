@@ -72,7 +72,7 @@ else:
 
 # Step 3: Add Apple button
 if 'Sign in with Apple' not in src:
-    for pat in [r'onPressed:\s*_loading\s*\?\s*null\s*:\s*_\w*[Gg]oogle\w*,?', r'Sign in with Google', r'Google']:
+    for pat in [r'onPressed:\s*_loading\s*\?\s*null\s*:\s*_\w*[Gg]oogle\w*,?', r'Sign in with Google']:
         bm = re.search(pat, src)
         if bm:
             print('Button found at', bm.start(), repr(src[bm.start():bm.end()]))
