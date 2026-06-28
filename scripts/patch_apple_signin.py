@@ -16,19 +16,16 @@ else:
 
 # Step 2: Add _signInWithApple method after _signInWithGoogle method
 if '_signInWithApple' not in src:
-    anchor = '_signInWithGoogle'
-    anchor_idx = src.find(anchor)
+    anchor_idx = src.find('_signInWithGoogle')
     if anchor_idx < 0:
-        for a in ['signInWithGoogle', 'GoogleSignIn().signIn()', 'GoogleSignIn(']:
-            anchor_idx = src.find(a)
-            if anchor_idx >= 0:
-                print('Anchor', repr(a), 'at', anchor_idx)
-                break
+        anchor_idx = src.find('GoogleSignIn(')
+        if anchor_idx >= 0:
+            print('Anchor GoogleSignIn( at', anchor_idx)
+        else:
+            print('ERROR: No sign-in anchor found!')
+            sys.exit(1)
     else:
         print('Anchor _signInWithGoogle at', anchor_idx)
-    if anchor_idx < 0:
-        print('ERROR: No sign-in anchor found!')
-        sys.exit(1)
     func_start = src.rfind('async {', 0, anchor_idx)
     if func_start < 0:
         func_start = src.rfind('async{', 0, anchor_idx)
@@ -51,45 +48,57 @@ if '_signInWithApple' not in src:
     NL = chr(10)
     ii = fi + '  '
     m = (NL + fi + 'Future<void> _signInWithApple() async {' + NL
-        + ii + 'setState(() { _loading = true; _errorMsg = null; });' + NL
-        + ii + 'try {' + NL
-        + ii + "  final c = await SignInWithApple.getAppleIDCredential(scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName]);" + NL
-        + ii + "  final cred = OAuthProvider('apple.com').credential(idToken: c.identityToken, accessToken: c.authorizationCode);" + NL
-        + ii + '  await FirebaseAuth.instance.signInWithCredential(cred);' + NL
-        + ii + '} on SignInWithAppleAuthorizationException catch (e) {' + NL
-        + ii + '  if (e.code != AuthorizationErrorCode.canceled) setState(() { _errorMsg = e.message; });' + NL
-        + ii + '} catch (e) {' + NL
-        + ii + '  setState(() { _errorMsg = e.toString(); });' + NL
-        + ii + '} finally {' + NL
-        + ii + '  setState(() { _loading = false; });' + NL
-        + ii + '}' + NL
-        + fi + '}')
+       + ii + 'setState(() { _loading = true; _errorMsg = null; });' + NL
+       + ii + 'try {' + NL
+       + ii + "  final c = await SignInWithApple.getAppleIDCredential(scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName]);" + NL
+       + ii + "  final cred = OAuthProvider('apple.com').credential(idToken: c.identityToken, accessToken: c.authorizationCode);" + NL
+       + ii + '  await FirebaseAuth.instance.signInWithCredential(cred);' + NL
+       + ii + '} on SignInWithAppleAuthorizationException catch (e) {' + NL
+       + ii + '  if (e.code != AuthorizationErrorCode.canceled) setState(() { _errorMsg = e.message; });' + NL
+       + ii + '} catch (e) {' + NL
+       + ii + '  setState(() { _errorMsg = e.toString(); });' + NL
+       + ii + '} finally {' + NL
+       + ii + '  setState(() { _loading = false; });' + NL
+       + ii + '}' + NL
+       + fi + '}')
     src = src[:ins] + m + src[ins:]
     print('Added _signInWithApple method')
 else:
     print('_signInWithApple already present')
 
-# Step 3: Add Apple button
+# Step 3: Add Apple button after Google button
 if 'Sign in with Apple' not in src:
-    btn_patterns = [
-        r'onPressed:\s*_loading\s*\?\s*null\s*:\s*_signInWithGoogle',
-        r'onPressed:\s*_loading\s*\?\s*null\s*:\s*_\w*[Gg]oogle\w*',
-        r"child:\s*(?:const\s+)?Text\(['\"]Sign in with Google['\"]",
+    google_text_markers = [
+        "'Sign in with Google'",
+        '"Sign in with Google"',
+        'Google',
     ]
-    bm = None
-    for pat in btn_patterns:
-        bm = re.search(pat, src)
-        if bm:
-            print('Button found with pattern', repr(pat), 'at', bm.start())
+    google_text_idx = -1
+    for marker in google_text_markers:
+        google_text_idx = src.find(marker)
+        if google_text_idx >= 0:
+            print('Google text marker', repr(marker), 'at', google_text_idx)
             break
-    if not bm:
-        print('ERROR: Google Sign-In button not found!')
+    if google_text_idx < 0:
+        print('ERROR: Google button text not found!')
+        ai = src.find('GoogleSignIn(')
+        if ai >= 0:
+            print('Context around GoogleSignIn(:')
+            print(repr(src[max(0,ai-300):ai+300]))
         sys.exit(1)
-    el = src.rfind('ElevatedButton(', 0, bm.start())
+    el = src.rfind('ElevatedButton(', 0, google_text_idx)
     if el < 0:
-        print('ERROR: ElevatedButton not found before pattern!')
-        sys.exit(1)
-    print('ElevatedButton at', el)
+        el = src.rfind('OutlinedButton(', 0, google_text_idx)
+        if el < 0:
+            el = src.rfind('TextButton(', 0, google_text_idx)
+        if el < 0:
+            print('ERROR: No button widget found before Google text!')
+            print(repr(src[max(0,google_text_idx-500):google_text_idx+100]))
+            sys.exit(1)
+        else:
+            print('TextButton/OutlinedButton at', el)
+    else:
+        print('ElevatedButton at', el)
     depth = 0
     close_pos = -1
     i = el
@@ -103,12 +112,12 @@ if 'Sign in with Apple' not in src:
                 break
         i += 1
     if close_pos < 0:
-        print('ERROR: ElevatedButton close paren not found!')
+        print('ERROR: Button close paren not found!')
         sys.exit(1)
     ia = close_pos + 1
     if ia < len(src) and src[ia] == ',':
         ia += 1
-    print('Insert after pos', ia)
+    print('Insert Apple button after pos', ia)
     ls = src.rfind(chr(10), 0, el) + 1
     bi = ''
     for ch in src[ls:]:
@@ -116,19 +125,19 @@ if 'Sign in with Apple' not in src:
             bi += ch
         else:
             break
+    if not bi:
+        bi = '              '
     print('btn_indent:', repr(bi))
     NL = chr(10)
-    ii2 = bi + '  '
-    btn = (NL + bi + 'const SizedBox(height: 12),' + NL
-        + bi + 'ElevatedButton(' + NL
-        + ii2 + 'style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 48)),' + NL
-        + ii2 + 'onPressed: _loading ? null : _signInWithApple,' + NL
-        + ii2 + "child: const Text('Sign in with Apple')," + NL
-        + bi + '),')
-    src = src[:ia] + btn + src[ia:]
-    print('Added Apple button')
+    apple_btn = (NL + bi + 'ElevatedButton(' + NL
+               + bi + '  onPressed: _loading ? null : _signInWithApple,' + NL
+               + bi + '  style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 48)),' + NL
+               + bi + "  child: const Text('Sign in with Apple')," + NL
+               + bi + '),')
+    src = src[:ia] + apple_btn + src[ia:]
+    print('Added Apple Sign-In button')
 else:
     print('Apple button already present')
 
 open('lib/main.dart', 'w', encoding='utf-8').write(src)
-print('SUCCESS: Sign in with Apple added!')
+print('Done. New size:', len(src))
