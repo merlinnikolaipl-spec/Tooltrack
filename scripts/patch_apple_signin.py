@@ -1,44 +1,57 @@
 #!/usr/bin/env python3
 """
-patch_apple_signin.py  v18
-Structure confirmed from v17 diagnostic:
-  Line 4713 [12]: SizedBox(
-  Line 4714 [14]:   width: double.infinity,
-  Line 4715 [14]:   child: FilledButton.icon(
-  Line 4716 [16]:     icon: const Icon(Icons.login),
-  Line 4717 [16]: >>> onPressed: loading ? null : _google,
-  Line 4718 [16]:     label: Text(i18n.t('google')),
-  Line 4719 [14]:   ),   <- closes FilledButton.icon
-  Line 4720 [12]: ),     <- closes SizedBox  <- INSERT AFTER THIS!
-  Line 4721 [10]: ],     <- closes Column children
-  Line 4722 [ 8]: ),     <- closes Column
-
-Fix: search for closing at indent < (gcall_indent - 2), i.e. < 14, to skip FilledButton and get SizedBox closing
-Column children are at indent 12, so Apple button should also be at indent 12
+patch_apple_signin.py  v19
+PRODUCTION patch (confirmed working v18 structure + fix MissingPluginException):
+- Adds sign_in_with_apple to pubspec.yaml dependencies (fixes MissingPluginException)
+- Adds import to main.dart
+- Inserts _signInWithApple() method in _LoginPageState (uses loading/error fields)
+- Inserts Apple button after Google SizedBox (indent=12, SizedBox closing at indent<=12)
 """
 
-import subprocess, sys
+import subprocess, sys, re
 
 MAIN_DART = "lib/main.dart"
+PUBSPEC = "pubspec.yaml"
 
 def run(cmd, **kw):
     return subprocess.run(cmd, shell=True, capture_output=True, text=True, **kw)
 
 def restore():
     sha = "2c64927700b7c2c7ed5fb1d017b16c1eb4a867b3"
-    r = run(f"git checkout {sha} -- {MAIN_DART}")
+    r = run(f"git checkout {sha} -- {MAIN_DART} {PUBSPEC}")
     if r.returncode != 0:
         print("RESTORE FAILED:", r.stderr); sys.exit(1)
-    print("Restored main.dart from", sha)
+    print("Restored main.dart and pubspec.yaml from", sha)
 
 restore()
 
+# ── Fix pubspec.yaml: add sign_in_with_apple to dependencies ──────────────────
+with open(PUBSPEC, "r", encoding="utf-8") as f:
+    pubspec = f.read()
+
+SIWA_DEP = "  sign_in_with_apple: ^6.1.4"
+if "sign_in_with_apple" not in pubspec:
+    # Insert after google_sign_in line
+    gsignin_line = [l for l in pubspec.split("\n") if "google_sign_in:" in l and "platform" not in l]
+    if gsignin_line:
+        insert_after = gsignin_line[0]
+        pubspec = pubspec.replace(insert_after, insert_after + "\n" + SIWA_DEP)
+        print(f"Added sign_in_with_apple to pubspec.yaml after: {insert_after.strip()}")
+    else:
+        # fallback: insert before dependency_overrides
+        pubspec = pubspec.replace("dependency_overrides:", SIWA_DEP + "\ndependency_overrides:")
+        print("Added sign_in_with_apple to pubspec.yaml (fallback)")
+    with open(PUBSPEC, "w", encoding="utf-8") as f:
+        f.write(pubspec)
+else:
+    print("sign_in_with_apple already in pubspec.yaml")
+
+# ── Read main.dart ────────────────────────────────────────────────────────────
 with open(MAIN_DART, "r", encoding="utf-8") as f:
     src = f.read()
+print(f"main.dart length: {len(src)} chars")
 
-print(f"File length: {len(src)} chars")
-
-# ── Step 1: Add imports ───────────────────────────────────────────────────────
+# ── Step 1: Add import ────────────────────────────────────────────────────────
 APPLE_IMPORT = "import 'package:sign_in_with_apple/sign_in_with_apple.dart';"
 if APPLE_IMPORT not in src:
     last_import = src.rfind("\nimport ")
@@ -91,11 +104,13 @@ if METHOD_MARKER not in src:
 else:
     print("_signInWithApple() already present")
 
-# ── Step 3: Find Google button SizedBox and insert Apple button after it ───────
-# The Google button (FilledButton.icon with _google) is wrapped in:
-#   SizedBox(width: double.infinity, child: FilledButton.icon(..._google...))
-# We need to insert Apple button AFTER the SizedBox closing ),
-# which is at indent < (gcall_indent - 2)
+# ── Step 3: Insert Apple button after Google SizedBox ─────────────────────────
+# Confirmed structure (v17 diagnostic, line numbers from original):
+#   Line 4713 [12]: SizedBox(width: double.infinity, child: FilledButton.icon(
+#   Line 4717 [16]:   onPressed: loading ? null : _google,
+#   Line 4719 [14]:   ),   <- closes FilledButton.icon
+#   Line 4720 [12]: ),     <- closes SizedBox <- INSERT AFTER THIS
+#   Line 4721 [10]: ],     <- closes Column children
 
 login_pos2 = src.find("class _LoginPageState")
 build_pos2 = src.find("Widget build", login_pos2)
@@ -104,7 +119,7 @@ if build_pos2 == -1:
 
 build_section = src[build_pos2:]
 
-# Find _google() call in build section
+# Find _google() call in build section (not method def)
 idx = 0
 google_call_offsets = []
 while True:
@@ -116,29 +131,26 @@ while True:
         google_call_offsets.append(pos)
     idx = pos + 1
 
-print(f"_google() references in build section: {google_call_offsets}")
+print(f"_google() refs in build: {google_call_offsets}")
 
-APPLE_BUTTON_MARKER = "_signInWithApple"
-if APPLE_BUTTON_MARKER in src[build_pos2:]:
+APPLE_BTN_MARKER = "_signInWithApple"
+if APPLE_BTN_MARKER in src[build_pos2:]:
     print("Apple button already in build section, skipping")
 elif not google_call_offsets:
-    print("ERROR: No _google() call found in build section"); sys.exit(1)
+    print("ERROR: No _google() call found"); sys.exit(1)
 else:
     gcall_offset = google_call_offsets[0]
     gcall_abs = build_pos2 + gcall_offset
 
-    # Find the line containing _google() call
     line_start = src.rfind("\n", 0, gcall_abs) + 1
     line_end = src.find("\n", gcall_abs)
     gcall_line = src[line_start:line_end]
     gcall_indent = len(gcall_line) - len(gcall_line.lstrip())
-    print(f"Found _google() at line indent {gcall_indent}: {repr(gcall_line.strip())}")
+    print(f"_google() at indent {gcall_indent}: {repr(gcall_line.strip()[:60])}")
 
-    # Find the closing of the SizedBox wrapping the button
-    # This is a line with indent < (gcall_indent - 2) ending with ),
-    # i.e., indent <= gcall_indent - 4
-    target_max_indent = gcall_indent - 4  # 16 - 4 = 12
-    print(f"Looking for closing at indent <= {target_max_indent}...")
+    # Find SizedBox closing: indent <= gcall_indent - 4 (12 = 16-4)
+    target_max_indent = gcall_indent - 4
+    print(f"Looking for SizedBox closing at indent <= {target_max_indent}...")
 
     search_from = line_end + 1
     closing_pos = None
@@ -148,23 +160,19 @@ else:
         ln_indent = len(ln) - len(ln.lstrip()) if ln.strip() else 999
         stripped = ln.strip()
         if stripped and ln_indent <= target_max_indent:
-            print(f"  Line {i}: indent={ln_indent}: {repr(ln[:60])}")
+            print(f"  Line {i}: indent={ln_indent}: {repr(ln[:50])}")
             if stripped.endswith("),") or stripped == "),":
                 closing_pos = abs_pos + len(ln)
-                print(f"  -> SELECTED as SizedBox closing!")
+                print(f"  -> SizedBox closing selected!")
                 break
             elif stripped.endswith("],") or stripped == "]:":
-                # We've gone past the SizedBox and into the children closing
-                print(f"  -> Reached children closing, too far!")
-                break
+                print(f"  -> Reached children ], stopping"); break
         abs_pos += len(ln) + 1
 
     if closing_pos is None:
-        print("ERROR: Could not find SizedBox closing"); sys.exit(1)
+        print("ERROR: SizedBox closing not found"); sys.exit(1)
 
-    # Insert Apple button at indent = target_max_indent (12 spaces = Column children level)
     apple_indent = " " * target_max_indent
-
     APPLE_BTN = f"""
 {apple_indent}const SizedBox(height: 12),
 {apple_indent}SizedBox(
@@ -175,10 +183,10 @@ else:
 {apple_indent}),"""
 
     src = src[:closing_pos + 1] + APPLE_BTN + src[closing_pos + 1:]
-    print(f"Inserted Apple button after SizedBox closing at pos {closing_pos}")
+    print(f"Apple button inserted at pos {closing_pos}")
 
-# ── Write result ──────────────────────────────────────────────────────────────
+# ── Write main.dart ───────────────────────────────────────────────────────────
 with open(MAIN_DART, "w", encoding="utf-8") as f:
     f.write(src)
-print(f"Written {len(src)} chars")
-print("Apple Sign-In patch complete")
+print(f"Written {len(src)} chars to main.dart")
+print("PATCH COMPLETE - Sign in with Apple ready")
