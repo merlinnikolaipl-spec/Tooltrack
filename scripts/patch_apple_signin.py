@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-patch_apple_signin.py  v16 – DIAGNOSTIC: show context around _google() call button
-to understand the full widget tree structure
+patch_apple_signin.py  v17 – DIAGNOSTIC: print actual code lines around _google() call
 """
 
 import subprocess, sys
@@ -21,44 +20,29 @@ def restore():
 restore()
 
 with open(MAIN_DART, "r", encoding="utf-8") as f:
-    src = f.read()
+    lines = f.readlines()
 
-print(f"File length: {len(src)} chars")
+print(f"Total lines: {len(lines)}")
 
-# Find _LoginPageState and build()
-login_pos = src.find("class _LoginPageState")
-build_pos = src.find("Widget build", login_pos)
-build_section = src[build_pos:]
+# Find the line with _google() call
+google_lines = []
+for i, line in enumerate(lines):
+    if "_google" in line and "Future" not in line and "void" not in line and "async" not in line:
+        google_lines.append((i + 1, line.rstrip()))
 
-# Find _google() call in build section (not method definition)
-idx = 0
-google_call_offsets = []
-while True:
-    pos = build_section.find("_google", idx)
-    if pos == -1:
-        break
-    context_before = build_section[max(0,pos-30):pos]
-    if "Future" not in context_before and "void" not in context_before:
-        google_call_offsets.append(pos)
-    idx = pos + 1
+print(f"Lines referencing _google (not in method def): {len(google_lines)}")
+for ln, txt in google_lines:
+    print(f"  Line {ln}: {repr(txt)}")
 
-print(f"_google() references in build section: {google_call_offsets}")
-
-if not google_call_offsets:
-    print("No references found"); sys.exit(1)
-
-gcall_offset = google_call_offsets[0]
-gcall_abs = build_pos + gcall_offset
-
-print(f"Found _google() call at abs pos {gcall_abs}")
-
-# Show 2000 chars BEFORE and 1000 chars AFTER
-print("\n=== 2000 chars BEFORE _google() call ===")
-print(repr(src[max(0, gcall_abs - 2000):gcall_abs]))
-print("=== END BEFORE ===")
-
-print("\n=== 1000 chars AFTER _google() call ===")
-print(repr(src[gcall_abs:gcall_abs + 1000]))
-print("=== END AFTER ===")
+# Show the range around each _google line
+for ln, txt in google_lines:
+    print(f"\n=== Context around line {ln} (lines {ln-30} to {ln+30}) ===")
+    start = max(0, ln - 31)
+    end = min(len(lines), ln + 30)
+    for i in range(start, end):
+        marker = ">>>" if (i + 1) == ln else "   "
+        indent = len(lines[i]) - len(lines[i].lstrip())
+        print(f"  {marker} {i+1:4d} [{indent:2d}]: {lines[i].rstrip()}")
+    print(f"=== END CONTEXT ===")
 
 print("DIAGNOSTIC COMPLETE")
