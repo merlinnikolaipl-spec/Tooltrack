@@ -66,56 +66,71 @@ if '_signInWithApple' not in src:
 else:
     print('_signInWithApple already present')
 
-# Step 3: Add Apple button after Google button
-# Find GoogleSignIn( anchor, then find ElevatedButton AFTER end of method
+# Step 3: Find ElevatedButton containing GoogleSignIn and add Apple button after it
 if 'Sign in with Apple' not in src:
     google_anchor = src.find('GoogleSignIn(')
     if google_anchor < 0:
         print('ERROR: Google anchor not found!')
         sys.exit(1)
     print('Google anchor at', google_anchor)
-    fa = src.rfind('async {', 0, google_anchor)
-    if fa < 0:
-        fa = google_anchor
-    fls = src.rfind(chr(10), 0, fa) + 1
-    fi2 = ''
-    for ch in src[fls:]:
-        if ch == ' ':
-            fi2 += ch
-        else:
-            break
-    if not fi2:
-        fi2 = '  '
-    mclose = src.find(chr(10) + fi2 + '}', google_anchor)
-    search_from = mclose if mclose >= 0 else google_anchor
-    print('ElevatedButton search from pos', search_from)
-    el = src.find('ElevatedButton(', search_from)
-    if el < 0:
-        el = src.find('OutlinedButton(', search_from)
-        if el < 0:
-            el = src.find('TextButton(', search_from)
-        if el < 0:
-            print('ERROR: No button widget found after Google method!')
-            print(repr(src[search_from:search_from+500]))
-            sys.exit(1)
-        else:
-            print('OutlinedButton/TextButton at', el)
-    else:
-        print('ElevatedButton at', el)
-    depth = 0
+    # Search all ElevatedButton and find one containing GoogleSignIn
+    search_pos = 0
+    el = -1
     close_pos = -1
-    i = el
-    while i < len(src):
-        if src[i] == '(':
-            depth += 1
-        elif src[i] == ')':
-            depth -= 1
-            if depth == 0:
-                close_pos = i
+    while True:
+        candidate = src.find('ElevatedButton(', search_pos)
+        if candidate < 0:
+            break
+        dep = 0
+        cp = -1
+        idx = candidate
+        while idx < len(src):
+            if src[idx] == '(':
+                dep += 1
+            elif src[idx] == ')':
+                dep -= 1
+                if dep == 0:
+                    cp = idx
+                    break
+            idx += 1
+        if cp >= 0 and 'GoogleSignIn(' in src[candidate:cp+1]:
+            el = candidate
+            close_pos = cp
+            print('Found Google ElevatedButton at', el)
+            break
+        search_pos = candidate + 15
+    if el < 0:
+        print('No ElevatedButton with GoogleSignIn found, trying OutlinedButton/TextButton')
+        for btype in ['OutlinedButton(', 'TextButton(']:
+            sp = 0
+            while True:
+                c2 = src.find(btype, sp)
+                if c2 < 0:
+                    break
+                d2 = 0
+                c2p = -1
+                i2 = c2
+                while i2 < len(src):
+                    if src[i2] == '(':
+                        d2 += 1
+                    elif src[i2] == ')':
+                        d2 -= 1
+                        if d2 == 0:
+                            c2p = i2
+                            break
+                    i2 += 1
+                if c2p >= 0 and 'GoogleSignIn(' in src[c2:c2p+1]:
+                    el = c2
+                    close_pos = c2p
+                    print('Found Google button', btype, 'at', el)
+                    break
+                sp = c2 + len(btype)
+            if el >= 0:
                 break
-        i += 1
-    if close_pos < 0:
-        print('ERROR: Button close paren not found!')
+    if el < 0:
+        print('ERROR: No button with GoogleSignIn found!')
+        # Diagnostic: show context around GoogleSignIn
+        print(repr(src[max(0,google_anchor-200):google_anchor+500]))
         sys.exit(1)
     ia = close_pos + 1
     if ia < len(src) and src[ia] == ',':
