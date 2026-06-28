@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-patch_apple_signin.py  v13 – DIAGNOSTIC: find _LoginPageState fields & Google button widget
+patch_apple_signin.py  v14
+- Fix variable names: loading, error (no underscore)
+- Find Google button by _google() call in build(), insert Apple button after it
 """
 
 import subprocess, sys, re
@@ -24,79 +26,149 @@ with open(MAIN_DART, "r", encoding="utf-8") as f:
 
 print(f"File length: {len(src)} chars")
 
-# ── 1. Find _LoginPageState boundaries ──────────────────────────────────────
-login_pos = src.find("class _LoginPageState")
-if login_pos == -1:
-    print("ERROR: _LoginPageState not found"); sys.exit(1)
-print(f"_LoginPageState at pos {login_pos}")
+# ── Step 1: Add imports ───────────────────────────────────────────────────────
+APPLE_IMPORT = "import 'package:sign_in_with_apple/sign_in_with_apple.dart';"
+if APPLE_IMPORT not in src:
+    # Insert after last existing import
+    last_import = src.rfind("\nimport ")
+    end_of_last_import = src.find(";", last_import) + 1
+    src = src[:end_of_last_import] + "\n" + APPLE_IMPORT + src[end_of_last_import:]
+    print("Added Apple import")
+else:
+    print("Apple import already present")
 
-# Find the build method
-build_pos = src.find("Widget build", login_pos)
-print(f"Widget build at pos {build_pos}")
+# ── Step 2: Add _signInWithApple() method before Widget build ─────────────────
+APPLE_METHOD = '''
+  Future<void> _signInWithApple() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+      await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+'''
 
-# Extract the class fields section (between class declaration and build)
-class_section = src[login_pos:build_pos]
-print(f"\n=== Fields in _LoginPageState (first 3000 chars) ===")
-print(class_section[:3000])
-print("=== END FIELDS ===")
+METHOD_MARKER = "Future<void> _signInWithApple()"
+if METHOD_MARKER not in src:
+    # Find _LoginPageState
+    login_pos = src.find("class _LoginPageState")
+    if login_pos == -1:
+        print("ERROR: _LoginPageState not found"); sys.exit(1)
+    # Find Widget build after _LoginPageState
+    build_pos = src.find("Widget build", login_pos)
+    if build_pos == -1:
+        print("ERROR: Widget build not found"); sys.exit(1)
+    # Find the @override before Widget build
+    override_pos = src.rfind("@override", login_pos, build_pos)
+    if override_pos == -1:
+        override_pos = build_pos
+    src = src[:override_pos] + APPLE_METHOD + "  " + src[override_pos:]
+    print(f"Inserted _signInWithApple() method at pos {override_pos}")
+else:
+    print("_signInWithApple() already present")
 
-# ── 2. Find all bool/String/var/int fields ───────────────────────────────────
-field_patterns = [
-    r'bools+(_w+)',
-    r'Strings+(_w+)',
-    r'ints+(_w+)',
-    r'vars+(_w+)',
-    r'doubles+(_w+)',
-    r'lates+w+s+(_w+)',
-]
-print("\n=== Detected state fields ===")
-for pat in field_patterns:
-    matches = re.findall(pat, class_section)
-    if matches:
-        print(f"  {pat}: {matches}")
+# ── Step 3: Find Google button by _google() call and insert Apple button after ─
+# Strategy: find "_google()" in build() section, find the closing of the widget
+# that contains it, then insert Apple button after it.
 
-# ── 3. Find googleSignIn.signIn() and surrounding context ───────────────────
-gsignin_pos = src.find("googleSignIn.signIn()")
-if gsignin_pos == -1:
-    gsignin_pos = src.find("googleSignIn.signIn(")
-print(f"\ngoogleSignIn.signIn() at pos {gsignin_pos}")
+login_pos2 = src.find("class _LoginPageState")
+build_pos2 = src.find("Widget build", login_pos2)
+if build_pos2 == -1:
+    print("ERROR: Widget build not found after insert"); sys.exit(1)
 
-# Show 800 chars around it
-ctx_start = max(0, gsignin_pos - 400)
-ctx_end = min(len(src), gsignin_pos + 400)
-print("\n=== Context around googleSignIn.signIn() ===")
-print(repr(src[ctx_start:ctx_end]))
-print("=== END CONTEXT ===")
+build_section = src[build_pos2:]
 
-# ── 4. Find the line with googleSignIn.signIn() ──────────────────────────────
-line_start = src.rfind("\n", 0, gsignin_pos) + 1
-line_end = src.find("\n", gsignin_pos)
-gsignin_line = src[line_start:line_end]
-print(f"\nLine with googleSignIn.signIn(): {repr(gsignin_line)}")
-indent = len(gsignin_line) - len(gsignin_line.lstrip())
-print(f"Indent: {indent} spaces")
+# Find _google() call in build section (not the method definition)
+# _google() is called as onPressed: _google (no parentheses) or onPressed: () => _google()
+# Let's find all occurrences
+idx = 0
+google_call_offsets = []
+while True:
+    pos = build_section.find("_google", idx)
+    if pos == -1:
+        break
+    # Skip "Future<void> _google() async {" - the method definition
+    context = build_section[max(0,pos-10):pos+30]
+    if "Future" not in context and "void" not in context and "async" not in build_section[pos:pos+20]:
+        google_call_offsets.append(pos)
+    idx = pos + 1
 
-# ── 5. Search backwards from googleSignIn for all widget types ───────────────
-search_area = src[login_pos:gsignin_pos]
-widget_keywords = [
-    "ElevatedButton", "OutlinedButton", "TextButton", "FilledButton",
-    "GestureDetector", "InkWell", "InkResponse", "MaterialButton",
-    "CupertinoButton", "IconButton", "FloatingActionButton",
-    "onTap:", "onPressed:", "SignInButton",
-    "GoogleSignInButton", "google_sign_in",
-]
-print("\n=== Widget occurrences before googleSignIn.signIn() (from _LoginPageState) ===")
-for kw in widget_keywords:
-    positions = [i for i in range(len(search_area)) if search_area.startswith(kw, i)]
-    if positions:
-        print(f"  {kw}: {len(positions)} occurrences, last at offset {positions[-1]}")
-        # Show last occurrence context
-        last = positions[-1]
-        print(f"    Context: {repr(search_area[max(0,last-20):last+60])}")
+print(f"_google() references in build section: {google_call_offsets}")
 
-# ── 6. Show 1500 chars before googleSignIn.signIn() ─────────────────────────
-print("\n=== 1500 chars before googleSignIn.signIn() ===")
-print(repr(src[max(0, gsignin_pos - 1500):gsignin_pos]))
-print("=== END ===")
+APPLE_BUTTON_MARKER = "_signInWithApple"
+if APPLE_BUTTON_MARKER in src[build_pos2:] and "SignInWithApple" in src[build_pos2:]:
+    print("Apple button already in build section, skipping")
+elif not google_call_offsets:
+    print("ERROR: No _google() call found in build section"); sys.exit(1)
+else:
+    # Use the first occurrence (there might be multiple)
+    gcall_offset = google_call_offsets[0]
+    gcall_abs = build_pos2 + gcall_offset
 
-print("\nDIAGNOSTIC COMPLETE")
+    print(f"Found _google() call at abs pos {gcall_abs}")
+    print(f"Context: {repr(src[gcall_abs-50:gcall_abs+50])}")
+
+    # Find the line containing _google() call
+    line_start = src.rfind("\n", 0, gcall_abs) + 1
+    line_end = src.find("\n", gcall_abs)
+    gcall_line = src[line_start:line_end]
+    print(f"_google() call line: {repr(gcall_line)}")
+    indent = len(gcall_line) - len(gcall_line.lstrip())
+    print(f"Indent of _google() line: {indent}")
+
+    # Find the closing of the widget containing _google()
+    # Walk forward from gcall_abs to find a line at same or lower indent ending with ","
+    # This would be the closing paren of the Google button widget
+    search_from = line_end + 1
+    closing_pos = None
+    lines_after = src[search_from:search_from + 3000].split("\n")
+    abs_pos = search_from
+    for ln in lines_after:
+        ln_indent = len(ln) - len(ln.lstrip()) if ln.strip() else 999
+        stripped = ln.strip()
+        # Looking for a line at indent <= (indent - 2) ending with , or ), or ),
+        if ln_indent <= indent and stripped and (stripped.endswith(",") or stripped == ")" or stripped == ")," or stripped == "]," or stripped == "]"):
+            closing_pos = abs_pos + len(ln)
+            print(f"Found closing at indent {ln_indent}: {repr(ln)}")
+            break
+        abs_pos += len(ln) + 1
+
+    if closing_pos is None:
+        print("ERROR: Could not find closing of Google button widget"); sys.exit(1)
+
+    # The Apple button to insert
+    # We need to figure out the correct indentation for the Apple button
+    # It should be at indent=4 (same level as other top-level widgets in column)
+    apple_indent = " " * 8  # typical Flutter widget indent in Column children
+
+    APPLE_BTN = f"""
+{apple_indent}const SizedBox(height: 12),
+{apple_indent}SignInWithAppleButton(
+{apple_indent}  onPressed: _signInWithApple,
+{apple_indent}),"""
+
+    # Insert after closing of Google button
+    src = src[:closing_pos + 1] + APPLE_BTN + src[closing_pos + 1:]
+    print(f"Inserted Apple button after Google button closing at pos {closing_pos}")
+
+# ── Write result ──────────────────────────────────────────────────────────────
+with open(MAIN_DART, "w", encoding="utf-8") as f:
+    f.write(src)
+print(f"Written {len(src)} chars")
+print("Apple Sign-In patch complete")
