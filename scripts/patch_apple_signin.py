@@ -68,26 +68,27 @@ else:
 
 # Step 3: Add Apple button after Google button
 if 'Sign in with Apple' not in src:
-    google_text_markers = [
-        "'Sign in with Google'",
-        '"Sign in with Google"',
-        'Google',
-    ]
-    google_text_idx = -1
-    for marker in google_text_markers:
-        google_text_idx = src.find(marker)
-        if google_text_idx >= 0:
-            print('Google text marker', repr(marker), 'at', google_text_idx)
-            break
-    if google_text_idx < 0:
-        print('ERROR: Google button text not found!')
-        ai = src.find('GoogleSignIn(')
-        if ai >= 0:
-            print('Context around GoogleSignIn(:')
-            print(repr(src[max(0,ai-300):ai+300]))
-        sys.exit(1)
-    el = src.rfind('ElevatedButton(', 0, google_text_idx)
-    if el < 0:
+    google_anchor = src.find('GoogleSignIn(')
+        if google_anchor < 0:
+                    print('ERROR: Google anchor not found!')
+                    sys.exit(1)
+                print('Google anchor at', google_anchor)
+    fa = src.rfind('async {', 0, google_anchor)
+    if fa < 0:
+                fa = google_anchor
+            fls = src.rfind(chr(10), 0, fa) + 1
+    fi2 = ''
+    for ch in src[fls:]:
+                if ch == ' ':
+                                fi2 += ch
+                else:
+                                break
+                        if not fi2:
+                                    fi2 = '  '
+                                mclose = src.find(chr(10) + fi2 + '}', google_anchor)
+    search_from = mclose if mclose >= 0 else google_anchor
+    print('ElevatedButton search from pos', search_from)
+    el = src.find('ElevatedButton(', search_from)
         el = src.rfind('OutlinedButton(', 0, google_text_idx)
         if el < 0:
             el = src.rfind('TextButton(', 0, google_text_idx)
