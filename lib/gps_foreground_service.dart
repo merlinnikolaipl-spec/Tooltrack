@@ -92,8 +92,8 @@ Future<void> _writeLocation(String companyId, String shiftId, Position pos) asyn
     'fields': {
       'lat': {'doubleValue': pos.latitude},
       'lng': {'doubleValue': pos.longitude},
-      'acc': {'doubleValue': pos.accuracy},
-      'ts': {'stringValue': posTs},
+      'accuracy': {'doubleValue': pos.accuracy},
+      'createdAt': {'timestampValue': posTs},
       'source': {'stringValue': 'gps_v7'},
     }
   });
