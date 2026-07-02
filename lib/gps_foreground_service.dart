@@ -10,8 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
-// GPS Service v7 - no SharedPreferences in _writeLocation (deadlock fix)
-// noauth write first (rules allow it), token write as fallback
+// GPS Service v8 - no SharedPreferences in _writeLocation (deadlock fix)
+// noauth write first (rules allow it), token write as fallback; timestampValue UTC fix
 
 const _projectId = 'tooltrack-ee0aa';
 
@@ -86,7 +86,7 @@ Future<void> _writeLocation(String companyId, String shiftId, Position pos) asyn
 
   _lastWriteTime = now;
 
-  final posTs = (pos.timestamp ?? now).toIso8601String();
+  final posTs = (pos.timestamp ?? now).toUtc().toIso8601String();
   final url = 'https://firestore.googleapis.com/v1/projects/$_projectId/databases/(default)/documents/companies/$companyId/timesheets/$shiftId/locations';
   final body = jsonEncode({
     'fields': {
@@ -94,7 +94,7 @@ Future<void> _writeLocation(String companyId, String shiftId, Position pos) asyn
       'lng': {'doubleValue': pos.longitude},
       'accuracy': {'doubleValue': pos.accuracy},
       'createdAt': {'timestampValue': posTs},
-      'source': {'stringValue': 'gps_v7'},
+      'source': {'stringValue': 'gps_v8'},
     }
   });
 
@@ -247,7 +247,7 @@ Future<void> _startGps(String companyId, String shiftId) async {
   try {
     _posStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
       (Position pos) async {
-        await _log('POS', 'lat=${pos.latitude.toStringAsFixed(5)} lng=${pos.longitude.toStringAsFixed(5)} acc=${pos.accuracy.toStringAsFixed(1)}');
+        // POS logging removed (v8) - was causing Firestore quota exhaustion
         await _writeLocation(companyId, shiftId, pos);
       },
       onError: (e) async { await _log('POS_ERR', e.toString()); },
