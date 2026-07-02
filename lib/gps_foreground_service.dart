@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
-// GPS Service v8 - no SharedPreferences in _writeLocation (deadlock fix)
+// GPS Service v9 - Android GPS fix (no Platform.isIOS startup check)
 // noauth write first (rules allow it), token write as fallback; timestampValue UTC fix
 
 const _projectId = 'tooltrack-ee0aa';
@@ -160,11 +160,11 @@ Future<void> gpsServiceMain(ServiceInstance service) async {
 
     await _log('SERVICE', 'v7 started token=${_cachedToken != null && _cachedToken!.isNotEmpty ? "ok" : "null"} refresh=${_cachedRefreshToken != null ? "ok" : "null"} cid=${savedCompany.isNotEmpty ? "ok" : "EMPTY"} sid=${savedShift.isNotEmpty ? "ok" : "EMPTY"} interval=$_gpsIntervalMin');
 
-    if (Platform.isIOS && savedCompany.isNotEmpty && savedShift.isNotEmpty) {
-      await _log('IOS', 'v7 IDs found on startup, starting GPS');
+    if (savedCompany.isNotEmpty && savedShift.isNotEmpty) {
+      await _log('SERVICE', 'v9 IDs found on startup, starting GPS');
       await _startGps(savedCompany, savedShift);
-    } else if (Platform.isIOS) {
-      await _log('IOS', 'v7 IDs empty on startup, waiting for startTracking event');
+    } else {
+      await _log('SERVICE', 'v9 IDs empty on startup, waiting for startTracking event');
       int attempts = 0;
       Timer.periodic(const Duration(seconds: 2), (timer) async {
         attempts++;
@@ -174,11 +174,11 @@ Future<void> gpsServiceMain(ServiceInstance service) async {
         final sId = p.getString('shift_shiftId') ?? '';
         if (cId.isNotEmpty && sId.isNotEmpty) {
           timer.cancel();
-          await _log('IOS', 'v7 IDs found after $attempts poll attempts');
+          await _log('SERVICE', 'v9 IDs found after ${attempts} poll attempts');
           await _startGps(cId, sId);
         } else if (attempts >= 30) {
           timer.cancel();
-          await _log('IOS', 'v7 poll timeout after $attempts attempts');
+          await _log('SERVICE', 'v9 poll timeout after ${attempts} attempts');
         }
       });
     }
