@@ -6725,7 +6725,7 @@ class _EmployeesListCardState extends State<EmployeesListCard> {
         final canEditProfiles = isOwner || isAdmin; // Ã¢ÂÂ ÃÂ°ÃÂ½ÃÂºÃÂµÃÂÃÂ ÃÂÃÂµÃÂ´ÃÂ°ÃÂºÃÂÃÂ¸ÃÂÃÂÃÂµÃÂ ÃÂ²ÃÂ»ÃÂ°ÃÂ´ÃÂµÃÂ»ÃÂµÃÂ ÃÂ¸ ÃÂ°ÃÂ´ÃÂ¼ÃÂ¸ÃÂ½
 
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: companyMembersRef(widget.companyId).where('status', isEqualTo: 'active').snapshots(),
+          stream: companyMembersRef(widget.companyId).where('status', isEqualTo: 'active').limit(200).snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -6971,7 +6971,7 @@ class JoinRequestsCard extends StatelessWidget {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: companyJoinRequestsRef(companyId)
           .orderBy('createdAt', descending: true)
-          .snapshots(),
+          .limit(50).snapshots(),
       builder: (c, s) {
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
         final docs = s.data!.docs;
@@ -7216,7 +7216,7 @@ class _PeoplePageState extends State<PeoplePage> {
   // type=null shows archive (all fired/completed); activeOnly filters by status
   Widget _buildList(I18n i18n, {String? type, bool activeOnly = true}) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: companyPeopleRef(widget.companyId).snapshots(),
+      stream: companyPeopleRef(widget.companyId).limit(200).snapshots(),
       builder: (c, s) {
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -7866,7 +7866,7 @@ class _ToolsPageState extends State<ToolsPage> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).snapshots(),
+              stream: companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
               builder: (c, s) {
                 if (!s.hasData) return const Center(child: CircularProgressIndicator());
                 final docs = s.data!.docs;
@@ -8243,7 +8243,7 @@ class _HistoryTabState extends State<HistoryTab> {
         ),
         Expanded(
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: companyMovesRef(widget.companyId).orderBy('createdAt', descending: true).snapshots(),
+            stream: companyMovesRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
             builder: (c, s) {
               if (!s.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -9426,7 +9426,7 @@ class _SitesPageState extends State<SitesPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: companySitesRef(widget.companyId).snapshots(),
+        stream: companySitesRef(widget.companyId).limit(100).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -11196,7 +11196,7 @@ class _WorkSitesInlineCardState extends State<WorkSitesInlineCard> {
                 ),
                 const SizedBox(height: 8),
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: companySitesRef(widget.companyId).snapshots(),
+                  stream: companySitesRef(widget.companyId).limit(100).snapshots(),
                   builder: (context, snap) {
                     if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                     var docs = snap.data!.docs;
@@ -11304,7 +11304,7 @@ class _SitesManageInlineCardState extends State<SitesManageInlineCard> {
                 ),
                 const SizedBox(height: 8),
                 StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: companySitesRef(widget.companyId).snapshots(),
+                  stream: companySitesRef(widget.companyId).limit(100).snapshots(),
                   builder: (context, snap) {
                     if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                     var docs = snap.data!.docs;
@@ -11378,7 +11378,7 @@ class WorkSitesReadOnlyPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(i18n.t('sites'))),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: companySitesRef(companyId).snapshots(),
+        stream: companySitesRef(companyId).limit(100).snapshots(),
         builder: (context, snap) {
           if (!snap.hasData) return const Center(child: CircularProgressIndicator());
           final docs = snap.data!.docs;
