@@ -9791,12 +9791,7 @@ class _ShiftButtonState extends State<ShiftButton> {
           .limit(1)
           .get();
       if (!mounted) return;
-      if (activeSnap.docs.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(i18n.t('alreadyHaveActiveShift'))),
-        );
-        return;
-      }
+      // v23: removed alreadyHaveActiveShift guard (allow new shift)
     } catch (_) {}
     if (!mounted) return;
 
@@ -10129,6 +10124,7 @@ class _ShiftButtonState extends State<ShiftButton> {
                   }
                 } catch (e) {
                   setDlg(() => saving = false);
+                  try { Navigator.pop(ctx); } catch (_) {}
                   if (ctx2.mounted) {
                     ScaffoldMessenger.of(ctx2)
                         .showSnackBar(SnackBar(content: Text('ÐÑÐ¸Ð±ÐºÐ°: $e')));
@@ -10193,8 +10189,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
           .snapshots();
     }
     return companyTimesheetsRef(widget.companyId)
-        .orderBy('startTime', descending: true)
-        .snapshots();
+        .snapshots(); // v23: removed orderBy (sort client-side)
   }
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _applyFilters(
