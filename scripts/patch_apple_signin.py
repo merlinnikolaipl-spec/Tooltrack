@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-patch_apple_signin.py v20
+patch_apple_signin.py v21
 Fixes:
 1. Removed restore() - workflow already restores pubspec.yaml and bumps version BEFORE this script
 2. Adds sign_in_with_apple to pubspec.yaml dependencies (fixes MissingPluginException)
@@ -13,7 +13,7 @@ import sys, re
 MAIN_DART = "lib/main.dart"
 PUBSPEC = "pubspec.yaml"
 
-# ── Read pubspec.yaml ─────────────────────────────────────────────────────────
+# ââ Read pubspec.yaml âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 with open(PUBSPEC, "r", encoding="utf-8") as f:
     pubspec = f.read()
 
@@ -47,12 +47,12 @@ with open(PUBSPEC, "w", encoding="utf-8") as f:
 print("pubspec.yaml updated")
 print("Version in pubspec:", [l for l in pubspec.split("\n") if l.startswith("version:")])
 
-# ── Read main.dart ────────────────────────────────────────────────────────────
+# ââ Read main.dart ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 with open(MAIN_DART, "r", encoding="utf-8") as f:
     src = f.read()
 print(f"main.dart length: {len(src)} chars")
 
-# ── Step 1: Add import ────────────────────────────────────────────────────────
+# ââ Step 1: Add import ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 APPLE_IMPORT = "import 'package:sign_in_with_apple/sign_in_with_apple.dart';"
 if APPLE_IMPORT not in src:
     last_import = src.rfind("\nimport ")
@@ -62,7 +62,7 @@ if APPLE_IMPORT not in src:
 else:
     print("Apple import already present")
 
-# ── Step 2: Add _signInWithApple() method before Widget build ─────────────────
+# ââ Step 2: Add _signInWithApple() method before Widget build âââââââââââââââââ
 APPLE_METHOD = '''
   Future<void> _signInWithApple() async {
     setState(() {
@@ -105,7 +105,7 @@ if METHOD_MARKER not in src:
 else:
     print("_signInWithApple() already present")
 
-# ── Step 3: Insert Apple button after Google SizedBox ─────────────────────────
+# ââ Step 3: Insert Apple button after Google SizedBox âââââââââââââââââââââââââ
 APPLE_BUTTON = """
               const SizedBox(height: 8),
               SizedBox(
@@ -166,8 +166,65 @@ if BUTTON_MARKER not in src:
 else:
     print("Apple button already present")
 
-# ── Save main.dart ────────────────────────────────────────────────────────────
+# ââ Save main.dart ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATCH v21 ADDITIONS: Fix _endShift hang + Fix alreadyHaveActiveShift block
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Fix A: null-safe startTime cast in _endShift (prevents NullPointerException hang)
+OLD_START_CAST = "final startTime = (shiftData['startTime'] as Timestamp).toDate();"
+NEW_START_CAST = "final startTime = (shiftData['startTime'] as Timestamp?)?.toDate() ?? DateTime.now();"
+if OLD_START_CAST in src:
+    src = src.replace(OLD_START_CAST, NEW_START_CAST, 1)
+    print("v21: Fixed startTime null-safe cast in _endShift")
+else:
+    print("v21 WARNING: startTime cast not found")
+
+# Fix B: add Navigator.pop(ctx) in _endShift catch block (so dialog always closes)
+OLD_ENDSHIFT_CATCH = """        } catch (e) {
+          setDlg(() => saving = false);
+          if (ctx2.mounted) {
+            ScaffoldMessenger.of(ctx2)
+                .showSnackBar(SnackBar(content: Text("""
+NEW_ENDSHIFT_CATCH = """        } catch (e) {
+          setDlg(() => saving = false);
+          try { Navigator.pop(ctx); } catch (_) {}
+          if (ctx2.mounted) {
+            ScaffoldMessenger.of(ctx2)
+                .showSnackBar(SnackBar(content: Text("""
+if OLD_ENDSHIFT_CATCH in src:
+    src = src.replace(OLD_ENDSHIFT_CATCH, NEW_ENDSHIFT_CATCH, 1)
+    print("v21: Fixed _endShift catch - added Navigator.pop(ctx)")
+else:
+    print("v21 WARNING: _endShift catch block not found exactly")
+
+# Fix C: remove alreadyHaveActiveShift block (blocks new shift after app restart)
+OLD_ACTIVE_CHECK = """    // Block starting a new shift if one is already active for this person
+    try {
+      final activeSnap = await companyTimesheetsRef(widget.companyId)
+          .where('personId', isEqualTo: personIdForShift)
+          .where('endTime', isNull: true)
+          .limit(1)
+          .get();
+      if (!mounted) return;
+      if (activeSnap.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(i18n.t('alreadyHaveActiveShift'))),
+        );
+        return;
+      }
+    } catch (_) {}
+    if (!mounted) return;"""
+NEW_ACTIVE_CHECK = "    // [v21] Active-shift duplicate check removed - allow restart after app reboot\n    if (!mounted) return;"
+if OLD_ACTIVE_CHECK in src:
+    src = src.replace(OLD_ACTIVE_CHECK, NEW_ACTIVE_CHECK, 1)
+    print("v21: Removed alreadyHaveActiveShift duplicate block")
+else:
+    print("v21 WARNING: alreadyHaveActiveShift block not found - may differ in whitespace")
+
+
 with open(MAIN_DART, "w", encoding="utf-8") as f:
     f.write(src)
 print("main.dart saved successfully")
-print("PATCH v20 COMPLETE")
+print("PATCH v21 COMPLETE")
