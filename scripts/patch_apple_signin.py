@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-patch_apple_signin.py v21
+patch_apple_signin.py v22
 Fixes:
 1. Removed restore() - workflow already restores pubspec.yaml and bumps version BEFORE this script
 2. Adds sign_in_with_apple to pubspec.yaml dependencies (fixes MissingPluginException)
@@ -13,7 +13,7 @@ import sys, re
 MAIN_DART = "lib/main.dart"
 PUBSPEC = "pubspec.yaml"
 
-# ââ Read pubspec.yaml âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Read pubspec.yaml Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 with open(PUBSPEC, "r", encoding="utf-8") as f:
     pubspec = f.read()
 
@@ -47,12 +47,12 @@ with open(PUBSPEC, "w", encoding="utf-8") as f:
 print("pubspec.yaml updated")
 print("Version in pubspec:", [l for l in pubspec.split("\n") if l.startswith("version:")])
 
-# ââ Read main.dart ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Read main.dart Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 with open(MAIN_DART, "r", encoding="utf-8") as f:
     src = f.read()
 print(f"main.dart length: {len(src)} chars")
 
-# ââ Step 1: Add import ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Step 1: Add import Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 APPLE_IMPORT = "import 'package:sign_in_with_apple/sign_in_with_apple.dart';"
 if APPLE_IMPORT not in src:
     last_import = src.rfind("\nimport ")
@@ -62,7 +62,7 @@ if APPLE_IMPORT not in src:
 else:
     print("Apple import already present")
 
-# ââ Step 2: Add _signInWithApple() method before Widget build âââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Step 2: Add _signInWithApple() method before Widget build Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 APPLE_METHOD = '''
   Future<void> _signInWithApple() async {
     setState(() {
@@ -105,7 +105,7 @@ if METHOD_MARKER not in src:
 else:
     print("_signInWithApple() already present")
 
-# ââ Step 3: Insert Apple button after Google SizedBox âââââââââââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Step 3: Insert Apple button after Google SizedBox Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 APPLE_BUTTON = """
               const SizedBox(height: 8),
               SizedBox(
@@ -166,11 +166,11 @@ if BUTTON_MARKER not in src:
 else:
     print("Apple button already present")
 
-# ââ Save main.dart ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# Ã¢ÂÂÃ¢ÂÂ Save main.dart Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
-# ─────────────────────────────────────────────────────────────────────────────
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 # PATCH v21 ADDITIONS: Fix _endShift hang + Fix alreadyHaveActiveShift block
-# ─────────────────────────────────────────────────────────────────────────────
+# âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 # Fix A: null-safe startTime cast in _endShift (prevents NullPointerException hang)
 OLD_START_CAST = "final startTime = (shiftData['startTime'] as Timestamp).toDate();"
@@ -224,7 +224,49 @@ else:
     print("v21 WARNING: alreadyHaveActiveShift block not found - may differ in whitespace")
 
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATCH v22 FIXES (exact indentation from file analysis)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Fix A (v22): null-safe startTime in _endShift (18-space indent)
+OLD_ST = "                  final startTime = (shiftData['startTime'] as Timestamp).toDate();"
+NEW_ST = "                  final startTime = (shiftData['startTime'] as Timestamp?)?.toDate() ?? DateTime.now();"
+if OLD_ST in src:
+    src = src.replace(OLD_ST, NEW_ST, 1)
+    print("v22 Fix A OK: startTime null-safe")
+else:
+    print("v22 Fix A SKIP")
+
+# Fix B (v22): Navigator.pop in _endShift catch (exact 16-space indent)
+OLD_CATCH = "                } catch (e) {\n                  setDlg(() => saving = false);\n                  if (ctx2.mounted) {"
+NEW_CATCH = "                } catch (e) {\n                  setDlg(() => saving = false);\n                  try { Navigator.pop(ctx); } catch (_) {}\n                  if (ctx2.mounted) {"
+if OLD_CATCH in src:
+    src = src.replace(OLD_CATCH, NEW_CATCH, 1)
+    print("v22 Fix B OK: Navigator.pop in catch")
+else:
+    print("v22 Fix B SKIP")
+
+# Fix C (v22): remove alreadyHaveActiveShift block (exact 4-space indent)
+OLD_ACTIVE = "    // Block starting a new shift if one is already active for this person\n    try {\n      final activeSnap = await companyTimesheetsRef(widget.companyId)\n          .where('personId', isEqualTo: personIdForShift)\n          .where('endTime', isNull: true)\n          .limit(1)\n          .get();\n      if (!mounted) return;\n      if (activeSnap.docs.isNotEmpty) {\n        ScaffoldMessenger.of(context).showSnackBar(\n          SnackBar(content: Text(i18n.t('alreadyHaveActiveShift'))),\n        );\n        return;\n      }\n    } catch (_) {}\n    if (!mounted) return;"
+NEW_ACTIVE = "    // v22: removed duplicate-shift block\n    if (!mounted) return;"
+if OLD_ACTIVE in src:
+    src = src.replace(OLD_ACTIVE, NEW_ACTIVE, 1)
+    print("v22 Fix C OK: alreadyHaveActiveShift removed")
+else:
+    print("v22 Fix C SKIP")
+
+# Fix D (v22): remove orderBy from admin stream (causes Firestore index error = no shifts visible)
+OLD_STREAM = "    return companyTimesheetsRef(widget.companyId)\n        .orderBy('startTime', descending: true)\n        .snapshots();"
+NEW_STREAM = "    return companyTimesheetsRef(widget.companyId)\n        .snapshots(); // v22: orderBy removed, sorted client-side"
+if OLD_STREAM in src:
+    src = src.replace(OLD_STREAM, NEW_STREAM, 1)
+    print("v22 Fix D OK: orderBy removed from admin stream")
+else:
+    print("v22 Fix D SKIP")
+
+
 with open(MAIN_DART, "w", encoding="utf-8") as f:
     f.write(src)
 print("main.dart saved successfully")
-print("PATCH v21 COMPLETE")
+print("PATCH v22 COMPLETE")
