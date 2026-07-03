@@ -171,6 +171,9 @@ class I18n {
       'continue': 'ÃÂÃÂÃÂ¾ÃÂ´ÃÂ¾ÃÂ»ÃÂ¶ÃÂ¸ÃÂÃÂ',
       'switchAcc': 'ÃÂ¡ÃÂ¼ÃÂµÃÂ½ÃÂ¸ÃÂÃÂ ÃÂ°ÃÂºÃÂºÃÂ°ÃÂÃÂ½ÃÂ',
       'logout': 'ÃÂÃÂÃÂ¹ÃÂÃÂ¸',
+      'deleteAccount': 'Удалить аккаунт',
+      'deleteAccountTitle': 'Удалить аккаунт?',
+      'deleteAccountText': 'Все ваши данные будут удалены. Это действие нельзя отменить.',
       'people': 'ÃÂÃÂÃÂ´ÃÂ¸',
       'tools': 'ÃÂÃÂ½ÃÂÃÂÃÂÃÂÃÂ¼ÃÂµÃÂ½ÃÂÃÂ',
       'tool': 'ÃÂÃÂ½ÃÂÃÂÃÂÃÂÃÂ¼ÃÂµÃÂ½ÃÂ',
@@ -485,6 +488,9 @@ class I18n {
       'register': 'ÃÂ ÃÂµÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂ',
       'enter': 'ÃÂ£ÃÂ²ÃÂÃÂ¹ÃÂÃÂ¸',
       'logout': 'ÃÂÃÂ¸ÃÂ¹ÃÂÃÂ¸',
+      'deleteAccount': 'Видалити акаунт',
+      'deleteAccountTitle': 'Видалити акаунт?',
+      'deleteAccountText': 'Усі ваші дані будуть видалені. Цю дію неможливо скасувати.',
       'people': 'ÃÂÃÂÃÂ´ÃÂ¸',
       'tools': 'ÃÂÃÂ½ÃÂÃÂÃÂÃÂÃÂ¼ÃÂµÃÂ½ÃÂÃÂ¸',
       'tool': 'ÃÂÃÂ½ÃÂÃÂÃÂÃÂÃÂ¼ÃÂµÃÂ½ÃÂ',
@@ -847,6 +853,9 @@ class I18n {
       'register': 'Rejestracja',
       'enter': 'Zaloguj',
       'logout': 'Wyloguj',
+      'deleteAccount': 'Usuń konto',
+      'deleteAccountTitle': 'Usuń konto?',
+      'deleteAccountText': 'Wszystkie Twoje dane zostaną usunięte. Tej operacji nie można cofnąć.',
       'people': 'Ludzie',
       'tools': 'NarzÃÂdzia',
       'tool': 'NarzÃÂdzie',
@@ -1210,6 +1219,9 @@ class I18n {
       'register': 'Register',
       'enter': 'Sign in',
       'logout': 'Sign out',
+      'deleteAccount': 'Delete account',
+      'deleteAccountTitle': 'Delete account?',
+      'deleteAccountText': 'All your data will be deleted. This action cannot be undone.',
       'people': 'People',
       'tools': 'Tools',
       'tool': 'Tool',
@@ -6482,6 +6494,40 @@ class CompanyProfilePage extends StatelessWidget {
     );
   }
 
+  Future<void> _deleteMyAccount(BuildContext context) async {
+    final i18n = AppState.of(context).i18n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(i18n.t('deleteAccountTitle')),
+        content: Text(i18n.t('deleteAccountText')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(i18n.t('cancel'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(i18n.t('deleteAccount')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
+    try {
+      await userDoc(uid).delete();
+    } catch (_) {}
+    try {
+      await user.delete();
+    } catch (_) {}
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AppRouter()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final i18n = I18n(AppState.of(context).lang.value);
@@ -6689,6 +6735,13 @@ class CompanyProfilePage extends StatelessWidget {
             label: Text(i18n.t('deleteCompany')),
           ),
         const SizedBox(height: 12),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+          onPressed: () => _deleteMyAccount(context),
+          icon: const Icon(Icons.delete_forever),
+          label: Text(i18n.t('deleteAccount')),
+        ),
+        const SizedBox(height: 8),
         FilledButton(
           onPressed: () async => onLogout(),
           child: Text(i18n.t('logout')),
