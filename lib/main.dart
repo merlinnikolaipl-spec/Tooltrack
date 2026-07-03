@@ -1585,9 +1585,12 @@ class I18n {
     AppLang.de: {
       'appTitle': 'ToolKeeper', 'login': 'Anmelden', 'register': 'Registrieren', 'enter': 'Einloggen',
       'logout': 'Abmelden', 'people': 'Personen', 'tools': 'Werkzeuge', 'tool': 'Werkzeug',
+      'deleteAccount': 'Konto löschen',
+      'deleteAccountTitle': 'Konto löschen?',
+      'deleteAccountText': 'Alle Ihre Daten werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
       'inv': 'Inv.-Nr.', 'issue': 'Ausgabe', 'profile': 'Profil', 'chooseLang': 'Sprache wÃÂ¤hlen',
       'companyNotFound': 'Firma nicht gefunden', 'noAccessCompany': 'Kein Zugang zur Firma',
-      'leaveCompany': 'Verlassen / andere Firma wÃÂ¤hlen', 'createCompany': 'Firma erstellen',
+      'leaveCompany': 'Verlassen / andere Firma wÃÂ¤hlen', 'createCompany': 'Team erstellen',
       'joinCompany': 'Beitreten', 'or': 'ODER', 'companyName': 'Firmenname',
       'create': 'Erstellen', 'myCompany': 'Meine Firma', 'myProfile': 'Mein Profil',
       'role': 'Rolle', 'role_owner': 'EigentÃÂ¼mer', 'role_admin': 'Administrator',
@@ -1620,8 +1623,8 @@ class I18n {
       'continue': 'Weiter', 'decline': 'Ablehnen', 'done': 'Fertig',
       'firstName': 'Vorname', 'invHint': 'Inventarnummer (z.B. SKDW-001)', 'lastName': 'Nachname',
       'password': 'Passwort', 'position': 'Position', 'reports': 'Berichte', 'welcome': 'Willkommen',
-      'email': 'E-Mail', 'employee': 'Mitarbeiter', 'employees': 'Mitarbeiter',
-      'owner': 'EigentÃÂ¼mer', 'admin': 'Admin', 'worker': 'Mitarbeiter',
+      'email': 'E-Mail', 'employee': 'Team beitreten', 'employees': 'Mitarbeiter',
+      'owner': 'Erstelle ein Team', 'admin': 'Admin', 'worker': 'Mitarbeiter',
       'employeeStatus': 'Mitarbeiterstatus', 'empStatusActive': 'Aktiv', 'empStatusFired': 'Entlassen',
       'toolStatus': 'Werkzeugstatus', 'toolStatusActive': 'Aktiv', 'toolStatusRepair': 'In Reparatur',
       'toolStatusDisposed': 'Ausgesondert', 'markToolActive': 'Als aktiv markieren',
@@ -1783,9 +1786,12 @@ class I18n {
     AppLang.fr: {
       'appTitle': 'ToolKeeper', 'login': 'Connexion', 'register': 'Inscription', 'enter': 'Se connecter',
       'logout': 'DÃÂ©connexion', 'people': 'Personnes', 'tools': 'Outils', 'tool': 'Outil',
+      'deleteAccount': 'Supprimer le compte',
+      'deleteAccountTitle': 'Supprimer le compte ?',
+      'deleteAccountText': 'Toutes vos données seront supprimées. Cette action est irréversible.',
       'inv': 'NÃÂ° inv.', 'issue': 'ÃÂmission', 'profile': 'Profil', 'chooseLang': 'Choisir la langue',
       'companyNotFound': 'Entreprise introuvable', 'noAccessCompany': 'Pas d accÃÂ¨s ÃÂ  l entreprise',
-      'leaveCompany': 'Quitter / autre entreprise', 'createCompany': 'CrÃÂ©er une entreprise',
+      'leaveCompany': 'Quitter / autre entreprise', 'createCompany': 'Créer une équipe',
       'joinCompany': 'Rejoindre', 'or': 'OU', 'companyName': 'Nom de l entreprise',
       'role': 'RÃÂ´le', 'role_owner': 'PropriÃÂ©taire', 'role_admin': 'Administrateur',
       'role_foreman': 'ContremaÃÂ®tre', 'role_employee': 'EmployÃÂ©',
@@ -1800,8 +1806,8 @@ class I18n {
       'birthDate': 'Date de naissance', 'clothesSize': 'Taille', 'company': 'Entreprise',
       'continue': 'Continuer', 'done': 'TerminÃÂ©', 'firstName': 'PrÃÂ©nom', 'lastName': 'Nom',
       'password': 'Mot de passe', 'position': 'Poste', 'reports': 'Rapports', 'welcome': 'Bienvenue',
-      'email': 'E-mail', 'employee': 'EmployÃÂ©', 'employees': 'EmployÃÂ©s',
-      'owner': 'PropriÃÂ©taire', 'admin': 'Admin', 'worker': 'EmployÃÂ©',
+      'email': 'E-mail', 'employee': 'Rejoindre une équipe', 'employees': 'EmployÃÂ©s',
+      'owner': 'Créer une équipe', 'admin': 'Admin', 'worker': 'EmployÃÂ©',
       'employeeStatus': 'Statut employÃÂ©', 'empStatusActive': 'Actif', 'empStatusFired': 'LicenciÃÂ©',
       'toolStatus': 'Statut outil', 'toolStatusActive': 'Actif', 'toolStatusRepair': 'En rÃÂ©paration',
       'toolStatusDisposed': 'Mis au rebut', 'statusNote': 'Note',
@@ -1940,9 +1946,12 @@ class I18n {
     AppLang.es: {
       'appTitle': 'ToolKeeper', 'login': 'Iniciar sesiÃÂ³n', 'register': 'Registrarse', 'enter': 'Entrar',
       'logout': 'Cerrar sesiÃÂ³n', 'people': 'Personas', 'tools': 'Herramientas', 'tool': 'Herramienta',
+      'deleteAccount': 'Eliminar cuenta',
+      'deleteAccountTitle': '¿Eliminar cuenta?',
+      'deleteAccountText': 'Todos sus datos serán eliminados. Esta acción no se puede deshacer.',
       'inv': 'NÃÂ° inv.', 'issue': 'Entrega', 'profile': 'Perfil', 'chooseLang': 'Elegir idioma',
       'companyNotFound': 'Empresa no encontrada', 'noAccessCompany': 'Sin acceso a la empresa',
-      'leaveCompany': 'Salir / elegir otra empresa', 'createCompany': 'Crear empresa',
+      'leaveCompany': 'Salir / elegir otra empresa', 'createCompany': 'Crear equipo',
       'joinCompany': 'Unirse', 'or': 'O', 'companyName': 'Nombre de empresa',
       'role': 'Rol', 'role_owner': 'Propietario', 'role_admin': 'Administrador',
       'role_foreman': 'Capataz', 'role_employee': 'Empleado',
@@ -1957,8 +1966,8 @@ class I18n {
       'birthDate': 'Fecha de nacimiento', 'clothesSize': 'Talla de ropa', 'company': 'Empresa',
       'continue': 'Continuar', 'done': 'Listo', 'firstName': 'Nombre', 'lastName': 'Apellido',
       'password': 'ContraseÃÂ±a', 'position': 'Cargo', 'reports': 'Informes', 'welcome': 'Bienvenido',
-      'email': 'Correo electrÃÂ³nico', 'employee': 'Empleado', 'employees': 'Empleados',
-      'owner': 'Propietario', 'admin': 'Admin', 'worker': 'Empleado',
+      'email': 'Correo electrÃÂ³nico', 'employee': 'Unirse al equipo', 'employees': 'Empleados',
+      'owner': 'Crear equipo', 'admin': 'Admin', 'worker': 'Empleado',
       'employeeStatus': 'Estado del empleado', 'empStatusActive': 'Activo', 'empStatusFired': 'Despedido',
       'toolStatus': 'Estado de herramienta', 'toolStatusActive': 'Activo', 'toolStatusRepair': 'En reparaciÃÂ³n',
       'toolStatusDisposed': 'Dado de baja', 'statusNote': 'Nota',
@@ -2096,9 +2105,12 @@ class I18n {
     AppLang.it: {
       'appTitle': 'ToolKeeper', 'login': 'Accesso', 'register': 'Registrazione', 'enter': 'Accedi',
       'logout': 'Esci', 'people': 'Persone', 'tools': 'Strumenti', 'tool': 'Strumento',
+      'deleteAccount': 'Elimina account',
+      'deleteAccountTitle': 'Eliminare l’account?',
+      'deleteAccountText': 'Tutti i tuoi dati verranno eliminati. Questa azione è irreversibile.',
       'inv': 'NÃÂ° inv.', 'issue': 'Emissione', 'profile': 'Profilo', 'chooseLang': 'Scegli lingua',
       'companyNotFound': 'Azienda non trovata', 'noAccessCompany': 'Nessun accesso all azienda',
-      'leaveCompany': 'Esci / scegli altra azienda', 'createCompany': 'Crea azienda',
+      'leaveCompany': 'Esci / scegli altra azienda', 'createCompany': 'Crea squadra',
       'joinCompany': 'Unisciti', 'or': 'O', 'companyName': 'Nome azienda',
       'role': 'Ruolo', 'role_owner': 'Proprietario', 'role_admin': 'Amministratore',
       'role_foreman': 'Caposquadra', 'role_employee': 'Dipendente',
@@ -2113,8 +2125,8 @@ class I18n {
       'birthDate': 'Data di nascita', 'clothesSize': 'Taglia abiti', 'company': 'Azienda',
       'continue': 'Continua', 'done': 'Fatto', 'firstName': 'Nome', 'lastName': 'Cognome',
       'password': 'Password', 'position': 'Posizione', 'reports': 'Rapporti', 'welcome': 'Benvenuto',
-      'email': 'Email', 'employee': 'Dipendente', 'employees': 'Dipendenti',
-      'owner': 'Proprietario', 'admin': 'Admin', 'worker': 'Dipendente',
+      'email': 'Email', 'employee': 'Unisciti al team', 'employees': 'Dipendenti',
+      'owner': 'Crea squadra', 'admin': 'Admin', 'worker': 'Dipendente',
       'employeeStatus': 'Stato dipendente', 'empStatusActive': 'Attivo', 'empStatusFired': 'Licenziato',
       'toolStatus': 'Stato strumento', 'toolStatusActive': 'Attivo', 'toolStatusRepair': 'In riparazione',
       'toolStatusDisposed': 'Dismesso', 'statusNote': 'Nota',
@@ -2252,9 +2264,12 @@ class I18n {
     AppLang.pt: {
       'appTitle': 'ToolKeeper', 'login': 'Entrar', 'register': 'Registrar', 'enter': 'Fazer login',
       'logout': 'Sair', 'people': 'Pessoas', 'tools': 'Ferramentas', 'tool': 'Ferramenta',
+      'deleteAccount': 'Excluir conta',
+      'deleteAccountTitle': 'Excluir conta?',
+      'deleteAccountText': 'Todos os seus dados serão excluídos. Esta ação não pode ser desfeita.',
       'inv': 'NÃÂ° inv.', 'issue': 'EmissÃÂ£o', 'profile': 'Perfil', 'chooseLang': 'Escolher idioma',
       'companyNotFound': 'Empresa nÃÂ£o encontrada', 'noAccessCompany': 'Sem acesso ÃÂ  empresa',
-      'leaveCompany': 'Sair / escolher outra empresa', 'createCompany': 'Criar empresa',
+      'leaveCompany': 'Sair / escolher outra empresa', 'createCompany': 'Criar equipe',
       'joinCompany': 'Entrar', 'or': 'OU', 'companyName': 'Nome da empresa',
       'role': 'FunÃÂ§ÃÂ£o', 'role_owner': 'ProprietÃÂ¡rio', 'role_admin': 'Administrador',
       'role_foreman': 'Mestre de obras', 'role_employee': 'FuncionÃÂ¡rio',
@@ -2269,8 +2284,8 @@ class I18n {
       'birthDate': 'Data de nascimento', 'clothesSize': 'Tamanho de roupa', 'company': 'Empresa',
       'continue': 'Continuar', 'done': 'Pronto', 'firstName': 'Nome', 'lastName': 'Sobrenome',
       'password': 'Senha', 'position': 'Cargo', 'reports': 'RelatÃÂ³rios', 'welcome': 'Bem-vindo',
-      'email': 'E-mail', 'employee': 'FuncionÃÂ¡rio', 'employees': 'FuncionÃÂ¡rios',
-      'owner': 'ProprietÃÂ¡rio', 'admin': 'Admin', 'worker': 'FuncionÃÂ¡rio',
+      'email': 'E-mail', 'employee': 'Entrar na equipe', 'employees': 'FuncionÃÂ¡rios',
+      'owner': 'Criar equipe', 'admin': 'Admin', 'worker': 'FuncionÃÂ¡rio',
       'employeeStatus': 'Status do funcionÃÂ¡rio', 'empStatusActive': 'Ativo', 'empStatusFired': 'Demitido',
       'toolStatus': 'Status da ferramenta', 'toolStatusActive': 'Ativo', 'toolStatusRepair': 'Em reparo',
       'toolStatusDisposed': 'Descartado', 'statusNote': 'Nota',
@@ -2408,9 +2423,12 @@ class I18n {
     AppLang.cs: {
       'appTitle': 'ToolKeeper', 'login': 'PÃÂihlÃÂ¡ÃÂ¡enÃÂ­', 'register': 'Registrace', 'enter': 'PÃÂihlÃÂ¡sit se',
       'logout': 'OdhlÃÂ¡sit', 'people': 'LidÃÂ©', 'tools': 'NÃÂ¡stroje', 'tool': 'NÃÂ¡stroj',
+      'deleteAccount': 'Smazat účet',
+      'deleteAccountTitle': 'Smazat účet?',
+      'deleteAccountText': 'Všechna vaše data budou smazána. Tuto akci nelze vrátit.',
       'inv': 'Inv. ÃÂ.', 'issue': 'VÃÂ½dej', 'profile': 'Profil', 'chooseLang': 'Vyberte jazyk',
       'companyNotFound': 'Firma nenalezena', 'noAccessCompany': 'ÃÂ½ÃÂ¡dnÃÂ½ pÃÂÃÂ­stup k firmÃÂ',
-      'leaveCompany': 'Opustit / vybrat jinou firmu', 'createCompany': 'VytvoÃÂit firmu',
+      'leaveCompany': 'Opustit / vybrat jinou firmu', 'createCompany': 'Vytvořit tým',
       'joinCompany': 'PÃÂipojit se', 'or': 'NEBO', 'companyName': 'NÃÂ¡zev firmy',
       'role': 'Role', 'role_owner': 'Majitel', 'role_admin': 'AdministrÃÂ¡tor',
       'role_foreman': 'VedoucÃÂ­', 'role_employee': 'ZamÃÂstnanec',
@@ -2425,8 +2443,8 @@ class I18n {
       'birthDate': 'Datum narozenÃÂ­', 'clothesSize': 'Velikost obleÃÂenÃÂ­', 'company': 'Firma',
       'continue': 'PokraÃÂovat', 'done': 'Hotovo', 'firstName': 'JmÃÂ©no', 'lastName': 'PÃÂÃÂ­jmenÃÂ­',
       'password': 'Heslo', 'position': 'Pozice', 'reports': 'ZprÃÂ¡vy', 'welcome': 'VÃÂ­tejte',
-      'email': 'E-mail', 'employee': 'ZamÃÂstnanec', 'employees': 'ZamÃÂstnanci',
-      'owner': 'Majitel', 'admin': 'Admin', 'worker': 'ZamÃÂstnanec',
+      'email': 'E-mail', 'employee': 'Přidat se k týmu', 'employees': 'ZamÃÂstnanci',
+      'owner': 'Vytvořit tým', 'admin': 'Admin', 'worker': 'ZamÃÂstnanec',
       'employeeStatus': 'Stav zamÃÂstnance', 'empStatusActive': 'AktivnÃÂ­', 'empStatusFired': 'PropuÃÂ¡tÃÂn',
       'toolStatus': 'Stav nÃÂ¡stroje', 'toolStatusActive': 'AktivnÃÂ­', 'toolStatusRepair': 'V opravÃÂ',
       'toolStatusDisposed': 'VyÃÂazen', 'statusNote': 'PoznÃÂ¡mka',
@@ -2561,9 +2579,12 @@ class I18n {
     AppLang.ro: {
       'appTitle': 'ToolKeeper', 'login': 'Autentificare', 'register': 'ÃÂnregistrare', 'enter': 'Conectare',
       'logout': 'Deconectare', 'people': 'Oameni', 'tools': 'Scule', 'tool': 'SculÃÂ',
+      'deleteAccount': 'Şterge cont',
+      'deleteAccountTitle': 'Şterge cont?',
+      'deleteAccountText': 'Toate datele dvs. vor fi śterse. Această acţiune este ireversibilă.',
       'inv': 'Nr. inv.', 'issue': 'Eliberare', 'profile': 'Profil', 'chooseLang': 'AlegeÃÂi limba',
       'companyNotFound': 'Companie negÃÂsitÃÂ', 'noAccessCompany': 'FÃÂrÃÂ acces la companie',
-      'leaveCompany': 'IeÃÂi / alege altÃÂ companie', 'createCompany': 'Creare companie',
+      'leaveCompany': 'IeÃÂi / alege altÃÂ companie', 'createCompany': 'Creaţi echipă',
       'joinCompany': 'AlÃÂturare', 'or': 'SAU', 'companyName': 'Numele companiei',
       'role': 'Rol', 'role_owner': 'Proprietar', 'role_admin': 'Administrator',
       'role_foreman': 'ÃÂef de echipÃÂ', 'role_employee': 'Angajat',
@@ -2578,8 +2599,8 @@ class I18n {
       'birthDate': 'Data naÃÂterii', 'clothesSize': 'MÃÂrime ÃÂ®mbrÃÂcÃÂminte', 'company': 'Companie',
       'continue': 'Continuare', 'done': 'Gata', 'firstName': 'Prenume', 'lastName': 'Nume',
       'password': 'ParolÃÂ', 'position': 'PoziÃÂie', 'reports': 'Rapoarte', 'welcome': 'Bun venit',
-      'email': 'E-mail', 'employee': 'Angajat', 'employees': 'AngajaÃÂi',
-      'owner': 'Proprietar', 'admin': 'Admin', 'worker': 'Angajat',
+      'email': 'E-mail', 'employee': 'Alăturaţi-vă echipei', 'employees': 'AngajaÃÂi',
+      'owner': 'Creaţi echipă', 'admin': 'Admin', 'worker': 'Angajat',
       'employeeStatus': 'Stare angajat', 'empStatusActive': 'Activ', 'empStatusFired': 'Concediat',
       'toolStatus': 'Stare sculÃÂ', 'toolStatusActive': 'ActivÃÂ', 'toolStatusRepair': 'ÃÂn reparaÃÂie',
       'toolStatusDisposed': 'CasatÃÂ', 'statusNote': 'NotÃÂ',
@@ -2698,9 +2719,12 @@ class I18n {
     AppLang.nl: {
       'appTitle': 'ToolKeeper', 'login': 'Inloggen', 'register': 'Registreren', 'enter': 'Inloggen',
       'logout': 'Uitloggen', 'people': 'Mensen', 'tools': 'Gereedschap', 'tool': 'Gereedschap',
+      'deleteAccount': 'Account verwijderen',
+      'deleteAccountTitle': 'Account verwijderen?',
+      'deleteAccountText': 'Al uw gegevens worden verwijderd. Deze actie kan niet ongedaan worden gemaakt.',
       'inv': 'Inv. nr.', 'issue': 'Uitgifte', 'profile': 'Profiel', 'chooseLang': 'Taal kiezen',
       'companyNotFound': 'Bedrijf niet gevonden', 'noAccessCompany': 'Geen toegang tot bedrijf',
-      'leaveCompany': 'Verlaten / ander bedrijf', 'createCompany': 'Bedrijf aanmaken',
+      'leaveCompany': 'Verlaten / ander bedrijf', 'createCompany': 'Team aanmaken',
       'joinCompany': 'Aansluiten', 'or': 'OF', 'companyName': 'Bedrijfsnaam',
       'role': 'Rol', 'role_owner': 'Eigenaar', 'role_admin': 'Beheerder',
       'role_foreman': 'Voorman', 'role_employee': 'Medewerker',
@@ -2715,8 +2739,8 @@ class I18n {
       'birthDate': 'Geboortedatum', 'clothesSize': 'Kledingmaat', 'company': 'Bedrijf',
       'continue': 'Doorgaan', 'done': 'Klaar', 'firstName': 'Voornaam', 'lastName': 'Achternaam',
       'password': 'Wachtwoord', 'position': 'Positie', 'reports': 'Rapporten', 'welcome': 'Welkom',
-      'email': 'E-mail', 'employee': 'Medewerker', 'employees': 'Medewerkers',
-      'owner': 'Eigenaar', 'admin': 'Beheerder', 'worker': 'Medewerker',
+      'email': 'E-mail', 'employee': 'Lid worden van team', 'employees': 'Medewerkers',
+      'owner': 'Team aanmaken', 'admin': 'Beheerder', 'worker': 'Medewerker',
       'employeeStatus': 'Medewerkerstatus', 'empStatusActive': 'Actief', 'empStatusFired': 'Ontslagen',
       'toolStatus': 'Gereedschapstatus', 'toolStatusActive': 'Actief', 'toolStatusRepair': 'In reparatie',
       'toolStatusDisposed': 'Afgevoerd', 'statusNote': 'Notitie',
@@ -2835,9 +2859,12 @@ class I18n {
     AppLang.tr: {
       'appTitle': 'ToolKeeper', 'login': 'GiriÃÂ', 'register': 'KayÃÂ±t', 'enter': 'GiriÃÂ yap',
       'logout': 'ÃÂÃÂ±kÃÂ±ÃÂ yap', 'people': 'KiÃÂiler', 'tools': 'Aletler', 'tool': 'Alet',
+      'deleteAccount': 'Hesabı sil',
+      'deleteAccountTitle': 'Hesabı sil?',
+      'deleteAccountText': 'Tüm verileriniz silinecek. Bu işlem geri alınamaz.',
       'inv': 'Env. no.', 'issue': 'DaÃÂÃÂ±tÃÂ±m', 'profile': 'Profil', 'chooseLang': 'Dil seÃÂ§in',
       'companyNotFound': 'ÃÂirket bulunamadÃÂ±', 'noAccessCompany': 'ÃÂirkete eriÃÂim yok',
-      'leaveCompany': 'ÃÂÃÂ±k / baÃÂka ÃÂirket seÃÂ§', 'createCompany': 'ÃÂirket oluÃÂtur',
+      'leaveCompany': 'ÃÂÃÂ±k / baÃÂka ÃÂirket seÃÂ§', 'createCompany': 'Takım oluştur',
       'joinCompany': 'KatÃÂ±l', 'or': 'VEYA', 'companyName': 'ÃÂirket adÃÂ±',
       'role': 'Rol', 'role_owner': 'Sahip', 'role_admin': 'YÃÂ¶netici',
       'role_foreman': 'UstabaÃÂÃÂ±', 'role_employee': 'ÃÂalÃÂ±ÃÂan',
@@ -2852,8 +2879,8 @@ class I18n {
       'birthDate': 'DoÃÂum tarihi', 'clothesSize': 'KÃÂ±yafet bedeni', 'company': 'ÃÂirket',
       'continue': 'Devam et', 'done': 'Tamam', 'firstName': 'Ad', 'lastName': 'Soyad',
       'password': 'ÃÂifre', 'position': 'Pozisyon', 'reports': 'Raporlar', 'welcome': 'HoÃÂ geldiniz',
-      'email': 'E-posta', 'employee': 'ÃÂalÃÂ±ÃÂan', 'employees': 'ÃÂalÃÂ±ÃÂanlar',
-      'owner': 'Sahip', 'admin': 'YÃÂ¶netici', 'worker': 'ÃÂalÃÂ±ÃÂan',
+      'email': 'E-posta', 'employee': 'Takıma katıl', 'employees': 'ÃÂalÃÂ±ÃÂanlar',
+      'owner': 'Takım oluştur', 'admin': 'YÃÂ¶netici', 'worker': 'ÃÂalÃÂ±ÃÂan',
       'employeeStatus': 'ÃÂalÃÂ±ÃÂan durumu', 'empStatusActive': 'Aktif', 'empStatusFired': 'ÃÂ°ÃÂten ÃÂ§ÃÂ±karÃÂ±ldÃÂ±',
       'toolStatus': 'Alet durumu', 'toolStatusActive': 'Aktif', 'toolStatusRepair': 'Tamirde',
       'toolStatusDisposed': 'Hurdaya ÃÂ§ÃÂ±karÃÂ±ldÃÂ±', 'statusNote': 'Not',
@@ -2972,9 +2999,12 @@ class I18n {
     AppLang.ar: {
       'appTitle': 'ToolKeeper', 'login': 'ÃÂªÃÂ³ÃÂ¬ÃÂÃÂ ÃÂ§ÃÂÃÂ¯ÃÂ®ÃÂÃÂ', 'register': 'ÃÂ§ÃÂÃÂªÃÂ³ÃÂ¬ÃÂÃÂ', 'enter': 'ÃÂ¯ÃÂ®ÃÂÃÂ',
       'logout': 'ÃÂªÃÂ³ÃÂ¬ÃÂÃÂ ÃÂ§ÃÂÃÂ®ÃÂ±ÃÂÃÂ¬', 'people': 'ÃÂ£ÃÂ´ÃÂ®ÃÂ§ÃÂµ', 'tools': 'ÃÂ£ÃÂ¯ÃÂÃÂ§ÃÂª', 'tool': 'ÃÂ£ÃÂ¯ÃÂ§ÃÂ©',
+      'deleteAccount': 'حذف الحساب',
+      'deleteAccountTitle': 'حذف الحساب؟',
+      'deleteAccountText': 'سيتم حذف جميع بياناتك. لا يمكن التراجع عن هذا الإجراء.',
       'inv': 'ÃÂ±ÃÂÃÂ ÃÂ§ÃÂÃÂ¬ÃÂ±ÃÂ¯', 'issue': 'ÃÂ¥ÃÂµÃÂ¯ÃÂ§ÃÂ±', 'profile': 'ÃÂ§ÃÂÃÂÃÂÃÂ ÃÂ§ÃÂÃÂ´ÃÂ®ÃÂµÃÂ', 'chooseLang': 'ÃÂ§ÃÂ®ÃÂªÃÂ± ÃÂ§ÃÂÃÂÃÂºÃÂ©',
       'companyNotFound': 'ÃÂ§ÃÂÃÂ´ÃÂ±ÃÂÃÂ© ÃÂºÃÂÃÂ± ÃÂÃÂÃÂ¬ÃÂÃÂ¯ÃÂ©', 'noAccessCompany': 'ÃÂÃÂ§ ÃÂÃÂÃÂ¬ÃÂ¯ ÃÂÃÂµÃÂÃÂ ÃÂÃÂÃÂ´ÃÂ±ÃÂÃÂ©',
-      'leaveCompany': 'ÃÂ®ÃÂ±ÃÂÃÂ¬ / ÃÂ§ÃÂ®ÃÂªÃÂÃÂ§ÃÂ± ÃÂ´ÃÂ±ÃÂÃÂ© ÃÂ£ÃÂ®ÃÂ±ÃÂ', 'createCompany': 'ÃÂ¥ÃÂÃÂ´ÃÂ§ÃÂ¡ ÃÂ´ÃÂ±ÃÂÃÂ©',
+      'leaveCompany': 'ÃÂ®ÃÂ±ÃÂÃÂ¬ / ÃÂ§ÃÂ®ÃÂªÃÂÃÂ§ÃÂ± ÃÂ´ÃÂ±ÃÂÃÂ© ÃÂ£ÃÂ®ÃÂ±ÃÂ', 'createCompany': 'إنشاء فريق',
       'joinCompany': 'ÃÂ§ÃÂÃÂ¶ÃÂÃÂ§ÃÂ', 'or': 'ÃÂ£ÃÂ', 'companyName': 'ÃÂ§ÃÂ³ÃÂ ÃÂ§ÃÂÃÂ´ÃÂ±ÃÂÃÂ©',
       'role': 'ÃÂ§ÃÂÃÂ¯ÃÂÃÂ±', 'role_owner': 'ÃÂ§ÃÂÃÂÃÂ§ÃÂÃÂ', 'role_admin': 'ÃÂ§ÃÂÃÂÃÂ³ÃÂ¤ÃÂÃÂ',
       'role_foreman': 'ÃÂ§ÃÂÃÂÃÂ´ÃÂ±ÃÂ', 'role_employee': 'ÃÂ§ÃÂÃÂÃÂÃÂ¸ÃÂ',
@@ -2989,8 +3019,8 @@ class I18n {
       'birthDate': 'ÃÂªÃÂ§ÃÂ±ÃÂÃÂ® ÃÂ§ÃÂÃÂÃÂÃÂÃÂ§ÃÂ¯', 'clothesSize': 'ÃÂÃÂÃÂ§ÃÂ³ ÃÂ§ÃÂÃÂÃÂÃÂ§ÃÂ¨ÃÂ³', 'company': 'ÃÂ§ÃÂÃÂ´ÃÂ±ÃÂÃÂ©',
       'continue': 'ÃÂÃÂªÃÂ§ÃÂ¨ÃÂ¹ÃÂ©', 'done': 'ÃÂªÃÂ', 'firstName': 'ÃÂ§ÃÂÃÂ§ÃÂ³ÃÂ ÃÂ§ÃÂÃÂ£ÃÂÃÂ', 'lastName': 'ÃÂ§ÃÂ³ÃÂ ÃÂ§ÃÂÃÂ¹ÃÂ§ÃÂ¦ÃÂÃÂ©',
       'password': 'ÃÂÃÂÃÂÃÂ© ÃÂ§ÃÂÃÂÃÂ±ÃÂÃÂ±', 'position': 'ÃÂ§ÃÂÃÂÃÂÃÂµÃÂ¨', 'reports': 'ÃÂ§ÃÂÃÂªÃÂÃÂ§ÃÂ±ÃÂÃÂ±', 'welcome': 'ÃÂÃÂ±ÃÂ­ÃÂ¨ÃÂ§ÃÂ',
-      'email': 'ÃÂ§ÃÂÃÂ¨ÃÂ±ÃÂÃÂ¯ ÃÂ§ÃÂÃÂ¥ÃÂÃÂÃÂªÃÂ±ÃÂÃÂÃÂ', 'employee': 'ÃÂÃÂÃÂ¸ÃÂ', 'employees': 'ÃÂÃÂÃÂ¸ÃÂÃÂÃÂ',
-      'owner': 'ÃÂ§ÃÂÃÂÃÂ§ÃÂÃÂ', 'admin': 'ÃÂ§ÃÂÃÂÃÂ³ÃÂ¤ÃÂÃÂ', 'worker': 'ÃÂ¹ÃÂ§ÃÂÃÂ',
+      'email': 'ÃÂ§ÃÂÃÂ¨ÃÂ±ÃÂÃÂ¯ ÃÂ§ÃÂÃÂ¥ÃÂÃÂÃÂªÃÂ±ÃÂÃÂÃÂ', 'employee': 'انضم إلى فريق', 'employees': 'ÃÂÃÂÃÂ¸ÃÂÃÂÃÂ',
+      'owner': 'إنشاء فريق', 'admin': 'ÃÂ§ÃÂÃÂÃÂ³ÃÂ¤ÃÂÃÂ', 'worker': 'ÃÂ¹ÃÂ§ÃÂÃÂ',
       'employeeStatus': 'ÃÂ­ÃÂ§ÃÂÃÂ© ÃÂ§ÃÂÃÂÃÂÃÂ¸ÃÂ', 'empStatusActive': 'ÃÂÃÂ´ÃÂ·', 'empStatusFired': 'ÃÂÃÂÃÂµÃÂÃÂ',
       'toolStatus': 'ÃÂ­ÃÂ§ÃÂÃÂ© ÃÂ§ÃÂÃÂ£ÃÂ¯ÃÂ§ÃÂ©', 'toolStatusActive': 'ÃÂÃÂ´ÃÂ·ÃÂ©', 'toolStatusRepair': 'ÃÂÃÂ ÃÂ§ÃÂÃÂ¥ÃÂµÃÂÃÂ§ÃÂ­',
       'toolStatusDisposed': 'ÃÂÃÂÃÂºÃÂ§ÃÂ©', 'statusNote': 'ÃÂÃÂÃÂ§ÃÂ­ÃÂ¸ÃÂ©',
@@ -3109,9 +3139,12 @@ class I18n {
     AppLang.hi: {
       'appTitle': 'ToolKeeper', 'login': 'Ã Â¤Â²Ã Â¥ÂÃ Â¤ÂÃ Â¤Â¿Ã Â¤Â¨', 'register': 'Ã Â¤Â°Ã Â¤ÂÃ Â¤Â¿Ã Â¤Â¸Ã Â¥ÂÃ Â¤ÂÃ Â¤Â°', 'enter': 'Ã Â¤Â¸Ã Â¤Â¾Ã Â¤ÂÃ Â¤Â¨ Ã Â¤ÂÃ Â¤Â¨ Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â',
       'logout': 'Ã Â¤Â²Ã Â¥ÂÃ Â¤ÂÃ Â¤ÂÃ Â¤ÂÃ Â¤Â', 'people': 'Ã Â¤Â²Ã Â¥ÂÃ Â¤Â', 'tools': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤Â¼Ã Â¤Â¾Ã Â¤Â°', 'tool': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤Â¼Ã Â¤Â¾Ã Â¤Â°',
+      'deleteAccount': 'खाता हटाएं',
+      'deleteAccountTitle': 'खाता हटाएं?',
+      'deleteAccountText': 'आपका सारा डेटा हटा दिया जाएगा। यह क्रिया अवापस नहीं हो सकती।',
       'inv': 'Ã Â¤ÂÃ Â¤Â¨Ã Â¥ÂÃ Â¤Âµ. Ã Â¤Â¨Ã Â¤Â.', 'issue': 'Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â Ã Â¤ÂÃ Â¤Â°Ã Â¤Â¨Ã Â¤Â¾', 'profile': 'Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â«Ã Â¤Â¼Ã Â¤Â¾Ã Â¤ÂÃ Â¤Â²', 'chooseLang': 'Ã Â¤Â­Ã Â¤Â¾Ã Â¤Â·Ã Â¤Â¾ Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¨Ã Â¥ÂÃ Â¤Â',
       'companyNotFound': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤Â¨Ã Â¤Â¹Ã Â¥ÂÃ Â¤Â Ã Â¤Â®Ã Â¤Â¿Ã Â¤Â²Ã Â¥Â', 'noAccessCompany': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤Â¤Ã Â¤Â Ã Â¤ÂªÃ Â¤Â¹Ã Â¥ÂÃ Â¤ÂÃ Â¤Â Ã Â¤Â¨Ã Â¤Â¹Ã Â¥ÂÃ Â¤Â',
-      'leaveCompany': 'Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â / Ã Â¤Â¦Ã Â¥ÂÃ Â¤Â¸Ã Â¤Â°Ã Â¥Â Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â', 'createCompany': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤Â¬Ã Â¤Â¨Ã Â¤Â¾Ã Â¤ÂÃ Â¤Â',
+      'leaveCompany': 'Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â / Ã Â¤Â¦Ã Â¥ÂÃ Â¤Â¸Ã Â¤Â°Ã Â¥Â Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â', 'createCompany': 'टीम बनाएं',
       'joinCompany': 'Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â', 'or': 'Ã Â¤Â¯Ã Â¤Â¾', 'companyName': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤ÂÃ Â¤Â¾ Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Â®',
       'role': 'Ã Â¤Â­Ã Â¥ÂÃ Â¤Â®Ã Â¤Â¿Ã Â¤ÂÃ Â¤Â¾', 'role_owner': 'Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â', 'role_admin': 'Ã Â¤ÂµÃ Â¥ÂÃ Â¤Â¯Ã Â¤ÂµÃ Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¾Ã Â¤ÂªÃ Â¤Â',
       'role_foreman': 'Ã Â¤Â«Ã Â¥ÂÃ Â¤Â°Ã Â¤Â®Ã Â¥ÂÃ Â¤Â¨', 'role_employee': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
@@ -3126,8 +3159,8 @@ class I18n {
       'birthDate': 'Ã Â¤ÂÃ Â¤Â¨Ã Â¥ÂÃ Â¤Â® Ã Â¤Â¤Ã Â¤Â¿Ã Â¤Â¥Ã Â¤Â¿', 'clothesSize': 'Ã Â¤ÂÃ Â¤ÂªÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â Ã Â¤ÂÃ Â¤Â¾ Ã Â¤Â¸Ã Â¤Â¾Ã Â¤ÂÃ Â¤ÂÃ Â¤Â¼', 'company': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â',
       'continue': 'Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â Ã Â¤Â°Ã Â¤ÂÃ Â¥ÂÃ Â¤Â', 'done': 'Ã Â¤Â¹Ã Â¥Â Ã Â¤ÂÃ Â¤Â¯Ã Â¤Â¾', 'firstName': 'Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Â®', 'lastName': 'Ã Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¤Â¾Ã Â¤Â®',
       'password': 'Ã Â¤ÂªÃ Â¤Â¾Ã Â¤Â¸Ã Â¤ÂµÃ Â¤Â°Ã Â¥ÂÃ Â¤Â¡', 'position': 'Ã Â¤ÂªÃ Â¤Â¦', 'reports': 'Ã Â¤Â°Ã Â¤Â¿Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â', 'welcome': 'Ã Â¤Â¸Ã Â¥ÂÃ Â¤ÂµÃ Â¤Â¾Ã Â¤ÂÃ Â¤Â¤ Ã Â¤Â¹Ã Â¥Â',
-      'email': 'Ã Â¤ÂÃ Â¤Â®Ã Â¥ÂÃ Â¤Â²', 'employee': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â', 'employees': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
-      'owner': 'Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â', 'admin': 'Ã Â¤ÂµÃ Â¥ÂÃ Â¤Â¯Ã Â¤ÂµÃ Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¾Ã Â¤ÂªÃ Â¤Â', 'worker': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
+      'email': 'Ã Â¤ÂÃ Â¤Â®Ã Â¥ÂÃ Â¤Â²', 'employee': 'टीम से जुड़ें', 'employees': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
+      'owner': 'टीम बनाएं', 'admin': 'Ã Â¤ÂµÃ Â¥ÂÃ Â¤Â¯Ã Â¤ÂµÃ Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¾Ã Â¤ÂªÃ Â¤Â', 'worker': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
       'employeeStatus': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â Ã Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¿Ã Â¤Â¤Ã Â¤Â¿', 'empStatusActive': 'Ã Â¤Â¸Ã Â¤ÂÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¿Ã Â¤Â¯', 'empStatusFired': 'Ã Â¤Â¬Ã Â¤Â°Ã Â¥ÂÃ Â¤ÂÃ Â¤Â¾Ã Â¤Â¸Ã Â¥ÂÃ Â¤Â¤',
       'toolStatus': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤Â¼Ã Â¤Â¾Ã Â¤Â° Ã Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¿Ã Â¤Â¤Ã Â¤Â¿', 'toolStatusActive': 'Ã Â¤Â¸Ã Â¤ÂÃ Â¥ÂÃ Â¤Â°Ã Â¤Â¿Ã Â¤Â¯', 'toolStatusRepair': 'Ã Â¤Â®Ã Â¤Â°Ã Â¤Â®Ã Â¥ÂÃ Â¤Â®Ã Â¤Â¤ Ã Â¤Â®Ã Â¥ÂÃ Â¤Â',
       'toolStatusDisposed': 'Ã Â¤Â¬Ã Â¤ÂÃ Â¤Â¦', 'statusNote': 'Ã Â¤Â¨Ã Â¥ÂÃ Â¤Â',
@@ -3246,9 +3279,12 @@ class I18n {
     AppLang.ko: {
       'appTitle': 'ToolKeeper', 'login': 'Ã«Â¡ÂÃªÂ·Â¸Ã¬ÂÂ¸', 'register': 'Ã­ÂÂÃ¬ÂÂÃªÂ°ÂÃ¬ÂÂ', 'enter': 'Ã«Â¡ÂÃªÂ·Â¸Ã¬ÂÂ¸',
       'logout': 'Ã«Â¡ÂÃªÂ·Â¸Ã¬ÂÂÃ¬ÂÂ', 'people': 'Ã¬ÂÂ¬Ã«ÂÂÃ«ÂÂ¤', 'tools': 'Ã«ÂÂÃªÂµÂ¬', 'tool': 'Ã«ÂÂÃªÂµÂ¬',
+      'deleteAccount': '계정 삭제',
+      'deleteAccountTitle': '계정을 삭제하시겠습니까?',
+      'deleteAccountText': '모든 데이터가 삭제됩니다. 이 작업은 실도할 수 없습니다.',
       'inv': 'Ã¬ÂÂ¬ÃªÂ³Â  Ã«Â²ÂÃ­ÂÂ¸', 'issue': 'Ã«ÂÂÃ¬Â¶Â', 'profile': 'Ã­ÂÂÃ«Â¡ÂÃ­ÂÂ', 'chooseLang': 'Ã¬ÂÂ¸Ã¬ÂÂ´ Ã¬ÂÂ Ã­ÂÂ',
       'companyNotFound': 'Ã­ÂÂÃ¬ÂÂ¬Ã«Â¥Â¼ Ã¬Â°Â¾Ã¬ÂÂ Ã¬ÂÂ Ã¬ÂÂÃ¬ÂÂ', 'noAccessCompany': 'Ã­ÂÂÃ¬ÂÂ¬Ã¬ÂÂ Ã¬Â ÂÃªÂ·Â¼ Ã«Â¶ÂÃªÂ°Â',
-      'leaveCompany': 'Ã«ÂÂÃªÂ°ÂÃªÂ¸Â° / Ã«ÂÂ¤Ã«Â¥Â¸ Ã­ÂÂÃ¬ÂÂ¬', 'createCompany': 'Ã­ÂÂÃ¬ÂÂ¬ Ã«Â§ÂÃ«ÂÂ¤ÃªÂ¸Â°',
+      'leaveCompany': 'Ã«ÂÂÃªÂ°ÂÃªÂ¸Â° / Ã«ÂÂ¤Ã«Â¥Â¸ Ã­ÂÂÃ¬ÂÂ¬', 'createCompany': '팀 만들기',
       'joinCompany': 'Ã¬Â°Â¸ÃªÂ°Â', 'or': 'Ã«ÂÂÃ«ÂÂ', 'companyName': 'Ã­ÂÂÃ¬ÂÂ¬ Ã¬ÂÂ´Ã«Â¦Â',
       'role': 'Ã¬ÂÂ­Ã­ÂÂ ', 'role_owner': 'Ã¬ÂÂÃ¬ÂÂ Ã¬ÂÂ', 'role_admin': 'ÃªÂ´ÂÃ«Â¦Â¬Ã¬ÂÂ',
       'role_foreman': 'Ã­ÂÂÃ¬ÂÂ¥ ÃªÂ°ÂÃ«ÂÂ', 'role_employee': 'Ã¬Â§ÂÃ¬ÂÂ',
@@ -3263,8 +3299,8 @@ class I18n {
       'birthDate': 'Ã¬ÂÂÃ«ÂÂÃ¬ÂÂÃ¬ÂÂ¼', 'clothesSize': 'Ã¬ÂÂÃ«Â¥Â Ã¬ÂÂ¬Ã¬ÂÂ´Ã¬Â¦Â', 'company': 'Ã­ÂÂÃ¬ÂÂ¬',
       'continue': 'ÃªÂ³ÂÃ¬ÂÂ', 'done': 'Ã¬ÂÂÃ«Â£Â', 'firstName': 'Ã¬ÂÂ´Ã«Â¦Â', 'lastName': 'Ã¬ÂÂ±',
       'password': 'Ã«Â¹ÂÃ«Â°ÂÃ«Â²ÂÃ­ÂÂ¸', 'position': 'Ã¬Â§ÂÃ¬ÂÂ', 'reports': 'Ã«Â³Â´ÃªÂ³Â Ã¬ÂÂ', 'welcome': 'Ã­ÂÂÃ¬ÂÂÃ­ÂÂ©Ã«ÂÂÃ«ÂÂ¤',
-      'email': 'Ã¬ÂÂ´Ã«Â©ÂÃ¬ÂÂ¼', 'employee': 'Ã¬Â§ÂÃ¬ÂÂ', 'employees': 'Ã¬Â§ÂÃ¬ÂÂÃ«ÂÂ¤',
-      'owner': 'Ã¬ÂÂÃ¬ÂÂ Ã¬ÂÂ', 'admin': 'ÃªÂ´ÂÃ«Â¦Â¬Ã¬ÂÂ', 'worker': 'Ã¬Â§ÂÃ¬ÂÂ',
+      'email': 'Ã¬ÂÂ´Ã«Â©ÂÃ¬ÂÂ¼', 'employee': '팀 참가하기', 'employees': 'Ã¬Â§ÂÃ¬ÂÂÃ«ÂÂ¤',
+      'owner': '팀 만들기', 'admin': 'ÃªÂ´ÂÃ«Â¦Â¬Ã¬ÂÂ', 'worker': 'Ã¬Â§ÂÃ¬ÂÂ',
       'employeeStatus': 'Ã¬Â§ÂÃ¬ÂÂ Ã¬ÂÂÃ­ÂÂ', 'empStatusActive': 'Ã­ÂÂÃ¬ÂÂ±', 'empStatusFired': 'Ã­ÂÂ´ÃªÂ³Â Ã«ÂÂ¨',
       'toolStatus': 'Ã«ÂÂÃªÂµÂ¬ Ã¬ÂÂÃ­ÂÂ', 'toolStatusActive': 'Ã­ÂÂÃ¬ÂÂ±', 'toolStatusRepair': 'Ã¬ÂÂÃ«Â¦Â¬ Ã¬Â¤Â',
       'toolStatusDisposed': 'Ã­ÂÂÃªÂ¸Â°Ã«ÂÂ¨', 'statusNote': 'Ã«Â©ÂÃ«ÂªÂ¨',
@@ -3383,9 +3419,12 @@ class I18n {
     AppLang.ja: {
       'appTitle': 'ToolKeeper', 'login': 'Ã£ÂÂ­Ã£ÂÂ°Ã£ÂÂ¤Ã£ÂÂ³', 'register': 'Ã§ÂÂ»Ã©ÂÂ²', 'enter': 'Ã£ÂÂ­Ã£ÂÂ°Ã£ÂÂ¤Ã£ÂÂ³',
       'logout': 'Ã£ÂÂ­Ã£ÂÂ°Ã£ÂÂ¢Ã£ÂÂ¦Ã£ÂÂ', 'people': 'Ã¤ÂºÂºÃ¥ÂÂ¡', 'tools': 'Ã¥Â·Â¥Ã¥ÂÂ·', 'tool': 'Ã¥Â·Â¥Ã¥ÂÂ·',
+      'deleteAccount': 'アカウント値除',
+      'deleteAccountTitle': 'アカウントを削除しますか？',
+      'deleteAccountText': 'すべてのデータが削除されます。この操作は元に戻せません。',
       'inv': 'Ã¥ÂÂ¨Ã¥ÂºÂ«Ã§ÂÂªÃ¥ÂÂ·', 'issue': 'Ã¨Â²Â¸Ã¥ÂÂº', 'profile': 'Ã£ÂÂÃ£ÂÂ­Ã£ÂÂÃ£ÂÂ£Ã£ÂÂ¼Ã£ÂÂ«', 'chooseLang': 'Ã¨Â¨ÂÃ¨ÂªÂÃ£ÂÂÃ©ÂÂ¸Ã¦ÂÂ',
       'companyNotFound': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã£ÂÂÃ¨Â¦ÂÃ£ÂÂ¤Ã£ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ', 'noAccessCompany': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã£ÂÂ¸Ã£ÂÂ®Ã£ÂÂ¢Ã£ÂÂ¯Ã£ÂÂ»Ã£ÂÂ¹Ã£ÂÂªÃ£ÂÂ',
-      'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã¥ÂÂ¥Ã£ÂÂ®Ã¤Â¼ÂÃ§Â¤Â¾', 'createCompany': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã£ÂÂÃ¤Â½ÂÃ¦ÂÂ',
+      'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã¥ÂÂ¥Ã£ÂÂ®Ã¤Â¼ÂÃ§Â¤Â¾', 'createCompany': 'チームを作る',
       'joinCompany': 'Ã¥ÂÂÃ¥ÂÂ ', 'or': 'Ã£ÂÂ¾Ã£ÂÂÃ£ÂÂ¯', 'companyName': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã¥ÂÂ',
       'role': 'Ã¥Â½Â¹Ã¥ÂÂ²', 'role_owner': 'Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂÃ£ÂÂ¼', 'role_admin': 'Ã§Â®Â¡Ã§ÂÂÃ¨ÂÂ',
       'role_foreman': 'Ã§ÂÂ¾Ã¥Â Â´Ã§ÂÂ£Ã§ÂÂ£', 'role_employee': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
@@ -3400,8 +3439,8 @@ class I18n {
       'birthDate': 'Ã§ÂÂÃ¥Â¹Â´Ã¦ÂÂÃ¦ÂÂ¥', 'clothesSize': 'Ã¦ÂÂÃ£ÂÂ®Ã£ÂÂµÃ£ÂÂ¤Ã£ÂÂº', 'company': 'Ã¤Â¼ÂÃ§Â¤Â¾',
       'continue': 'Ã§Â¶ÂÃ£ÂÂÃ£ÂÂ', 'done': 'Ã¥Â®ÂÃ¤ÂºÂ', 'firstName': 'Ã¥ÂÂ', 'lastName': 'Ã¥Â§Â',
       'password': 'Ã£ÂÂÃ£ÂÂ¹Ã£ÂÂ¯Ã£ÂÂ¼Ã£ÂÂ', 'position': 'Ã¥Â½Â¹Ã¨ÂÂ·', 'reports': 'Ã£ÂÂ¬Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ', 'welcome': 'Ã£ÂÂÃ£ÂÂÃ£ÂÂÃ£ÂÂ',
-      'email': 'Ã£ÂÂ¡Ã£ÂÂ¼Ã£ÂÂ«', 'employee': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡', 'employees': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
-      'owner': 'Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂÃ£ÂÂ¼', 'admin': 'Ã§Â®Â¡Ã§ÂÂÃ¨ÂÂ', 'worker': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
+      'email': 'Ã£ÂÂ¡Ã£ÂÂ¼Ã£ÂÂ«', 'employee': 'チームに参加', 'employees': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
+      'owner': 'チームを作る', 'admin': 'Ã§Â®Â¡Ã§ÂÂÃ¨ÂÂ', 'worker': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
       'employeeStatus': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡Ã£ÂÂ¹Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ¿Ã£ÂÂ¹', 'empStatusActive': 'Ã£ÂÂ¢Ã£ÂÂ¯Ã£ÂÂÃ£ÂÂ£Ã£ÂÂ', 'empStatusFired': 'Ã¨Â§Â£Ã©ÂÂÃ¦Â¸Â',
       'toolStatus': 'Ã¥Â·Â¥Ã¥ÂÂ·Ã£ÂÂ¹Ã£ÂÂÃ£ÂÂ¼Ã£ÂÂ¿Ã£ÂÂ¹', 'toolStatusActive': 'Ã£ÂÂ¢Ã£ÂÂ¯Ã£ÂÂÃ£ÂÂ£Ã£ÂÂ', 'toolStatusRepair': 'Ã¤Â¿Â®Ã§ÂÂÃ¤Â¸Â­',
       'toolStatusDisposed': 'Ã¥Â»ÂÃ¦Â£ÂÃ¦Â¸Â', 'statusNote': 'Ã£ÂÂ¡Ã£ÂÂ¢',
@@ -3520,9 +3559,12 @@ class I18n {
     AppLang.zh: {
       'appTitle': 'ToolKeeper', 'login': 'Ã§ÂÂ»Ã¥Â½Â', 'register': 'Ã¦Â³Â¨Ã¥ÂÂ', 'enter': 'Ã§ÂÂ»Ã¥Â½Â',
       'logout': 'Ã©ÂÂÃ¥ÂÂº', 'people': 'Ã¤ÂºÂºÃ¥ÂÂ', 'tools': 'Ã¥Â·Â¥Ã¥ÂÂ·', 'tool': 'Ã¥Â·Â¥Ã¥ÂÂ·',
+      'deleteAccount': '删除账户',
+      'deleteAccountTitle': '删除账户？',
+      'deleteAccountText': '您的所有数据将被删除。此操作无法恢复。',
       'inv': 'Ã¥ÂºÂÃ¥Â­ÂÃ§Â¼ÂÃ¥ÂÂ·', 'issue': 'Ã¥ÂÂÃ¦ÂÂ¾', 'profile': 'Ã¤Â¸ÂªÃ¤ÂºÂºÃ¨ÂµÂÃ¦ÂÂ', 'chooseLang': 'Ã©ÂÂÃ¦ÂÂ©Ã¨Â¯Â­Ã¨Â¨Â',
       'companyNotFound': 'Ã¦ÂÂ¾Ã¤Â¸ÂÃ¥ÂÂ°Ã¥ÂÂ¬Ã¥ÂÂ¸', 'noAccessCompany': 'Ã¦ÂÂ Ã¦Â³ÂÃ¨Â®Â¿Ã©ÂÂ®Ã¥ÂÂ¬Ã¥ÂÂ¸',
-      'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã©ÂÂÃ¦ÂÂ©Ã¥ÂÂ¶Ã¤Â»ÂÃ¥ÂÂ¬Ã¥ÂÂ¸', 'createCompany': 'Ã¥ÂÂÃ¥Â»ÂºÃ¥ÂÂ¬Ã¥ÂÂ¸',
+      'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã©ÂÂÃ¦ÂÂ©Ã¥ÂÂ¶Ã¤Â»ÂÃ¥ÂÂ¬Ã¥ÂÂ¸', 'createCompany': '创建团队',
       'joinCompany': 'Ã¥ÂÂ Ã¥ÂÂ¥', 'or': 'Ã¦ÂÂ', 'companyName': 'Ã¥ÂÂ¬Ã¥ÂÂ¸Ã¥ÂÂÃ§Â§Â°',
       'role': 'Ã¨Â§ÂÃ¨ÂÂ²', 'role_owner': 'Ã¦ÂÂÃ¦ÂÂÃ¨ÂÂ', 'role_admin': 'Ã§Â®Â¡Ã§ÂÂÃ¥ÂÂ',
       'role_foreman': 'Ã¥Â·Â¥Ã¥Â¤Â´', 'role_employee': 'Ã¥ÂÂÃ¥Â·Â¥',
@@ -3537,8 +3579,8 @@ class I18n {
       'birthDate': 'Ã¥ÂÂºÃ§ÂÂÃ¦ÂÂ¥Ã¦ÂÂ', 'clothesSize': 'Ã¦ÂÂÃ¨Â£ÂÃ¥Â°ÂºÃ§Â Â', 'company': 'Ã¥ÂÂ¬Ã¥ÂÂ¸',
       'continue': 'Ã§Â»Â§Ã§Â»Â­', 'done': 'Ã¥Â®ÂÃ¦ÂÂ', 'firstName': 'Ã¥ÂÂ', 'lastName': 'Ã¥Â§Â',
       'password': 'Ã¥Â¯ÂÃ§Â Â', 'position': 'Ã¨ÂÂÃ¤Â½Â', 'reports': 'Ã¦ÂÂ¥Ã¥ÂÂ', 'welcome': 'Ã¦Â¬Â¢Ã¨Â¿Â',
-      'email': 'Ã§ÂÂµÃ¥Â­ÂÃ©ÂÂ®Ã¤Â»Â¶', 'employee': 'Ã¥ÂÂÃ¥Â·Â¥', 'employees': 'Ã¥ÂÂÃ¥Â·Â¥',
-      'owner': 'Ã¦ÂÂÃ¦ÂÂÃ¨ÂÂ', 'admin': 'Ã§Â®Â¡Ã§ÂÂÃ¥ÂÂ', 'worker': 'Ã¥ÂÂÃ¥Â·Â¥',
+      'email': 'Ã§ÂÂµÃ¥Â­ÂÃ©ÂÂ®Ã¤Â»Â¶', 'employee': '加入团队', 'employees': 'Ã¥ÂÂÃ¥Â·Â¥',
+      'owner': '创建团队', 'admin': 'Ã§Â®Â¡Ã§ÂÂÃ¥ÂÂ', 'worker': 'Ã¥ÂÂÃ¥Â·Â¥',
       'employeeStatus': 'Ã¥ÂÂÃ¥Â·Â¥Ã§ÂÂ¶Ã¦ÂÂ', 'empStatusActive': 'Ã¦Â´Â»Ã¨Â·Â', 'empStatusFired': 'Ã¥Â·Â²Ã¨Â§Â£Ã©ÂÂ',
       'toolStatus': 'Ã¥Â·Â¥Ã¥ÂÂ·Ã§ÂÂ¶Ã¦ÂÂ', 'toolStatusActive': 'Ã¦Â´Â»Ã¨Â·Â', 'toolStatusRepair': 'Ã§Â»Â´Ã¤Â¿Â®Ã¤Â¸Â­',
       'toolStatusDisposed': 'Ã¥Â·Â²Ã¦ÂÂ¥Ã¥ÂºÂ', 'statusNote': 'Ã¥Â¤ÂÃ¦Â³Â¨',
@@ -3657,9 +3699,12 @@ class I18n {
     AppLang.id: {
       'appTitle': 'ToolKeeper', 'login': 'Masuk', 'register': 'Daftar', 'enter': 'Masuk',
       'logout': 'Keluar', 'people': 'Orang', 'tools': 'Alat', 'tool': 'Alat',
+      'deleteAccount': 'Hapus akun',
+      'deleteAccountTitle': 'Hapus akun?',
+      'deleteAccountText': 'Semua data Anda akan dihapus. Tindakan ini tidak dapat dibatalkan.',
       'inv': 'No. inv.', 'issue': 'Pengeluaran', 'profile': 'Profil', 'chooseLang': 'Pilih bahasa',
       'companyNotFound': 'Perusahaan tidak ditemukan', 'noAccessCompany': 'Tidak ada akses ke perusahaan',
-      'leaveCompany': 'Keluar / pilih lain', 'createCompany': 'Buat perusahaan',
+      'leaveCompany': 'Keluar / pilih lain', 'createCompany': 'Buat tim',
       'joinCompany': 'Bergabung', 'or': 'ATAU', 'companyName': 'Nama perusahaan',
       'role': 'Peran', 'role_owner': 'Pemilik', 'role_admin': 'Administrator',
       'role_foreman': 'Mandor', 'role_employee': 'Karyawan',
@@ -3674,8 +3719,8 @@ class I18n {
       'birthDate': 'Tanggal lahir', 'clothesSize': 'Ukuran pakaian', 'company': 'Perusahaan',
       'continue': 'Lanjutkan', 'done': 'Selesai', 'firstName': 'Nama', 'lastName': 'Nama belakang',
       'password': 'Kata sandi', 'position': 'Jabatan', 'reports': 'Laporan', 'welcome': 'Selamat datang',
-      'email': 'Email', 'employee': 'Karyawan', 'employees': 'Karyawan',
-      'owner': 'Pemilik', 'admin': 'Admin', 'worker': 'Karyawan',
+      'email': 'Email', 'employee': 'Bergabung dengan tim', 'employees': 'Karyawan',
+      'owner': 'Buat tim', 'admin': 'Admin', 'worker': 'Karyawan',
       'employeeStatus': 'Status karyawan', 'empStatusActive': 'Aktif', 'empStatusFired': 'Dipecat',
       'toolStatus': 'Status alat', 'toolStatusActive': 'Aktif', 'toolStatusRepair': 'Dalam perbaikan',
       'toolStatusDisposed': 'Dibuang', 'statusNote': 'Catatan',
@@ -3794,9 +3839,12 @@ class I18n {
     AppLang.vi: {
       'appTitle': 'ToolKeeper', 'login': 'ÃÂÃÂng nhÃ¡ÂºÂ­p', 'register': 'ÃÂÃÂng kÃÂ½', 'enter': 'ÃÂÃÂng nhÃ¡ÂºÂ­p',
       'logout': 'ÃÂÃÂng xuÃ¡ÂºÂ¥t', 'people': 'MÃ¡Â»Âi ngÃÂ°Ã¡Â»Âi', 'tools': 'DÃ¡Â»Â¥ng cÃ¡Â»Â¥', 'tool': 'DÃ¡Â»Â¥ng cÃ¡Â»Â¥',
+      'deleteAccount': 'Xóa tài khoản',
+      'deleteAccountTitle': 'Xóa tài khoản?',
+      'deleteAccountText': 'Tất cả dữ liệu của bạn sẽ bị xóa. Hành động này không thể hoàn tác.',
       'inv': 'MÃÂ£ kiÃ¡Â»Âm kÃÂª', 'issue': 'CÃ¡ÂºÂ¥p phÃÂ¡t', 'profile': 'HÃ¡Â»Â sÃÂ¡', 'chooseLang': 'ChÃ¡Â»Ân ngÃÂ´n ngÃ¡Â»Â¯',
       'companyNotFound': 'KhÃÂ´ng tÃÂ¬m thÃ¡ÂºÂ¥y cÃÂ´ng ty', 'noAccessCompany': 'KhÃÂ´ng cÃÂ³ quyÃ¡Â»Ân truy cÃ¡ÂºÂ­p',
-      'leaveCompany': 'ThoÃÂ¡t / chÃ¡Â»Ân cÃÂ´ng ty khÃÂ¡c', 'createCompany': 'TÃ¡ÂºÂ¡o cÃÂ´ng ty',
+      'leaveCompany': 'ThoÃÂ¡t / chÃ¡Â»Ân cÃÂ´ng ty khÃÂ¡c', 'createCompany': 'Tạo nhóm',
       'joinCompany': 'Tham gia', 'or': 'HOÃ¡ÂºÂ¶C', 'companyName': 'TÃÂªn cÃÂ´ng ty',
       'role': 'Vai trÃÂ²', 'role_owner': 'ChÃ¡Â»Â§ sÃ¡Â»Â hÃ¡Â»Â¯u', 'role_admin': 'QuÃ¡ÂºÂ£n trÃ¡Â»Â viÃÂªn',
       'role_foreman': 'ÃÂÃ¡Â»Âc cÃÂ´ng', 'role_employee': 'NhÃÂ¢n viÃÂªn',
@@ -3811,8 +3859,8 @@ class I18n {
       'birthDate': 'NgÃÂ y sinh', 'clothesSize': 'CÃ¡Â»Â¡ quÃ¡ÂºÂ§n ÃÂ¡o', 'company': 'CÃÂ´ng ty',
       'continue': 'TiÃ¡ÂºÂ¿p tÃ¡Â»Â¥c', 'done': 'Xong', 'firstName': 'TÃÂªn', 'lastName': 'HÃ¡Â»Â',
       'password': 'MÃ¡ÂºÂ­t khÃ¡ÂºÂ©u', 'position': 'ChÃ¡Â»Â©c vÃ¡Â»Â¥', 'reports': 'BÃÂ¡o cÃÂ¡o', 'welcome': 'ChÃÂ o mÃ¡Â»Â«ng',
-      'email': 'Email', 'employee': 'NhÃÂ¢n viÃÂªn', 'employees': 'NhÃÂ¢n viÃÂªn',
-      'owner': 'ChÃ¡Â»Â§ sÃ¡Â»Â hÃ¡Â»Â¯u', 'admin': 'QuÃ¡ÂºÂ£n trÃ¡Â»Â', 'worker': 'CÃÂ´ng nhÃÂ¢n',
+      'email': 'Email', 'employee': 'Tham gia nhóm', 'employees': 'NhÃÂ¢n viÃÂªn',
+      'owner': 'Tạo nhóm', 'admin': 'QuÃ¡ÂºÂ£n trÃ¡Â»Â', 'worker': 'CÃÂ´ng nhÃÂ¢n',
       'employeeStatus': 'TrÃ¡ÂºÂ¡ng thÃÂ¡i nhÃÂ¢n viÃÂªn', 'empStatusActive': 'HoÃ¡ÂºÂ¡t ÃÂÃ¡Â»Âng', 'empStatusFired': 'ÃÂÃÂ£ sa thÃ¡ÂºÂ£i',
       'toolStatus': 'TrÃ¡ÂºÂ¡ng thÃÂ¡i dÃ¡Â»Â¥ng cÃ¡Â»Â¥', 'toolStatusActive': 'HoÃ¡ÂºÂ¡t ÃÂÃ¡Â»Âng', 'toolStatusRepair': 'ÃÂang sÃ¡Â»Â­a chÃ¡Â»Â¯a',
       'toolStatusDisposed': 'ÃÂÃÂ£ thanh lÃÂ½', 'statusNote': 'Ghi chÃÂº',
@@ -3931,9 +3979,12 @@ class I18n {
     AppLang.tl: {
       'appTitle': 'ToolKeeper', 'login': 'Mag-login', 'register': 'Mag-register', 'enter': 'Pumasok',
       'logout': 'Mag-logout', 'people': 'Mga Tao', 'tools': 'Mga Kagamitan', 'tool': 'Kagamitan',
+      'deleteAccount': 'Burahin ang account',
+      'deleteAccountTitle': 'Burahin ang account?',
+      'deleteAccountText': 'Lahat ng iyong data ay mabubura. Hindi maaaring i-undo ang aksyong ito.',
       'inv': 'Inv. no.', 'issue': 'Pag-isyu', 'profile': 'Profile', 'chooseLang': 'Pumili ng wika',
       'companyNotFound': 'Hindi nahanap ang kumpanya', 'noAccessCompany': 'Walang access sa kumpanya',
-      'leaveCompany': 'Umalis / pumili ng iba', 'createCompany': 'Lumikha ng kumpanya',
+      'leaveCompany': 'Umalis / pumili ng iba', 'createCompany': 'Gumawa ng koponan',
       'joinCompany': 'Sumali', 'or': 'O', 'companyName': 'Pangalan ng kumpanya',
       'role': 'Papel', 'role_owner': 'May-ari', 'role_admin': 'Admin',
       'role_foreman': 'Capataz', 'role_employee': 'Empleyado',
@@ -3948,8 +3999,8 @@ class I18n {
       'birthDate': 'Petsa ng kapanganakan', 'clothesSize': 'Sukat ng damit', 'company': 'Kumpanya',
       'continue': 'Magpatuloy', 'done': 'Tapos', 'firstName': 'Pangalan', 'lastName': 'Apelyido',
       'password': 'Password', 'position': 'Posisyon', 'reports': 'Mga Ulat', 'welcome': 'Maligayang pagdating',
-      'email': 'Email', 'employee': 'Empleyado', 'employees': 'Mga Empleyado',
-      'owner': 'May-ari', 'admin': 'Admin', 'worker': 'Manggagawa',
+      'email': 'Email', 'employee': 'Sumali sa koponan', 'employees': 'Mga Empleyado',
+      'owner': 'Gumawa ng koponan', 'admin': 'Admin', 'worker': 'Manggagawa',
       'employeeStatus': 'Status ng empleyado', 'empStatusActive': 'Aktibo', 'empStatusFired': 'Tinanggal',
       'toolStatus': 'Status ng kagamitan', 'toolStatusActive': 'Aktibo', 'toolStatusRepair': 'Sa pagkukumpuni',
       'toolStatusDisposed': 'Itinatapon', 'statusNote': 'Tala',
