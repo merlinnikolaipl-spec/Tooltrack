@@ -45,6 +45,11 @@ jobs:
           if grep -q "CODE_SIGN_ENTITLEMENTS" "$PBXPROJ"; then
             echo "CODE_SIGN_ENTITLEMENTS already set"
           else
+
+          - name: Apply Apple Review fixes (i18n + team labels)
+            run: |
+                python3 scripts/patch_fixes.py
+                    echo "Apple Review fixes applied"
             sed -i '' 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ" || \
             sed -i 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ"
             echo "Added CODE_SIGN_ENTITLEMENTS to pbxproj"
