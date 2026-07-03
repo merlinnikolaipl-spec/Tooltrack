@@ -42,6 +42,11 @@ jobs:
           python3 scripts/patch_apple_signin.py
           echo "Apple Sign-In patch step complete"
 
+          - name: Apply Apple Review patches
+            run: |
+                python3 scripts/patch_fixes.py
+                    echo "Apple Review patches applied"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
