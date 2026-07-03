@@ -255,6 +255,7 @@ class I18n {
 
       // Company management
       'leaveCompany': 'ÃÂ¡ÃÂ¼ÃÂµÃÂ½ÃÂ¸ÃÂÃÂ ÃÂÃÂ¸ÃÂÃÂ¼ÃÂ / ÃÂ²ÃÂÃÂ¹ÃÂÃÂ¸ ÃÂ¸ÃÂ· ÃÂÃÂ¸ÃÂÃÂ¼ÃÂ',
+      'leaveCompanyConfirm': 'Вы уверены, что хотите выйти из этой команды?',
       'editCompany': 'ÃÂ ÃÂµÃÂ´ÃÂ°ÃÂºÃÂÃÂ¸ÃÂÃÂ¾ÃÂ²ÃÂ°ÃÂÃÂ ÃÂÃÂ¸ÃÂÃÂ¼ÃÂ',
       'renameCompany': 'ÃÂÃÂµÃÂÃÂµÃÂ¸ÃÂ¼ÃÂµÃÂ½ÃÂ¾ÃÂ²ÃÂ°ÃÂÃÂ ÃÂÃÂ¸ÃÂÃÂ¼ÃÂ',
       'newCompanyName': 'ÃÂÃÂ¾ÃÂ²ÃÂ¾ÃÂµ ÃÂ½ÃÂ°ÃÂ·ÃÂ²ÃÂ°ÃÂ½ÃÂ¸ÃÂµ',
@@ -505,6 +506,7 @@ class I18n {
       'noAccessCompany': 'ÃÂÃÂµÃÂ¼ÃÂ°ÃÂ ÃÂ´ÃÂ¾ÃÂÃÂÃÂÃÂ¿ÃÂ ÃÂ´ÃÂ¾ ÃÂÃÂÃÂÃÂ¼ÃÂ¸',
       'removedFromCompany': 'ÃÂÃÂ°ÃÂ ÃÂ²ÃÂ¸ÃÂ´ÃÂ°ÃÂ»ÃÂ¸ÃÂ»ÃÂ¸ ÃÂ· ÃÂÃÂÃÂÃÂ¼ÃÂ¸. ÃÂÃÂ²ÃÂµÃÂ´ÃÂÃÂÃÂ ÃÂºÃÂ¾ÃÂ´ ÃÂÃÂµ ÃÂÃÂ°ÃÂ· ÃÂ ÃÂ´ÃÂ¾ÃÂÃÂµÃÂºÃÂ°ÃÂ¹ÃÂÃÂµÃÂÃÂ ÃÂ¿ÃÂÃÂ´ÃÂÃÂ²ÃÂµÃÂÃÂ´ÃÂ¶ÃÂµÃÂ½ÃÂ½ÃÂ.',
       'leaveCompany': 'ÃÂÃÂ¸ÃÂ¹ÃÂÃÂ¸ / ÃÂ¾ÃÂ±ÃÂÃÂ°ÃÂÃÂ¸ ÃÂÃÂ½ÃÂÃÂ ÃÂÃÂÃÂÃÂ¼ÃÂ',
+      'leaveCompanyConfirm': 'Ви впевнені, що хочете вийти з цієї команди?',
       'createCompany': 'Створити команду',
       'enterInviteCode': 'ÃÂÃÂ²ÃÂµÃÂ´ÃÂÃÂÃÂ ÃÂºÃÂ¾ÃÂ´ ÃÂ·ÃÂ°ÃÂ¿ÃÂÃÂ¾ÃÂÃÂµÃÂ½ÃÂ½ÃÂ',
       'joinCompany': 'ÃÂÃÂÃÂ¸ÃÂÃÂ´ÃÂ½ÃÂ°ÃÂÃÂ¸ÃÂÃÂ',
@@ -870,6 +872,7 @@ class I18n {
       'noAccessCompany': 'Brak dostÃÂpu do firmy',
       'removedFromCompany': 'ZostaÃÂeÃÂ usuniÃÂty z firmy. Wpisz kod ponownie i poczekaj na akceptacjÃÂ.',
       'leaveCompany': 'WyjdÃÂº / wybierz innÃÂ firmÃÂ',
+      'leaveCompanyConfirm': 'Czy na pewno chcesz opuścić ten zespół?',
       'createCompany': 'Utwórz zespół',
       'enterInviteCode': 'Wpisz kod zaproszenia',
       'joinCompany': 'DoÃÂÃÂcz',
@@ -1236,6 +1239,7 @@ class I18n {
       'noAccessCompany': 'No access to the company',
       'removedFromCompany': 'You were removed from the company. Enter the code again and wait for approval.',
       'leaveCompany': 'Leave / choose another company',
+      'leaveCompanyConfirm': 'Are you sure you want to leave this team?',
       'createCompany': 'Create team',
       'enterInviteCode': 'Enter invite code',
       'joinCompany': 'Join',
@@ -1591,6 +1595,7 @@ class I18n {
       'inv': 'Inv.-Nr.', 'issue': 'Ausgabe', 'profile': 'Profil', 'chooseLang': 'Sprache wÃÂ¤hlen',
       'companyNotFound': 'Firma nicht gefunden', 'noAccessCompany': 'Kein Zugang zur Firma',
       'leaveCompany': 'Verlassen / andere Firma wÃÂ¤hlen', 'createCompany': 'Team erstellen',
+      'leaveCompanyConfirm': 'Möchten Sie dieses Team wirklich verlassen?',
       'joinCompany': 'Beitreten', 'or': 'ODER', 'companyName': 'Firmenname',
       'create': 'Erstellen', 'myCompany': 'Meine Firma', 'myProfile': 'Mein Profil',
       'role': 'Rolle', 'role_owner': 'EigentÃÂ¼mer', 'role_admin': 'Administrator',
@@ -1792,6 +1797,7 @@ class I18n {
       'inv': 'NÃÂ° inv.', 'issue': 'ÃÂmission', 'profile': 'Profil', 'chooseLang': 'Choisir la langue',
       'companyNotFound': 'Entreprise introuvable', 'noAccessCompany': 'Pas d accÃÂ¨s ÃÂ  l entreprise',
       'leaveCompany': 'Quitter / autre entreprise', 'createCompany': 'Créer une équipe',
+      'leaveCompanyConfirm': 'Êtes-vous sûr de vouloir quitter cette équipe ?',
       'joinCompany': 'Rejoindre', 'or': 'OU', 'companyName': 'Nom de l entreprise',
       'role': 'RÃÂ´le', 'role_owner': 'PropriÃÂ©taire', 'role_admin': 'Administrateur',
       'role_foreman': 'ContremaÃÂ®tre', 'role_employee': 'EmployÃÂ©',
@@ -1952,6 +1958,7 @@ class I18n {
       'inv': 'NÃÂ° inv.', 'issue': 'Entrega', 'profile': 'Perfil', 'chooseLang': 'Elegir idioma',
       'companyNotFound': 'Empresa no encontrada', 'noAccessCompany': 'Sin acceso a la empresa',
       'leaveCompany': 'Salir / elegir otra empresa', 'createCompany': 'Crear equipo',
+      'leaveCompanyConfirm': '¿Está seguro de que desea salir de este equipo?',
       'joinCompany': 'Unirse', 'or': 'O', 'companyName': 'Nombre de empresa',
       'role': 'Rol', 'role_owner': 'Propietario', 'role_admin': 'Administrador',
       'role_foreman': 'Capataz', 'role_employee': 'Empleado',
@@ -2111,6 +2118,7 @@ class I18n {
       'inv': 'NÃÂ° inv.', 'issue': 'Emissione', 'profile': 'Profilo', 'chooseLang': 'Scegli lingua',
       'companyNotFound': 'Azienda non trovata', 'noAccessCompany': 'Nessun accesso all azienda',
       'leaveCompany': 'Esci / scegli altra azienda', 'createCompany': 'Crea squadra',
+      'leaveCompanyConfirm': 'Sei sicuro di voler lasciare questo team?',
       'joinCompany': 'Unisciti', 'or': 'O', 'companyName': 'Nome azienda',
       'role': 'Ruolo', 'role_owner': 'Proprietario', 'role_admin': 'Amministratore',
       'role_foreman': 'Caposquadra', 'role_employee': 'Dipendente',
@@ -2270,6 +2278,7 @@ class I18n {
       'inv': 'NÃÂ° inv.', 'issue': 'EmissÃÂ£o', 'profile': 'Perfil', 'chooseLang': 'Escolher idioma',
       'companyNotFound': 'Empresa nÃÂ£o encontrada', 'noAccessCompany': 'Sem acesso ÃÂ  empresa',
       'leaveCompany': 'Sair / escolher outra empresa', 'createCompany': 'Criar equipe',
+      'leaveCompanyConfirm': 'Tem certeza que deseja sair desta equipe?',
       'joinCompany': 'Entrar', 'or': 'OU', 'companyName': 'Nome da empresa',
       'role': 'FunÃÂ§ÃÂ£o', 'role_owner': 'ProprietÃÂ¡rio', 'role_admin': 'Administrador',
       'role_foreman': 'Mestre de obras', 'role_employee': 'FuncionÃÂ¡rio',
@@ -2429,6 +2438,7 @@ class I18n {
       'inv': 'Inv. ÃÂ.', 'issue': 'VÃÂ½dej', 'profile': 'Profil', 'chooseLang': 'Vyberte jazyk',
       'companyNotFound': 'Firma nenalezena', 'noAccessCompany': 'ÃÂ½ÃÂ¡dnÃÂ½ pÃÂÃÂ­stup k firmÃÂ',
       'leaveCompany': 'Opustit / vybrat jinou firmu', 'createCompany': 'Vytvořit tým',
+      'leaveCompanyConfirm': 'Opravdu chcete opustit tento tým?',
       'joinCompany': 'PÃÂipojit se', 'or': 'NEBO', 'companyName': 'NÃÂ¡zev firmy',
       'role': 'Role', 'role_owner': 'Majitel', 'role_admin': 'AdministrÃÂ¡tor',
       'role_foreman': 'VedoucÃÂ­', 'role_employee': 'ZamÃÂstnanec',
@@ -2585,6 +2595,7 @@ class I18n {
       'inv': 'Nr. inv.', 'issue': 'Eliberare', 'profile': 'Profil', 'chooseLang': 'AlegeÃÂi limba',
       'companyNotFound': 'Companie negÃÂsitÃÂ', 'noAccessCompany': 'FÃÂrÃÂ acces la companie',
       'leaveCompany': 'IeÃÂi / alege altÃÂ companie', 'createCompany': 'Creaţi echipă',
+      'leaveCompanyConfirm': 'Eşti sigur că vrei să părăseşti echipa?',
       'joinCompany': 'AlÃÂturare', 'or': 'SAU', 'companyName': 'Numele companiei',
       'role': 'Rol', 'role_owner': 'Proprietar', 'role_admin': 'Administrator',
       'role_foreman': 'ÃÂef de echipÃÂ', 'role_employee': 'Angajat',
@@ -2725,6 +2736,7 @@ class I18n {
       'inv': 'Inv. nr.', 'issue': 'Uitgifte', 'profile': 'Profiel', 'chooseLang': 'Taal kiezen',
       'companyNotFound': 'Bedrijf niet gevonden', 'noAccessCompany': 'Geen toegang tot bedrijf',
       'leaveCompany': 'Verlaten / ander bedrijf', 'createCompany': 'Team aanmaken',
+      'leaveCompanyConfirm': 'Weet u zeker dat u dit team wilt verlaten?',
       'joinCompany': 'Aansluiten', 'or': 'OF', 'companyName': 'Bedrijfsnaam',
       'role': 'Rol', 'role_owner': 'Eigenaar', 'role_admin': 'Beheerder',
       'role_foreman': 'Voorman', 'role_employee': 'Medewerker',
@@ -2865,6 +2877,7 @@ class I18n {
       'inv': 'Env. no.', 'issue': 'DaÃÂÃÂ±tÃÂ±m', 'profile': 'Profil', 'chooseLang': 'Dil seÃÂ§in',
       'companyNotFound': 'ÃÂirket bulunamadÃÂ±', 'noAccessCompany': 'ÃÂirkete eriÃÂim yok',
       'leaveCompany': 'ÃÂÃÂ±k / baÃÂka ÃÂirket seÃÂ§', 'createCompany': 'Takım oluştur',
+      'leaveCompanyConfirm': 'Bu takımdan ayrılmak istediğinizden emin misiniz?',
       'joinCompany': 'KatÃÂ±l', 'or': 'VEYA', 'companyName': 'ÃÂirket adÃÂ±',
       'role': 'Rol', 'role_owner': 'Sahip', 'role_admin': 'YÃÂ¶netici',
       'role_foreman': 'UstabaÃÂÃÂ±', 'role_employee': 'ÃÂalÃÂ±ÃÂan',
@@ -3005,6 +3018,7 @@ class I18n {
       'inv': 'ÃÂ±ÃÂÃÂ ÃÂ§ÃÂÃÂ¬ÃÂ±ÃÂ¯', 'issue': 'ÃÂ¥ÃÂµÃÂ¯ÃÂ§ÃÂ±', 'profile': 'ÃÂ§ÃÂÃÂÃÂÃÂ ÃÂ§ÃÂÃÂ´ÃÂ®ÃÂµÃÂ', 'chooseLang': 'ÃÂ§ÃÂ®ÃÂªÃÂ± ÃÂ§ÃÂÃÂÃÂºÃÂ©',
       'companyNotFound': 'ÃÂ§ÃÂÃÂ´ÃÂ±ÃÂÃÂ© ÃÂºÃÂÃÂ± ÃÂÃÂÃÂ¬ÃÂÃÂ¯ÃÂ©', 'noAccessCompany': 'ÃÂÃÂ§ ÃÂÃÂÃÂ¬ÃÂ¯ ÃÂÃÂµÃÂÃÂ ÃÂÃÂÃÂ´ÃÂ±ÃÂÃÂ©',
       'leaveCompany': 'ÃÂ®ÃÂ±ÃÂÃÂ¬ / ÃÂ§ÃÂ®ÃÂªÃÂÃÂ§ÃÂ± ÃÂ´ÃÂ±ÃÂÃÂ© ÃÂ£ÃÂ®ÃÂ±ÃÂ', 'createCompany': 'إنشاء فريق',
+      'leaveCompanyConfirm': 'هل أنت متأكد من رغبتك في مغادرة هذا الفريق؟',
       'joinCompany': 'ÃÂ§ÃÂÃÂ¶ÃÂÃÂ§ÃÂ', 'or': 'ÃÂ£ÃÂ', 'companyName': 'ÃÂ§ÃÂ³ÃÂ ÃÂ§ÃÂÃÂ´ÃÂ±ÃÂÃÂ©',
       'role': 'ÃÂ§ÃÂÃÂ¯ÃÂÃÂ±', 'role_owner': 'ÃÂ§ÃÂÃÂÃÂ§ÃÂÃÂ', 'role_admin': 'ÃÂ§ÃÂÃÂÃÂ³ÃÂ¤ÃÂÃÂ',
       'role_foreman': 'ÃÂ§ÃÂÃÂÃÂ´ÃÂ±ÃÂ', 'role_employee': 'ÃÂ§ÃÂÃÂÃÂÃÂ¸ÃÂ',
@@ -3145,6 +3159,7 @@ class I18n {
       'inv': 'Ã Â¤ÂÃ Â¤Â¨Ã Â¥ÂÃ Â¤Âµ. Ã Â¤Â¨Ã Â¤Â.', 'issue': 'Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â Ã Â¤ÂÃ Â¤Â°Ã Â¤Â¨Ã Â¤Â¾', 'profile': 'Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â«Ã Â¤Â¼Ã Â¤Â¾Ã Â¤ÂÃ Â¤Â²', 'chooseLang': 'Ã Â¤Â­Ã Â¤Â¾Ã Â¤Â·Ã Â¤Â¾ Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¨Ã Â¥ÂÃ Â¤Â',
       'companyNotFound': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤Â¨Ã Â¤Â¹Ã Â¥ÂÃ Â¤Â Ã Â¤Â®Ã Â¤Â¿Ã Â¤Â²Ã Â¥Â', 'noAccessCompany': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤Â¤Ã Â¤Â Ã Â¤ÂªÃ Â¤Â¹Ã Â¥ÂÃ Â¤ÂÃ Â¤Â Ã Â¤Â¨Ã Â¤Â¹Ã Â¥ÂÃ Â¤Â',
       'leaveCompany': 'Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â / Ã Â¤Â¦Ã Â¥ÂÃ Â¤Â¸Ã Â¤Â°Ã Â¥Â Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â', 'createCompany': 'टीम बनाएं',
+      'leaveCompanyConfirm': 'क्या आप वाकई इस टीम से निकलना चाहते हैं?',
       'joinCompany': 'Ã Â¤ÂÃ Â¥ÂÃ Â¤Â¡Ã Â¤Â¼Ã Â¥ÂÃ Â¤Â', 'or': 'Ã Â¤Â¯Ã Â¤Â¾', 'companyName': 'Ã Â¤ÂÃ Â¤ÂÃ Â¤ÂªÃ Â¤Â¨Ã Â¥Â Ã Â¤ÂÃ Â¤Â¾ Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Â®',
       'role': 'Ã Â¤Â­Ã Â¥ÂÃ Â¤Â®Ã Â¤Â¿Ã Â¤ÂÃ Â¤Â¾', 'role_owner': 'Ã Â¤Â®Ã Â¤Â¾Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â', 'role_admin': 'Ã Â¤ÂµÃ Â¥ÂÃ Â¤Â¯Ã Â¤ÂµÃ Â¤Â¸Ã Â¥ÂÃ Â¤Â¥Ã Â¤Â¾Ã Â¤ÂªÃ Â¤Â',
       'role_foreman': 'Ã Â¤Â«Ã Â¥ÂÃ Â¤Â°Ã Â¤Â®Ã Â¥ÂÃ Â¤Â¨', 'role_employee': 'Ã Â¤ÂÃ Â¤Â°Ã Â¥ÂÃ Â¤Â®Ã Â¤ÂÃ Â¤Â¾Ã Â¤Â°Ã Â¥Â',
@@ -3285,6 +3300,7 @@ class I18n {
       'inv': 'Ã¬ÂÂ¬ÃªÂ³Â  Ã«Â²ÂÃ­ÂÂ¸', 'issue': 'Ã«ÂÂÃ¬Â¶Â', 'profile': 'Ã­ÂÂÃ«Â¡ÂÃ­ÂÂ', 'chooseLang': 'Ã¬ÂÂ¸Ã¬ÂÂ´ Ã¬ÂÂ Ã­ÂÂ',
       'companyNotFound': 'Ã­ÂÂÃ¬ÂÂ¬Ã«Â¥Â¼ Ã¬Â°Â¾Ã¬ÂÂ Ã¬ÂÂ Ã¬ÂÂÃ¬ÂÂ', 'noAccessCompany': 'Ã­ÂÂÃ¬ÂÂ¬Ã¬ÂÂ Ã¬Â ÂÃªÂ·Â¼ Ã«Â¶ÂÃªÂ°Â',
       'leaveCompany': 'Ã«ÂÂÃªÂ°ÂÃªÂ¸Â° / Ã«ÂÂ¤Ã«Â¥Â¸ Ã­ÂÂÃ¬ÂÂ¬', 'createCompany': '팀 만들기',
+      'leaveCompanyConfirm': '이 팀에서 나가시겠습니까?',
       'joinCompany': 'Ã¬Â°Â¸ÃªÂ°Â', 'or': 'Ã«ÂÂÃ«ÂÂ', 'companyName': 'Ã­ÂÂÃ¬ÂÂ¬ Ã¬ÂÂ´Ã«Â¦Â',
       'role': 'Ã¬ÂÂ­Ã­ÂÂ ', 'role_owner': 'Ã¬ÂÂÃ¬ÂÂ Ã¬ÂÂ', 'role_admin': 'ÃªÂ´ÂÃ«Â¦Â¬Ã¬ÂÂ',
       'role_foreman': 'Ã­ÂÂÃ¬ÂÂ¥ ÃªÂ°ÂÃ«ÂÂ', 'role_employee': 'Ã¬Â§ÂÃ¬ÂÂ',
@@ -3425,6 +3441,7 @@ class I18n {
       'inv': 'Ã¥ÂÂ¨Ã¥ÂºÂ«Ã§ÂÂªÃ¥ÂÂ·', 'issue': 'Ã¨Â²Â¸Ã¥ÂÂº', 'profile': 'Ã£ÂÂÃ£ÂÂ­Ã£ÂÂÃ£ÂÂ£Ã£ÂÂ¼Ã£ÂÂ«', 'chooseLang': 'Ã¨Â¨ÂÃ¨ÂªÂÃ£ÂÂÃ©ÂÂ¸Ã¦ÂÂ',
       'companyNotFound': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã£ÂÂÃ¨Â¦ÂÃ£ÂÂ¤Ã£ÂÂÃ£ÂÂÃ£ÂÂ¾Ã£ÂÂÃ£ÂÂ', 'noAccessCompany': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã£ÂÂ¸Ã£ÂÂ®Ã£ÂÂ¢Ã£ÂÂ¯Ã£ÂÂ»Ã£ÂÂ¹Ã£ÂÂªÃ£ÂÂ',
       'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã¥ÂÂ¥Ã£ÂÂ®Ã¤Â¼ÂÃ§Â¤Â¾', 'createCompany': 'チームを作る',
+      'leaveCompanyConfirm': 'このチームを退出しますか？',
       'joinCompany': 'Ã¥ÂÂÃ¥ÂÂ ', 'or': 'Ã£ÂÂ¾Ã£ÂÂÃ£ÂÂ¯', 'companyName': 'Ã¤Â¼ÂÃ§Â¤Â¾Ã¥ÂÂ',
       'role': 'Ã¥Â½Â¹Ã¥ÂÂ²', 'role_owner': 'Ã£ÂÂªÃ£ÂÂ¼Ã£ÂÂÃ£ÂÂ¼', 'role_admin': 'Ã§Â®Â¡Ã§ÂÂÃ¨ÂÂ',
       'role_foreman': 'Ã§ÂÂ¾Ã¥Â Â´Ã§ÂÂ£Ã§ÂÂ£', 'role_employee': 'Ã¥Â¾ÂÃ¦Â¥Â­Ã¥ÂÂ¡',
@@ -3565,6 +3582,7 @@ class I18n {
       'inv': 'Ã¥ÂºÂÃ¥Â­ÂÃ§Â¼ÂÃ¥ÂÂ·', 'issue': 'Ã¥ÂÂÃ¦ÂÂ¾', 'profile': 'Ã¤Â¸ÂªÃ¤ÂºÂºÃ¨ÂµÂÃ¦ÂÂ', 'chooseLang': 'Ã©ÂÂÃ¦ÂÂ©Ã¨Â¯Â­Ã¨Â¨Â',
       'companyNotFound': 'Ã¦ÂÂ¾Ã¤Â¸ÂÃ¥ÂÂ°Ã¥ÂÂ¬Ã¥ÂÂ¸', 'noAccessCompany': 'Ã¦ÂÂ Ã¦Â³ÂÃ¨Â®Â¿Ã©ÂÂ®Ã¥ÂÂ¬Ã¥ÂÂ¸',
       'leaveCompany': 'Ã©ÂÂÃ¥ÂÂº / Ã©ÂÂÃ¦ÂÂ©Ã¥ÂÂ¶Ã¤Â»ÂÃ¥ÂÂ¬Ã¥ÂÂ¸', 'createCompany': '创建团队',
+      'leaveCompanyConfirm': '您确定要离开这个团队吗？',
       'joinCompany': 'Ã¥ÂÂ Ã¥ÂÂ¥', 'or': 'Ã¦ÂÂ', 'companyName': 'Ã¥ÂÂ¬Ã¥ÂÂ¸Ã¥ÂÂÃ§Â§Â°',
       'role': 'Ã¨Â§ÂÃ¨ÂÂ²', 'role_owner': 'Ã¦ÂÂÃ¦ÂÂÃ¨ÂÂ', 'role_admin': 'Ã§Â®Â¡Ã§ÂÂÃ¥ÂÂ',
       'role_foreman': 'Ã¥Â·Â¥Ã¥Â¤Â´', 'role_employee': 'Ã¥ÂÂÃ¥Â·Â¥',
@@ -3705,6 +3723,7 @@ class I18n {
       'inv': 'No. inv.', 'issue': 'Pengeluaran', 'profile': 'Profil', 'chooseLang': 'Pilih bahasa',
       'companyNotFound': 'Perusahaan tidak ditemukan', 'noAccessCompany': 'Tidak ada akses ke perusahaan',
       'leaveCompany': 'Keluar / pilih lain', 'createCompany': 'Buat tim',
+      'leaveCompanyConfirm': 'Apakah Anda yakin ingin meninggalkan tim ini?',
       'joinCompany': 'Bergabung', 'or': 'ATAU', 'companyName': 'Nama perusahaan',
       'role': 'Peran', 'role_owner': 'Pemilik', 'role_admin': 'Administrator',
       'role_foreman': 'Mandor', 'role_employee': 'Karyawan',
@@ -3845,6 +3864,7 @@ class I18n {
       'inv': 'MÃÂ£ kiÃ¡Â»Âm kÃÂª', 'issue': 'CÃ¡ÂºÂ¥p phÃÂ¡t', 'profile': 'HÃ¡Â»Â sÃÂ¡', 'chooseLang': 'ChÃ¡Â»Ân ngÃÂ´n ngÃ¡Â»Â¯',
       'companyNotFound': 'KhÃÂ´ng tÃÂ¬m thÃ¡ÂºÂ¥y cÃÂ´ng ty', 'noAccessCompany': 'KhÃÂ´ng cÃÂ³ quyÃ¡Â»Ân truy cÃ¡ÂºÂ­p',
       'leaveCompany': 'ThoÃÂ¡t / chÃ¡Â»Ân cÃÂ´ng ty khÃÂ¡c', 'createCompany': 'Tạo nhóm',
+      'leaveCompanyConfirm': 'Bạn có chắc chắn muốn rời khỏi nhóm này không?',
       'joinCompany': 'Tham gia', 'or': 'HOÃ¡ÂºÂ¶C', 'companyName': 'TÃÂªn cÃÂ´ng ty',
       'role': 'Vai trÃÂ²', 'role_owner': 'ChÃ¡Â»Â§ sÃ¡Â»Â hÃ¡Â»Â¯u', 'role_admin': 'QuÃ¡ÂºÂ£n trÃ¡Â»Â viÃÂªn',
       'role_foreman': 'ÃÂÃ¡Â»Âc cÃÂ´ng', 'role_employee': 'NhÃÂ¢n viÃÂªn',
@@ -3985,6 +4005,7 @@ class I18n {
       'inv': 'Inv. no.', 'issue': 'Pag-isyu', 'profile': 'Profile', 'chooseLang': 'Pumili ng wika',
       'companyNotFound': 'Hindi nahanap ang kumpanya', 'noAccessCompany': 'Walang access sa kumpanya',
       'leaveCompany': 'Umalis / pumili ng iba', 'createCompany': 'Gumawa ng koponan',
+      'leaveCompanyConfirm': 'Sigurado ka bang gusto mong umalis sa koponang ito?',
       'joinCompany': 'Sumali', 'or': 'O', 'companyName': 'Pangalan ng kumpanya',
       'role': 'Papel', 'role_owner': 'May-ari', 'role_admin': 'Admin',
       'role_foreman': 'Capataz', 'role_employee': 'Empleyado',
@@ -6467,8 +6488,23 @@ class CompanyProfilePage extends StatelessWidget {
   }
 
   Future<void> _leaveCompany(BuildContext context) async {
-    // Mark membership as "left" so the owner won't see the person in active list
-    // and the same user can re-join later by code.
+    final i18n = AppState.of(context).i18n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(i18n.t('leaveCompany')),
+        content: Text(i18n.t('leaveCompanyConfirm')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(i18n.t('cancel'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(i18n.t('leaveCompany')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
     final u = FirebaseAuth.instance.currentUser;
     if (u != null) {
       await companyMemberDoc(companyId, u.uid).set({
@@ -6476,7 +6512,7 @@ class CompanyProfilePage extends StatelessWidget {
         'leftAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
-    await userDoc().set({'activeCompanyId': ''}, SetOptions(merge: true));
+    await userDoc().set({'activeCompanyId': FieldValue.delete()}, SetOptions(merge: true));
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const AppRouter()),
