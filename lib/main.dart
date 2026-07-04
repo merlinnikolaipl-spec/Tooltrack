@@ -6608,6 +6608,9 @@ class CompanyProfilePage extends StatelessWidget {
     try {
       await user.delete();
     } catch (_) {}
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {}
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const AppRouter()),
