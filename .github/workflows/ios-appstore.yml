@@ -1,1 +1,397 @@
+name: iOS App Store Build
 
+on:
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore original main.dart from git history
+        run: |
+          # Restore the original main.dart (correct UI architecture)
+          git checkout 2c64927700b7c2c7ed5fb1d017b16c1eb4a867b3 -- lib/main.dart pubspec.yaml
+          echo "Original main.dart restored, lines:"
+          wc -l lib/main.dart
+          # Downgrade packages incompatible with original code
+          printf 'dependency_overrides:\n  win32: 5.10.1\n  mobile_scanner: 5.2.3\n  sign_in_with_apple: ^6.1.0\n' > pubspec_overrides.yaml
+          echo "pubspec_overrides.yaml with downgrades created"
+          # Bump build number using GitHub run number (always unique and increasing)
+          NEWBUILD=${{ github.run_number }}
+          if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s/^version:.*/version: 1.1.0+${NEWBUILD}/" pubspec.yaml
+          else
+            sed -i "s/^version:.*/version: 1.1.0+${NEWBUILD}/" pubspec.yaml
+          fi
+          echo "Version bumped to 1.1.0+${NEWBUILD}"
+          grep '^version:' pubspec.yaml
+
+      - name: Patch GPS dialog string timestamp support
+        run: |
+          python3 scripts/patch_gps_dialog.py
+          echo "GPS dialog patch step complete"
+
+      - name: Add Sign in with Apple to LoginPage
+        run: |
+          python3 scripts/patch_apple_signin.py
+          echo "Apple Sign-In patch step complete"
+
+      - name: Configure Sign in with Apple entitlements
+        run: |
+          # Add entitlements file reference to Xcode project
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          if grep -q "CODE_SIGN_ENTITLEMENTS" "$PBXPROJ"; then
+            echo "CODE_SIGN_ENTITLEMENTS already set"
+          else
+            sed -i '' 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ" || \
+            sed -i 's/DEVELOPMENT_TEAM = VHF76Z663B;/DEVELOPMENT_TEAM = VHF76Z663B;\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = Runner\/Runner.entitlements;/g' "$PBXPROJ"
+            echo "Added CODE_SIGN_ENTITLEMENTS to pbxproj"
+          fi
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install Apple certificate and provisioning profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          PP_UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
+          echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
+
+      - name: Write Google Service Info Plist
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
+
+      - name: Add Google Sign-In URL scheme to Info.plist
+        run: |
+          REVERSED=$(grep -A1 'REVERSED_CLIENT_ID' ios/Runner/GoogleService-Info.plist | grep '<string>' | sed 's/.*<string>\(.*\)<\/string>.*/\1/' | head -1 || echo "")
+          if [ -n "$REVERSED" ] && echo "$REVERSED" | grep -qE '^[a-zA-Z]'; then
+            /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" ios/Runner/Info.plist 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" ios/Runner/Info.plist
+            /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $REVERSED" ios/Runner/Info.plist
+            echo "Added Google Sign-In URL scheme: $REVERSED"
+          else
+            echo "REVERSED_CLIENT_ID not found or invalid, skipping"
+          fi
+      - name: Create pubspec_overrides.yaml
+        run: |
+          # Only create if not already created by restore step
+          if [ ! -s pubspec_overrides.yaml ]; then touch pubspec_overrides.yaml; fi
+
+      - name: Flutter pub get
+        run: |
+          rm -f ios/Runner/GeneratedPluginRegistrant.m
+          rm -f ios/Runner/GeneratedPluginRegistrant.h
+          flutter pub get
+
+
+      - name: Patch pdf_widget_wrapper Flutter 3.3 compatibility
+        run: |
+          PDF_WIDGET_FILE=$(find ~/.pub-cache -path '*pdf_widget_wrapper-1.0.1*' -name 'widget_wrapper.dart' 2>/dev/null | head -1)
+          if [ -n "$PDF_WIDGET_FILE" ]; then
+            echo "Found: $PDF_WIDGET_FILE"
+            # Find line number of standalone "size:" line (the Scrollbar size param)
+            SIZE_LINE=$(grep -n "^[[:space:]]*size:[[:space:]]*$" "$PDF_WIDGET_FILE" | head -1 | cut -d: -f1)
+            if [ -n "$SIZE_LINE" ]; then
+              NEXT_LINE=$((SIZE_LINE + 1))
+              echo "Removing size: at line $SIZE_LINE and value at line $NEXT_LINE"
+              sed -i '' "${SIZE_LINE},${NEXT_LINE}d" "$PDF_WIDGET_FILE"
+              echo "Patch applied"
+              grep -n "size:" "$PDF_WIDGET_FILE" && echo "WARNING: size: still found" || echo "SUCCESS: size: removed"
+            else
+              echo "No standalone size: found - already patched or different format"
+            fi
+          else
+            echo "pdf_widget_wrapper not found, skipping"
+          fi
+      - name: Flutter precache iOS
+        run: flutter precache --ios
+
+      - name: Configure iOS project
+        run: |
+          flutter build ios --no-codesign --config-only
+          echo "iOS project configured"
+
+      - name: Write Podfile
+        run: |
+          cat > ios/Podfile << 'PODEOF'
+          platform :ios, '15.0'
+
+          ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+          project 'Runner', {
+            'Debug' => :debug,
+            'Profile' => :release,
+            'Release' => :release,
+          }
+
+          def flutter_root
+            generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+            unless File.exist?(generated_xcode_build_settings_path)
+              raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+            end
+
+            File.foreach(generated_xcode_build_settings_path) do |line|
+              matches = line.match(/FLUTTER_ROOT\=(.*)/)
+              return matches[1].strip if matches
+            end
+            raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get again"
+          end
+
+          require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+          flutter_ios_podfile_setup
+
+          target 'Runner' do
+            use_frameworks!
+            use_modular_headers!
+
+            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+            # Pin pod versions to resolve CocoaPods CDN conflicts
+            pod 'AppAuth', '~> 1.7'
+            pod 'GoogleSignIn', '~> 7.1'
+            pod 'GTMAppAuth', '~> 4.1'
+            pod 'GTMSessionFetcher', '~> 3.4'
+
+            target 'RunnerTests' do
+              inherit! :search_paths
+            end
+          end
+
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              flutter_additional_ios_build_settings(target)
+              target.build_configurations.each do |config|
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+                config.build_settings['CODE_SIGN_IDENTITY'] = ''
+                config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+                config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+                config.build_settings['SWIFT_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+                config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+                config.build_settings['CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE'] = 'NO'
+                config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+                config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-everything'
+                config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-everything'
+                config.build_settings['WARNING_CFLAGS'] = ''
+              end
+            end
+
+            # Fix BoringSSL-GRPC: remove -G flag (MIPS/GCC only, unsupported on arm64 iOS)
+            installer.pods_project.targets.each do |target|
+              if target.name == 'BoringSSL-GRPC'
+                target.build_configurations.each do |config|
+                  config.build_settings.delete('GCC_OPTIMIZATION_LEVEL')
+                  config.build_settings['OTHER_CFLAGS'] = '-Wno-everything'
+                  config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-Wno-everything'
+                end
+              end
+            end
+          end
+          PODEOF
+
+      - name: Pod install
+        run: |
+          cd ios
+          pod install
+          echo "=== FULL BoringSSL xcconfig content ==="
+          for f in Pods/Target\ Support\ Files/BoringSSL-GRPC/*.xcconfig; do
+            echo "--- $f ---"
+            cat "$f" 2>/dev/null || echo "cannot read"
+          done
+          echo "=== pbxproj -G occurrences ==="
+          grep -n "\-G" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null | head -30 || echo "no -G in pbxproj"
+          echo "=== Fixing COMPILER_FLAGS -GCC_WARN_INHIBIT_ALL_WARNINGS in pbxproj ==="
+          sed -i '' 's/ -GCC_WARN_INHIBIT_ALL_WARNINGS//g' Pods/Pods.xcodeproj/project.pbxproj && echo "Fixed COMPILER_FLAGS" || echo "sed failed"
+          echo "=== Verify fix ==="
+          grep -c "GCC_WARN_INHIBIT_ALL_WARNINGS" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null || echo "0 occurrences"
+          grep -n "\-GCC_WARN" Pods/Pods.xcodeproj/project.pbxproj 2>/dev/null | head -5 || echo "no -GCC_WARN left"
+
+      - name: Patch warning flags from all project files
+        run: |
+          # Patch Pods project
+          if [ -f "ios/Pods/Pods.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/GCC_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/GCC_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            sed -i '' 's/SWIFT_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/SWIFT_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Pods/Pods.xcodeproj/project.pbxproj
+            echo "Patched Pods.xcodeproj"
+          fi
+          # Patch Runner project
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            sed -i '' 's/GCC_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/GCC_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            sed -i '' 's/SWIFT_TREAT_WARNINGS_AS_ERRORS = YES[A-Z_]*/SWIFT_TREAT_WARNINGS_AS_ERRORS = NO/g' ios/Runner.xcodeproj/project.pbxproj
+            echo "Patched Runner.xcodeproj"
+          fi
+          # Also patch any xcconfig files
+          find ios -name "*.xcconfig" -exec sed -i '' 's/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = YES[A-Z_]*/CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE = NO/g' {} \;
+
+      - name: Configure code signing for Runner
+        run: |
+          # Patch provisioning profile specifier
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Distribution"/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store"/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ToolKeeper Distribution/PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper App Store"/g' ios/Runner.xcodeproj/project.pbxproj
+          # Set manual code signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          # Update bundle version from pubspec.yaml
+          plutil -replace CFBundleVersion -string $(cat pubspec.yaml | grep '^version:' | sed 's/version: [0-9.]*//' | tr -d '+') ios/Runner/Info.plist 2>/dev/null || true
+          echo "Code signing configured"
+
+      - name: Update iOS deployment target to 15.0
+        run: |
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' ios/Runner.xcodeproj/project.pbxproj
+          echo "Updated iOS deployment target to 15.0"
+
+      - name: Fix BGTaskSchedulerPermittedIdentifiers in Info.plist
+        run: |
+          PLIST="ios/Runner/Info.plist"
+          # Check if UIBackgroundModes contains 'processing'
+          if /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST" 2>/dev/null | grep -q "processing"; then
+            echo "Found 'processing' in UIBackgroundModes - checking BGTaskSchedulerPermittedIdentifiers"
+            # Check if BGTaskSchedulerPermittedIdentifiers already exists
+            if ! /usr/libexec/PlistBuddy -c "Print :BGTaskSchedulerPermittedIdentifiers" "$PLIST" 2>/dev/null; then
+              echo "Adding BGTaskSchedulerPermittedIdentifiers key"
+              /usr/libexec/PlistBuddy -c "Add :BGTaskSchedulerPermittedIdentifiers array" "$PLIST"
+              /usr/libexec/PlistBuddy -c "Add :BGTaskSchedulerPermittedIdentifiers:0 string com.toolkeeper.app.refresh" "$PLIST"
+              echo "Added BGTaskSchedulerPermittedIdentifiers to Info.plist"
+            else
+              echo "BGTaskSchedulerPermittedIdentifiers already exists"
+            fi
+          else
+            echo "No 'processing' in UIBackgroundModes, skipping"
+          fi
+
+      - name: Build and archive iOS app
+        run: |
+          echo "Starting xcodebuild archive..."
+          set +e
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath /tmp/Runner.xcarchive \
+            -sdk iphoneos \
+            -skipPackageSignatureValidation \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
+            DEVELOPMENT_TEAM=VHF76Z663B \
+            CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE=NO \
+            CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
+            GCC_TREAT_WARNINGS_AS_ERRORS=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
+            > /tmp/xcodebuild.log 2>&1
+          BUILD_RESULT=$?
+          set -e
+          echo "xcodebuild exit code: $BUILD_RESULT"
+          echo "Log size: $(wc -c < /tmp/xcodebuild.log) bytes, $(wc -l < /tmp/xcodebuild.log) lines"
+          if [ $BUILD_RESULT -ne 0 ]; then
+            echo "=== LAST 100 LINES ==="
+            tail -100 /tmp/xcodebuild.log
+            echo "=== ERROR LINES ==="
+            grep -i "error:" /tmp/xcodebuild.log | tail -30
+            exit 1
+          fi
+          echo "Archive succeeded!"
+
+      - name: Export IPA
+        run: |
+          cat > /tmp/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>VHF76Z663B</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.toolkeeper.app</key>
+              <string>ToolKeeper App Store</string>
+            </dict>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath /tmp/Runner.xcarchive \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath /tmp/Runner_export
+          IPA_PATH=$(find /tmp/Runner_export -name "*.ipa" | head -1)
+          echo "IPA exported: $IPA_PATH"
+          ls -la "$IPA_PATH"
+
+      - name: Upload to TestFlight
+        env:
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$ASC_PRIVATE_KEY" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          IPA_PATH=$(find /tmp/Runner_export -name "*.ipa" | head -1)
+          echo "Uploading IPA: $IPA_PATH"
+          echo "Using API Key: $ASC_KEY_ID"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID" \
+            2>&1 | tee /tmp/upload.log
+          UPLOAD_RESULT=${PIPESTATUS[0]}
+          echo "Upload exit code: $UPLOAD_RESULT"
+          if grep -q "UPLOAD FAILED" /tmp/upload.log; then
+            echo "Upload failed - check log above"
+            exit 1
+          fi
+          if [ $UPLOAD_RESULT -ne 0 ]; then
+            echo "altool returned non-zero exit code"
+            exit 1
+          fi
+          echo "Upload completed successfully!"
+ 
+ 
+ 
