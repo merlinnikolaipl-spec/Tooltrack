@@ -5497,6 +5497,43 @@ class _LinkPasswordPageState extends State<LinkPasswordPage> {
   }
 }
 
+Future<void> _deleteAccountFromRoleChoice(BuildContext context) async {
+  final i18n = AppState.of(context).i18n;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(i18n.t('deleteAccountTitle')),
+      content: Text(i18n.t('deleteAccountText')),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(i18n.t('cancel'))),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(i18n.t('deleteAccount')),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  final uid = user.uid;
+  try {
+    await userDoc(uid).delete();
+  } catch (_) {}
+  try {
+    await user.delete();
+  } catch (_) {}
+  try {
+    await FirebaseAuth.instance.signOut();
+  } catch (_) {}
+  if (!context.mounted) return;
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const AppRouter()),
+    (_) => false,
+  );
+}
+
 /// ===================
 /// ROLE CHOICE
 /// ===================
@@ -5561,6 +5598,14 @@ class RoleChoicePage extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const JoinCompanyPage()),
                 ),
                 label: Text(i18n.t('employee')),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextButton(
+              onPressed: () => _deleteAccountFromRoleChoice(context),
+              child: Text(
+                i18n.t('deleteAccount'),
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ],
