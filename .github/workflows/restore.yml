@@ -1,0 +1,21 @@
+name: Restore iOS Workflow
+
+on:
+  workflow_dispatch:
+
+  jobs:
+    restore:
+        runs-on: ubuntu-latest
+            steps:
+                  - uses: actions/checkout@v4
+                          with:
+                                    fetch-depth: 0
+
+                                                - name: Restore ios-appstore.yml from commit 598c170
+                                                        run: |
+                                                                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                                                                            git config user.name "github-actions[bot]"
+                                                                                      git checkout 598c170 -- .github/workflows/ios-appstore.yml
+                                                                                                git add .github/workflows/ios-appstore.yml
+                                                                                                          git commit -m "Restore iOS workflow from Build #196 (commit 598c170)"
+                                                                                                                    git push origin main
