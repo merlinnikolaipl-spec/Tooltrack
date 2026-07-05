@@ -58,8 +58,8 @@ jobs:
           echo "Timesheets sort patch step complete"
       - name: Improve account deletion error handling
         run: |
-          python3 -c "content=open('lib/main.dart',encoding='utf-8').read(); i=content.find('_deleteAccountFromRoleChoice'); seg=content[i:i+1600] if i!=-1 else 'NOTFOUND1'; print(seg.replace(chr(61),' EQ ').replace(chr(63),' Q ').replace(chr(38),' AMP '))"
-          python3 -c "content=open('lib/main.dart',encoding='utf-8').read(); i=content.find('_deleteMyAccount'); seg=content[i:i+1600] if i!=-1 else 'NOTFOUND2'; print(seg.replace(chr(61),' EQ ').replace(chr(63),' Q ').replace(chr(38),' AMP '))"
+          python3 -c "content=open('lib/main.dart',encoding='utf-8').read(); i=content.find('_deleteAccount(BuildContext'); seg=content[i:i+2000] if i!=-1 else 'NOTFOUND1'; print(seg.replace(chr(61),' EQ ').replace(chr(63),' Q ').replace(chr(38),' AMP '))"
+          python3 -c "content=open('lib/main.dart',encoding='utf-8').read(); n=content.count('deleteAccountReauthRequired'); print('REAUTH_KEY_COUNT=' + str(n))"
           echo "Delete account error handling patch step complete"
 
       - name: Configure Sign in with Apple entitlements
