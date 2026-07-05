@@ -52,6 +52,11 @@ jobs:
           python3 scripts/patch_role_labels.py
           echo "Role labels patch step complete"
 
+      - name: Fix timesheets sort order (active shifts on top)
+        run: |
+          python3 scripts/patch_timesheets_sort.py
+          echo "Timesheets sort patch step complete"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
