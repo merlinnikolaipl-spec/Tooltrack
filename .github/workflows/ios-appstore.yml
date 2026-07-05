@@ -56,6 +56,10 @@ jobs:
         run: |
           python3 scripts/patch_timesheets_sort.py
           echo "Timesheets sort patch step complete"
+      - name: Improve account deletion error handling
+        run: |
+          python3 scripts/patch_delete_account_error_handling.py
+          echo "Delete account error handling patch step complete"
 
       - name: Configure Sign in with Apple entitlements
         run: |
