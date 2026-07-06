@@ -1,20 +1,34 @@
 import re
 content = open("lib/main.dart", encoding="utf-8").read()
 
-idxs = [m.start() for m in re.finditer("leaveCompanyConfirm", content)]
-print("LEAVE_CONFIRM_COUNT=" + str(len(idxs)))
-for i in idxs[:2]:
-    snippet = content[i-10:i+100]
-    print("SNIPPET_START")
-    print(snippet)
-    print("SNIPPET_END")
+print("LEN=" + str(len(content)))
 
-fidx = content.find("_leaveCompany(BuildContext")
-print("FUNC_IDX=" + str(fidx))
-if fidx >= 0:
-    print("FUNC_START")
-    print(content[fidx:fidx+900])
-    print("FUNC_END")
+count_func = content.count("_leaveCompany(BuildContext")
+print("FUNC_COUNT=" + str(count_func))
 
-idx2 = content.find("isOwner")
-print("IS_OWNER_IDX=" + str(idx2))
+idx2 = content.find("bool get isOwner")
+print("IS_OWNER_GETTER_IDX=" + str(idx2))
+if idx2 >= 0:
+    print("OWNER_CTX_START")
+    print(content[idx2-400:idx2+50])
+    print("OWNER_CTX_END")
+
+idxLC = content.find("'leaveCompany':")
+print("LEAVECOMPANY_KEY_IDX=" + str(idxLC))
+if idxLC >= 0:
+    print("LC_CTX_START")
+    print(content[idxLC:idxLC+150])
+    print("LC_CTX_END")
+
+idxI18n = content.find("class I18n")
+print("I18N_CLASS_IDX=" + str(idxI18n))
+
+idxDeleteCompany = content.find("_deleteCompany(BuildContext")
+print("DELETE_COMPANY_FUNC_IDX=" + str(idxDeleteCompany))
+
+idxLeaveBtn = content.find("_leaveCompany(context)")
+print("LEAVE_BTN_IDX=" + str(idxLeaveBtn))
+if idxLeaveBtn >= 0:
+    print("BTN_CTX_START")
+    print(content[idxLeaveBtn-300:idxLeaveBtn+400])
+    print("BTN_CTX_END")
