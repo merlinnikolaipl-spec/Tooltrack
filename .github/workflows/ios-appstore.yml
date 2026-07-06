@@ -61,6 +61,11 @@ jobs:
           python3 scripts/patch_delete_account_error_handling.py
           echo "Delete account error handling patch step complete"
 
+      - name: Prevent company owner from leaving silently
+        run: |
+          python3 scripts/patch_owner_leave_company.py
+          echo "Owner leave-company patch step complete"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
