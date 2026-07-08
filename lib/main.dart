@@ -10377,7 +10377,8 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
           .snapshots();
     }
     return companyTimesheetsRef(widget.companyId)
-        .snapshots(); // v23: removed orderBy (sort client-side)
+      .limit(100) // v24: cap reads to last 100 docs (unordered; orderBy still avoided, sort stays client-side)
+      .snapshots();
   }
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _applyFilters(
