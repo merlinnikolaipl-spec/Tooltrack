@@ -10385,7 +10385,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
     var result = docs.toList();
-    if (widget.personId != null) {
+        if (true) { // v25: sort applies to all views now (was: only when personId != null) so admin "Все табели" view is sorted too
       result.sort((a, b) {
         final ta = (a.data()['startTime'] as Timestamp?)?.toDate() ?? DateTime(0);
         final tb = (b.data()['startTime'] as Timestamp?)?.toDate() ?? DateTime(0);
