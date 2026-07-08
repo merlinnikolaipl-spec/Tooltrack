@@ -5498,7 +5498,7 @@ class _LinkPasswordPageState extends State<LinkPasswordPage> {
 }
 
 Future<void> _deleteAccountFromRoleChoice(BuildContext context) async {
-  final i18n = AppState.of(context).i18n;
+  final i18n = I18n(AppState.of(context).lang.value);
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -6533,7 +6533,7 @@ class CompanyProfilePage extends StatelessWidget {
   }
 
   Future<void> _leaveCompany(BuildContext context) async {
-    final i18n = AppState.of(context).i18n;
+    final i18n = I18n(AppState.of(context).lang.value);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -6627,7 +6627,7 @@ class CompanyProfilePage extends StatelessWidget {
   }
 
   Future<void> _deleteMyAccount(BuildContext context) async {
-    final i18n = AppState.of(context).i18n;
+    final i18n = I18n(AppState.of(context).lang.value);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
