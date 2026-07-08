@@ -256,14 +256,14 @@ if OLD_ACTIVE in src:
 else:
     print("v22 Fix C SKIP")
 
-# Fix D (v22): remove orderBy from admin stream (causes Firestore index error = no shifts visible)
+# Fix D (v23): restore orderBy on admin stream + add limit(100) to cap Firestore reads
 OLD_STREAM = "    return companyTimesheetsRef(widget.companyId)\n        .orderBy('startTime', descending: true)\n        .snapshots();"
-NEW_STREAM = "    return companyTimesheetsRef(widget.companyId)\n        .snapshots(); // v22: orderBy removed, sorted client-side"
+NEW_STREAM = "    return companyTimesheetsRef(widget.companyId)\n        .orderBy('startTime', descending: true)\n        .limit(100)\n        .snapshots(); // v23: orderBy restored + limit(100) to cap reads"
 if OLD_STREAM in src:
     src = src.replace(OLD_STREAM, NEW_STREAM, 1)
-    print("v22 Fix D OK: orderBy removed from admin stream")
+    print("v23 Fix D OK: orderBy + limit(100) applied to admin stream")
 else:
-    print("v22 Fix D SKIP")
+    print("v23 Fix D SKIP")
 
 
 with open(MAIN_DART, "w", encoding="utf-8") as f:
