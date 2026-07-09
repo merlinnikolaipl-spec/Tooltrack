@@ -10060,7 +10060,9 @@ class _ShiftButtonState extends State<ShiftButton> {
 
     if (siteLat != 0.0 || siteLng != 0.0) {
       try {
-        if (gpsPermission == LocationPermission.denied || gpsPermission == LocationPermission.deniedForever) {
+        if (!(await Geolocator.isLocationServiceEnabled())) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Включите GPS (геолокацию) на устройстве')));
+        } else if (gpsPermission == LocationPermission.denied || gpsPermission == LocationPermission.deniedForever) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(i18n.t('gpsPermissionDenied'))));
         } else {
           final pos = await Geolocator.getCurrentPosition(
@@ -10089,7 +10091,11 @@ class _ShiftButtonState extends State<ShiftButton> {
             return; // жёсткий блок
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('GPS: ' + e.toString())));
+        }
+      }
     }
 
     // 5. Записать смену
