@@ -6931,7 +6931,7 @@ class _EmployeesListCardState extends State<EmployeesListCard> {
 
         final name = (first + ' ' + last).trim().isEmpty ? uid : (first + ' ' + last).trim();
 
-        return {
+        return <String, dynamic>{
           'uid': uid,
           'roleRaw': roleRaw,
           'role': role,
