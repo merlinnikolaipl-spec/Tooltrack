@@ -1,63 +1,78 @@
 {
-  "project_info": {
-    "project_number": "242560270718",
-    "project_id": "tooltrack-ee0aa",
-    "storage_bucket": "tooltrack-ee0aa.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:242560270718:android:52e0829473ae5410ccb32f",
-        "android_client_info": {
-          "package_name": "com.toolkeeper.app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "242560270718-2i6fvsu2gi5clgt50bmk6i9je3njsjem.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.toolkeeper.app",
-            "certificate_hash": "905772053b77968a441d96a4d7f72b318b461489"
+    "project_info": {
+          "project_number": "242560270718",
+          "project_id": "tooltrack-ee0aa",
+          "storage_bucket": "tooltrack-ee0aa.firebasestorage.app"
+    },
+    "client": [
+          {
+                  "client_info": {
+                            "mobilesdk_app_id": "1:242560270718:android:52e0829473ae5410ccb32f",
+                            "android_client_info": {
+                                        "package_name": "com.toolkeeper.app"
+                            }
+                  },
+                  "oauth_client": [
+                            {
+                                        "client_id": "242560270718-2i6fvsu2gi5clgt50bmk6i9je3njsjem.apps.googleusercontent.com",
+                                        "client_type": 1,
+                                        "android_info": {
+                                                      "package_name": "com.toolkeeper.app",
+                                                      "certificate_hash": "905772053b77968a441d96a4d7f72b318b461489"
+                                        }
+                            },
+                            {
+                                        "client_id": "242560270718-a1mpuheojqndb4bof3dd1pj19b2a10u6.apps.googleusercontent.com",
+                                        "client_type": 1,
+                                        "android_info": {
+                                                      "package_name": "com.toolkeeper.app",
+                                                      "certificate_hash": "927f859b75a3b2496b25b21626f96dd9d3ef0d7f"
+                                        }
+                            },
+                            {
+                                        "client_id": "242560270718-m45t33h1955fq7l0ol03clbg4jbhajak.apps.googleusercontent.com",
+                                        "client_type": 1,
+                                        "android_info": {
+                                                      "package_name": "com.toolkeeper.app",
+                                                      "certificate_hash": "f32ecbda41ada1c53f5c566abb74dc21982d5ec5"
+                                        }
+                            },
+                            {
+                                        "client_id": "242560270718-vrlbh46f29nt8a51k5eb0mfappmd729l.apps.googleusercontent.com",
+                                        "client_type": 1,
+                                        "android_info": {
+                                                      "package_name": "com.toolkeeper.app",
+                                                      "certificate_hash": "7d8e38d16ac0a7331dce37367c3c5c90f1a1a7ca"
+                                        }
+                            },
+                            {
+                                        "client_id": "242560270718-34t5p3p2kms0dl0mq4q382efvi2psqvf.apps.googleusercontent.com",
+                                        "client_type": 3
+                            }
+                  ],
+                  "api_key": [
+                            {
+                                        "current_key": "AIzaSyDKRzqWv3SraB_jZjom-G8FLEjB6LvSnig"
+                            }
+                  ],
+                  "services": {
+                            "appinvite_service": {
+                                        "other_platform_oauth_client": [
+                                                      {
+                                                                      "client_id": "242560270718-34t5p3p2kms0dl0mq4q382efvi2psqvf.apps.googleusercontent.com",
+                                                                      "client_type": 3
+                                                      },
+                                          {
+                                                          "client_id": "242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com",
+                                                          "client_type": 2,
+                                                          "ios_info": {
+                                                                            "bundle_id": "com.toolkeeper.app"
+                                                          }
+                                          }
+                                        ]
+                            }
+                  }
           }
-        },
-        {
-          "client_id": "242560270718-a1mpuheojqndb4bof3dd1pj19b2a10u6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.toolkeeper.app",
-            "certificate_hash": "927f859b75a3b2496b25b21626f96dd9d3ef0d7f"
-          }
-        },
-        {
-          "client_id": "242560270718-m45t33h1955fq7l0ol03clbg4jbhajak.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.toolkeeper.app",
-            "certificate_hash": "f32ecbda41ada1c53f5c566abb74dc21982d5ec5"
-          }
-        },
-        {
-          "client_id": "242560270718-34t5p3p2kms0dl0mq4q382efvi2psqvf.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDKRzqWv3SraB_jZjom-G8FLEjB6LvSnig"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "242560270718-34t5p3p2kms0dl0mq4q382efvi2psqvf.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
+    ],
+    "configuration_version": "1"
 }
