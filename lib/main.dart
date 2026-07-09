@@ -6898,6 +6898,56 @@ class EmployeesListCard extends StatefulWidget {
 class _EmployeesListCardState extends State<EmployeesListCard> {
   String _searchQuery = "";
 
+  Future<List<Map<String, dynamic>>>? _profilesFuture;
+  String _profilesFutureKey = '';
+
+  Future<List<Map<String, dynamic>>> _loadProfiles(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> memberDocs) {
+    final key = memberDocs.map((m) => m.id).join(',');
+    if (_profilesFuture != null && _profilesFutureKey == key) {
+      return _profilesFuture!;
+    }
+    _profilesFutureKey = key;
+    _profilesFuture = () async {
+      final peopleSnap = await companyPeopleRef(widget.companyId).get();
+      final linkedUids = <String>{};
+      for (final p in peopleSnap.docs) {
+        final uid = (p.data()['linkedUserId'] ?? '').toString();
+        if (uid.isNotEmpty) linkedUids.add(uid);
+      }
+
+      final out = await Future.wait(memberDocs.map((m) async {
+        final uid = m.id;
+        final roleRaw = (m.data()['role'] ?? 'employee').toString();
+        final role = normalizeRole(roleRaw);
+
+        final u = await userDoc(uid).get();
+        final ud = u.data() ?? {};
+
+        final first = (ud['firstName'] ?? '').toString();
+        final last = (ud['lastName'] ?? '').toString();
+        final phone = (ud['phone'] ?? '').toString();
+        final position = (ud['position'] ?? '').toString();
+
+        final name = (first + ' ' + last).trim().isEmpty ? uid : (first + ' ' + last).trim();
+
+        return {
+          'uid': uid,
+          'roleRaw': roleRaw,
+          'role': role,
+          'name': name,
+          'phone': phone,
+          'position': position,
+          'isLinked': linkedUids.contains(uid),
+        };
+      }));
+
+      out.sort((a, b) => normText(a['name']).compareTo(normText(b['name'])));
+      return out;
+    }();
+    return _profilesFuture!;
+  }
+
   @override
   Widget build(BuildContext context) {
     final i18n = I18n(AppState.of(context).lang.value);
@@ -6920,46 +6970,7 @@ class _EmployeesListCardState extends State<EmployeesListCard> {
             final memberDocs = snapshot.data!.docs;
 
             return FutureBuilder<List<Map<String, dynamic>>>(
-              future: () async {
-                // Загружаем анкеты, чтобы знать какие UIDs уже привязаны
-                final peopleSnap = await companyPeopleRef(widget.companyId).get();
-                final linkedUids = <String>{};
-                for (final p in peopleSnap.docs) {
-                  final uid = (p.data()['linkedUserId'] ?? '').toString();
-                  if (uid.isNotEmpty) linkedUids.add(uid);
-                }
-
-                final out = <Map<String, dynamic>>[];
-                for (final m in memberDocs) {
-                  final uid = m.id;
-                  final roleRaw = (m.data()['role'] ?? 'employee').toString();
-                  final role = normalizeRole(roleRaw);
-
-                  final u = await userDoc(uid).get();
-                  final ud = u.data() ?? {};
-
-                  final first = (ud['firstName'] ?? '').toString();
-                  final last = (ud['lastName'] ?? '').toString();
-                  final phone = (ud['phone'] ?? '').toString();
-                  final position = (ud['position'] ?? '').toString();
-
-                  final name = ('$first $last').trim().isEmpty ? uid : ('$first $last').trim();
-
-                  out.add({
-                    'uid': uid,
-                    'roleRaw': roleRaw,
-                    'role': role,
-                    'name': name,
-                    'phone': phone,
-                    'position': position,
-                    'isLinked': linkedUids.contains(uid),
-                  });
-                }
-
-                // ✅ алфавит (с учетом ё -> е)
-                out.sort((a, b) => normText(a['name']).compareTo(normText(b['name'])));
-                return out;
-              }(),
+              future: _loadProfiles(memberDocs),
               builder: (context, listSnap) {
                 if (!listSnap.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -9638,7 +9649,14 @@ class _SitesPageState extends State<SitesPage> {
               return ListTile(
                 title: Text(name),
                 subtitle: Text('$address\nGPS: $interval мин'),
-                isThreeLine: address.isNotEmpty,
+                onTap: () {
+                                    final lat = (data['latitude'] as num?)?.toDouble();
+                                    final lng = (data['longitude'] as num?)?.toDouble();
+                                    if (lat != null && lng != null) {
+                                                          launchUrl(Uri.parse('https://maps.google.com/?q=$lat,$lng'));
+                                    }
+                },
+                                isThreeLine: address.isNotEmpty,
                 trailing: IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () => _addOrEditSite(existing: data, siteId: doc.id),
