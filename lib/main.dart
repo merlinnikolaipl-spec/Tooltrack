@@ -9649,13 +9649,18 @@ class _SitesPageState extends State<SitesPage> {
               return ListTile(
                 title: Text(name),
                 subtitle: Text('$address\nGPS: $interval мин'),
-                onTap: () {
-                                    final lat = (data['latitude'] as num?)?.toDouble();
-                                    final lng = (data['longitude'] as num?)?.toDouble();
-                                    if (lat != null && lng != null) {
-                                                          launchUrl(Uri.parse('https://maps.google.com/?q=$lat,$lng'));
-                                    }
-                },
+                onTap: () async {
+              final lat = (data['latitude'] as num?)?.toDouble();
+              final lng = (data['longitude'] as num?)?.toDouble();
+              if (lat != null && lng != null) {
+                final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=' + lat.toString() + ',' + lng.toString());
+                try {
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                } catch (_) {}
+              }
+            },
                                 isThreeLine: address.isNotEmpty,
                 trailing: IconButton(
                   icon: const Icon(Icons.edit),
