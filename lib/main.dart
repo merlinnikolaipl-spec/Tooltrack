@@ -4699,7 +4699,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     final GoogleSignIn googleSignIn = GoogleSignIn(
-      clientId: '242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com',
+      clientId: Platform.isIOS ? '242560270718-nrq1kk5mg60i7so7li93s7ip8vfa9t6n.apps.googleusercontent.com' : null,
       scopes: const ['email'],
     );
 
