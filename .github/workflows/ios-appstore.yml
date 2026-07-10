@@ -25,11 +25,11 @@ jobs:
           # Bump build number using GitHub run number (always unique and increasing)
           NEWBUILD=${{ github.run_number }}
           if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' "s/^version:.*/version: 1.1.0+${NEWBUILD}/" pubspec.yaml
+            sed -i '' "s/^version:.*/version: 1.1.1+${NEWBUILD}/" pubspec.yaml
           else
-            sed -i "s/^version:.*/version: 1.1.0+${NEWBUILD}/" pubspec.yaml
+            sed -i "s/^version:.*/version: 1.1.1+${NEWBUILD}/" pubspec.yaml
           fi
-          echo "Version bumped to 1.1.0+${NEWBUILD}"
+          echo "Version bumped to 1.1.1+${NEWBUILD}"
           grep '^version:' pubspec.yaml
 
       - name: Patch GPS dialog string timestamp support
