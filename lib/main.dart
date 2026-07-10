@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -131,7 +131,7 @@ Future<void> main() async {
 /// ===================
 /// SIMPLE LANG
 /// ===================
-enum AppLang { ru, uk, pl, en, de, fr, es, it, pt, cs, ro, nl, tr, ar, hi, ko, ja, zh, id, vi, tl }
+enum AppLang { ru, uk, pl, en, de, fr, es, it, pt, cs, ro, nl, tr, ar, hi, ko, ja, zh, id, vi, tl } Locale localeForAppLang(AppLang l) { if (l == AppLang.tl) return const Locale('fil'); return Locale(l.name); }
 
 /// Human-readable names for all supported languages
 const Map<AppLang, String> kLangNames = {
@@ -4447,7 +4447,7 @@ class _MyAppState extends State<MyApp> {
         builder: (_, lang, __) {
           final i18n = I18n(lang);
           return MaterialApp(
-            title: i18n.t('appTitle'),
+            title: i18n.t('appTitle'), locale: localeForAppLang(lang), localizationsDelegates: const [GlobalMaterialLocalizations.delegate, GlobalWidgetsLocalizations.delegate, GlobalCupertinoLocalizations.delegate], supportedLocales: AppLang.values.map(localeForAppLang).toList(),
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               useMaterial3: true,
@@ -11092,7 +11092,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
                     ],
                     onChanged: (v) => setState(() { _monthFilter = v; _dayFilter = null; }),
                   ),
-                  const SizedBox(width: 12), OutlinedButton.icon(icon: const Icon(Icons.calendar_today, size: 16), label: Text(_dayFilter == null ? i18n.t('allDays') : _fmtDay(_dayFilter!, i18n)), onPressed: () async { final picked = await showDatePicker(context: context, initialDate: _dayFilter ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(DateTime.now().year + 1)); if (picked != null) { setState(() { _dayFilter = picked; _monthFilter = null; }); } }), if (_dayFilter != null) IconButton(icon: const Icon(Icons.clear, size: 18), tooltip: i18n.t('allDays'), onPressed: () => setState(() => _dayFilter = null)), const SizedBox(width: 12), DropdownButton<String?>(value: _statusFilter, isDense: true, hint: Text(i18n.t('allStatuses')), items: [DropdownMenuItem(value: null, child: Text(i18n.t('allStatuses'))), DropdownMenuItem(value: 'active', child: Text(i18n.t('filterActive'))), DropdownMenuItem(value: 'completed', child: Text(i18n.t('shiftCompleted')))], onChanged: (v) => setState(() => _statusFilter = v)), const SizedBox(width: 12), if (_sites.isNotEmpty) ...[
+                  const SizedBox(width: 12), OutlinedButton.icon(icon: const Icon(Icons.calendar_today, size: 16), label: Text(_dayFilter == null ? i18n.t('allDays') : _fmtDay(_dayFilter!, i18n)), onPressed: () async { final picked = await showDatePicker(context: context, initialDate: _dayFilter ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(DateTime.now().year + 1), locale: localeForAppLang(AppState.of(context).lang.value)); if (picked != null) { setState(() { _dayFilter = picked; _monthFilter = null; }); } }), if (_dayFilter != null) IconButton(icon: const Icon(Icons.clear, size: 18), tooltip: i18n.t('allDays'), onPressed: () => setState(() => _dayFilter = null)), const SizedBox(width: 12), DropdownButton<String?>(value: _statusFilter, isDense: true, hint: Text(i18n.t('allStatuses')), items: [DropdownMenuItem(value: null, child: Text(i18n.t('allStatuses'))), DropdownMenuItem(value: 'active', child: Text(i18n.t('filterActive'))), DropdownMenuItem(value: 'completed', child: Text(i18n.t('shiftCompleted')))], onChanged: (v) => setState(() => _statusFilter = v)), const SizedBox(width: 12), if (_sites.isNotEmpty) ...[
                     const SizedBox(width: 12),
                     DropdownButton<String?>(
                       value: _siteFilter,
