@@ -421,7 +421,7 @@ class I18n {
       'gpsWarningText': 'Ваше местоположение не совпадает с адресом объекта.',
       'distance': 'Расстояние',
       'startAnyway': 'Начать всё равно',
-      'allTime': 'Всё время',
+      'allTime': 'Всё время', 'allDays': 'Все дни', 'today': 'Сегодня', 'allStatuses': 'Все статусы', 'shiftActive': 'Активна', 'shiftCompleted': 'Завершена',
       'allSites': 'Все объекты',
       'allPeople': 'Все сотрудники',
       'exportPdf': 'Экспорт PDF',
@@ -10390,12 +10390,12 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
   String? _siteFilter;
   String? _personFilter;
   List<Map<String, dynamic>> _sites = [];
-  bool _exporting = false;
+  bool _exporting = false; DateTime? _dayFilter; String? _statusFilter;
 
   @override
   void initState() {
     super.initState();
-    _loadSites();
+    _loadSites(); _dayFilter = DateTime.now();
   }
 
   Future<void> _loadSites() async {
@@ -10444,13 +10444,13 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
     if (_siteFilter != null) {
       result = result.where((d) => d.data()['siteId'] == _siteFilter).toList();
     }
-    if (_personFilter != null) {
+    if (_dayFilter != null) { result = result.where((d) { final dt = (d.data()['startTime'] as Timestamp?)?.toDate(); return dt != null && dt.year == _dayFilter!.year && dt.month == _dayFilter!.month && dt.day == _dayFilter!.day; }).toList(); } if (_statusFilter != null) { result = result.where((d) { final isActive = d.data()['endTime'] == null; return _statusFilter == 'active' ? isActive : !isActive; }).toList(); } if (_personFilter != null) {
       result = result.where((d) => d.data()['personId'] == _personFilter).toList();
     }
     return result;
   }
 
-  String _fmtMonth(String ym) {
+  String _fmtDay(DateTime d, I18n i18n) { final now = DateTime.now(); if (d.year == now.year && d.month == now.month && d.day == now.day) return i18n.t('today'); String p(int n) => n.toString().padLeft(2, '0'); return p(d.day) + '.' + p(d.month) + '.' + d.year.toString(); } String _fmtMonth(String ym) {
     final p = ym.split('-');
     return '${p[1]}.${p[0]}';
   }
@@ -11090,9 +11090,9 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
                       ...monthOptions.map((m) => DropdownMenuItem(
                           value: m, child: Text(_fmtMonth(m)))),
                     ],
-                    onChanged: (v) => setState(() => _monthFilter = v),
+                    onChanged: (v) => setState(() { _monthFilter = v; _dayFilter = null; }),
                   ),
-                  if (_sites.isNotEmpty) ...[
+                  const SizedBox(width: 12), OutlinedButton.icon(icon: const Icon(Icons.calendar_today, size: 16), label: Text(_dayFilter == null ? i18n.t('allDays') : _fmtDay(_dayFilter!, i18n)), onPressed: () async { final picked = await showDatePicker(context: context, initialDate: _dayFilter ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(DateTime.now().year + 1)); if (picked != null) { setState(() { _dayFilter = picked; _monthFilter = null; }); } }), if (_dayFilter != null) IconButton(icon: const Icon(Icons.clear, size: 18), tooltip: i18n.t('allDays'), onPressed: () => setState(() => _dayFilter = null)), const SizedBox(width: 12), DropdownButton<String?>(value: _statusFilter, isDense: true, hint: Text(i18n.t('allStatuses')), items: [DropdownMenuItem(value: null, child: Text(i18n.t('allStatuses'))), DropdownMenuItem(value: 'active', child: Text(i18n.t('shiftActive'))), DropdownMenuItem(value: 'completed', child: Text(i18n.t('shiftCompleted')))], onChanged: (v) => setState(() => _statusFilter = v)), const SizedBox(width: 12), if (_sites.isNotEmpty) ...[
                     const SizedBox(width: 12),
                     DropdownButton<String?>(
                       value: _siteFilter,
