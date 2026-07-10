@@ -10406,7 +10406,8 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
           .snapshots();
     }
     return companyTimesheetsRef(widget.companyId)
-      .limit(100) // v24: cap reads to last 100 docs (unordered; orderBy still avoided, sort stays client-side)
+      .orderBy('startTime', descending: true)
+        .limit(100) // v25: sorted server-side by startTime so newest shifts are always included
       .snapshots();
   }
 
