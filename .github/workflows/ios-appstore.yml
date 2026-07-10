@@ -66,6 +66,11 @@ jobs:
           python3 scripts/patch_owner_leave_company.py
           echo "Owner leave-company patch step complete"
 
+      - name: Add day and status filters to timesheets
+        run: |
+          python3 scripts/patch_day_status_filter.py
+          echo "Day/status filter patch step complete"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
