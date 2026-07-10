@@ -10062,8 +10062,10 @@ class _ShiftButtonState extends State<ShiftButton> {
       try {
         if (!(await Geolocator.isLocationServiceEnabled())) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Включите GPS (геолокацию) на устройстве')));
+          return;
         } else if (gpsPermission == LocationPermission.denied || gpsPermission == LocationPermission.deniedForever) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(i18n.t('gpsPermissionDenied'))));
+          return;
         } else {
           final pos = await Geolocator.getCurrentPosition(
                         desiredAccuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10),
