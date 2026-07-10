@@ -79,7 +79,7 @@ class _IssueTabState extends State<IssueTab> {
   }
 
   Future<void> _refreshMoves() async {
-    final snap = await _moves.orderBy('createdAt', descending: true).get();
+    final snap = await _moves.orderBy('createdAt', descending: true).limit(3000).get();
     final Map<String, Map<String, dynamic>> result = {};
     for (final d in snap.docs) {
       final data = d.data();
