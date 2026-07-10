@@ -71,6 +71,11 @@ jobs:
           python3 scripts/patch_day_status_filter.py
           echo "Day/status filter patch step complete"
 
+      - name: Add calendar locale support
+        run: |
+          python3 scripts/patch_calendar_locale.py
+          echo "Calendar locale patch step complete"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
