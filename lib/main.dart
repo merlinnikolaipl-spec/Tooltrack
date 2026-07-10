@@ -421,7 +421,7 @@ class I18n {
       'gpsWarningText': 'Ваше местоположение не совпадает с адресом объекта.',
       'distance': 'Расстояние',
       'startAnyway': 'Начать всё равно',
-      'allTime': 'Всё время', 'allDays': 'Все дни', 'today': 'Сегодня', 'allStatuses': 'Все статусы', 'shiftActive': 'Активна', 'shiftCompleted': 'Завершена',
+      'allTime': 'Всё время', 'allDays': 'Все дни', 'today': 'Сегодня', 'allStatuses': 'Все статусы', 'filterActive': 'Активна', 'shiftCompleted': 'Завершена',
       'allSites': 'Все объекты',
       'allPeople': 'Все сотрудники',
       'exportPdf': 'Экспорт PDF',
@@ -11092,7 +11092,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
                     ],
                     onChanged: (v) => setState(() { _monthFilter = v; _dayFilter = null; }),
                   ),
-                  const SizedBox(width: 12), OutlinedButton.icon(icon: const Icon(Icons.calendar_today, size: 16), label: Text(_dayFilter == null ? i18n.t('allDays') : _fmtDay(_dayFilter!, i18n)), onPressed: () async { final picked = await showDatePicker(context: context, initialDate: _dayFilter ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(DateTime.now().year + 1)); if (picked != null) { setState(() { _dayFilter = picked; _monthFilter = null; }); } }), if (_dayFilter != null) IconButton(icon: const Icon(Icons.clear, size: 18), tooltip: i18n.t('allDays'), onPressed: () => setState(() => _dayFilter = null)), const SizedBox(width: 12), DropdownButton<String?>(value: _statusFilter, isDense: true, hint: Text(i18n.t('allStatuses')), items: [DropdownMenuItem(value: null, child: Text(i18n.t('allStatuses'))), DropdownMenuItem(value: 'active', child: Text(i18n.t('shiftActive'))), DropdownMenuItem(value: 'completed', child: Text(i18n.t('shiftCompleted')))], onChanged: (v) => setState(() => _statusFilter = v)), const SizedBox(width: 12), if (_sites.isNotEmpty) ...[
+                  const SizedBox(width: 12), OutlinedButton.icon(icon: const Icon(Icons.calendar_today, size: 16), label: Text(_dayFilter == null ? i18n.t('allDays') : _fmtDay(_dayFilter!, i18n)), onPressed: () async { final picked = await showDatePicker(context: context, initialDate: _dayFilter ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(DateTime.now().year + 1)); if (picked != null) { setState(() { _dayFilter = picked; _monthFilter = null; }); } }), if (_dayFilter != null) IconButton(icon: const Icon(Icons.clear, size: 18), tooltip: i18n.t('allDays'), onPressed: () => setState(() => _dayFilter = null)), const SizedBox(width: 12), DropdownButton<String?>(value: _statusFilter, isDense: true, hint: Text(i18n.t('allStatuses')), items: [DropdownMenuItem(value: null, child: Text(i18n.t('allStatuses'))), DropdownMenuItem(value: 'active', child: Text(i18n.t('filterActive'))), DropdownMenuItem(value: 'completed', child: Text(i18n.t('shiftCompleted')))], onChanged: (v) => setState(() => _statusFilter = v)), const SizedBox(width: 12), if (_sites.isNotEmpty) ...[
                     const SizedBox(width: 12),
                     DropdownButton<String?>(
                       value: _siteFilter,
