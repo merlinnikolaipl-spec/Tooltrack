@@ -13,6 +13,7 @@ import 'billing/plans.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'firebase_options.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:geolocator/geolocator.dart';
@@ -113,6 +114,11 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  ui.PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
   // Офлайн-кэш Firestore (размер не ограничен)
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
@@ -10192,7 +10198,10 @@ class _ShiftButtonState extends State<ShiftButton> {
               'idToken': capturedIdToken ?? '',
             });
           } catch (e) {
-            print('[GPS] Launch error: $e');
+            FirebaseCrashlytics.instance.recordError(e, StackTrace.current, fatal: false);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка запуска GPS-сервиса: $e')));
+            }
           }
         });
       }
