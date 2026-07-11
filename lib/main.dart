@@ -32,9 +32,13 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'gps_foreground_service.dart';
+import 'package:home_widget/home_widget.dart';
 
 /// Глобальный экземпляр локальных уведомлений
 final FlutterLocalNotificationsPlugin _localNotifs = FlutterLocalNotificationsPlugin();
+
+/// Действие, запрошенное через виджет рабочего стола ('start'/'end')
+final ValueNotifier<String?> pendingWidgetAction = ValueNotifier<String?>(null);
 
 /// MethodChannel для Android-специфичных операций
 const _batteryChannel = MethodChannel('com.toolkeeper.app/battery');
@@ -125,6 +129,9 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
   await _initLocalNotifications();
+  try {
+    await HomeWidget.setAppGroupId('group.com.toolkeeper.app.widget');
+  } catch (_) {}
   runApp(const MyApp());
 }
 
@@ -4399,6 +4406,26 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _loadLang();
+    _initWidgetLaunch();
+  }
+
+  Future<void> _initWidgetLaunch() async {
+    try {
+      final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      if (uri != null) _handleWidgetUri(uri);
+    } catch (_) {}
+    HomeWidget.widgetClicked.listen((uri) {
+      if (uri != null) _handleWidgetUri(uri);
+    });
+  }
+
+  void _handleWidgetUri(Uri uri) {
+    final action = uri.host.isNotEmpty ? uri.host : uri.path.replaceAll('/', '');
+    if (action == 'start') {
+      pendingWidgetAction.value = 'start';
+    } else if (action == 'end') {
+      pendingWidgetAction.value = 'end';
+    }
   }
 
   AppLang _langFromLocale(String code) {
@@ -6171,6 +6198,12 @@ class HomeCompanyPage extends StatefulWidget {
 
 class _HomeCompanyPageState extends State<HomeCompanyPage> {
   int index = 1;
+
+  void _onPendingWidgetAction() {
+    if (pendingWidgetAction.value != null && mounted) {
+      setState(() => index = 3);
+    }
+  }
   int _toolsOnHandsCount = 0;
   int _pendingCount = 0;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _toolsSub;
@@ -6179,6 +6212,8 @@ class _HomeCompanyPageState extends State<HomeCompanyPage> {
   @override
   void initState() {
     super.initState();
+    pendingWidgetAction.addListener(_onPendingWidgetAction);
+    _onPendingWidgetAction();
     _toolsSub = companyToolsRef(widget.companyId)
         .where('status', isEqualTo: 'issued')
         .snapshots()
@@ -6197,6 +6232,7 @@ class _HomeCompanyPageState extends State<HomeCompanyPage> {
 
   @override
   void dispose() {
+    pendingWidgetAction.removeListener(_onPendingWidgetAction);
     _toolsSub?.cancel();
     _pendingSub?.cancel();
     super.dispose();
@@ -9814,6 +9850,32 @@ class _ShiftButtonState extends State<ShiftButton> {
   // Реальный ID для поиска смен: анкета (если привязан) или uid
   String get _queryPersonId => _linkedPersonId ?? widget.userId;
 
+  void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) {
+    try {
+      final active = activeShifts.isNotEmpty;
+      final data = active ? activeShifts.first.data() : null;
+      final siteName = (data?['siteName'] ?? '').toString();
+      final startTs = data?['startTime'];
+      final startMillis = startTs is Timestamp ? startTs.millisecondsSinceEpoch : 0;
+      HomeWidget.saveWidgetData<bool>('shiftActive', active);
+      HomeWidget.saveWidgetData<String>('shiftSiteName', siteName);
+      HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
+      HomeWidget.updateWidget(androidName: 'ShiftWidgetProvider', iOSName: 'ShiftWidget');
+    } catch (_) {}
+  }
+
+  void _handlePendingWidgetAction(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) {
+    final action = pendingWidgetAction.value;
+    if (action == null || !mounted) return;
+    if (action == 'start' && activeShifts.isEmpty) {
+      pendingWidgetAction.value = null;
+      _startShift();
+    } else if (action == 'end' && activeShifts.isNotEmpty) {
+      pendingWidgetAction.value = null;
+      _endShift(activeShifts.first.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = AppState.of(context);
@@ -9832,6 +9894,8 @@ class _ShiftButtonState extends State<ShiftButton> {
         if (!snapshot.hasData) return const SizedBox();
 
         final activeShifts = snapshot.data!.docs;
+        _syncShiftWidget(activeShifts);
+        WidgetsBinding.instance.addPostFrameCallback((_) => _handlePendingWidgetAction(activeShifts));
 
         if (activeShifts.isEmpty) {
           return ElevatedButton(
