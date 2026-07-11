@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
+import com.toolkeeper.tooltrack_app.R
 
 class ShiftWidgetProvider : HomeWidgetProvider() {
   override fun onUpdate(
