@@ -6901,7 +6901,7 @@ class EmployeesListCard extends StatefulWidget {
   State<EmployeesListCard> createState() => _EmployeesListCardState();
 }
 
-class _EmployeesListCardState extends State<EmployeesListCard> {
+class _EmployeesListCardState extends State<EmployeesListCard> { Stream<QuerySnapshot<Map<String, dynamic>>>? _membersStream;
   String _searchQuery = "";
 
   Future<List<Map<String, dynamic>>>? _profilesFuture;
@@ -6969,7 +6969,7 @@ class _EmployeesListCardState extends State<EmployeesListCard> {
         final canEditProfiles = isOwner || isAdmin; // ✅ анкеты редактирует владелец и админ
 
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: companyMembersRef(widget.companyId).where('status', isEqualTo: 'active').limit(200).snapshots(),
+          stream: _membersStream ??= companyMembersRef(widget.companyId).where('status', isEqualTo: 'active').limit(200).snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -7268,7 +7268,7 @@ class PeoplePage extends StatefulWidget {
   State<PeoplePage> createState() => _PeoplePageState();
 }
 
-class _PeoplePageState extends State<PeoplePage> {
+class _PeoplePageState extends State<PeoplePage> { Stream<QuerySnapshot<Map<String, dynamic>>>? _peopleStream;
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
   String get _role => normalizeRole(widget.role.trim());
@@ -7421,7 +7421,7 @@ class _PeoplePageState extends State<PeoplePage> {
   // type=null shows archive (all fired/completed); activeOnly filters by status
   Widget _buildList(I18n i18n, {String? type, bool activeOnly = true}) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: companyPeopleRef(widget.companyId).limit(200).snapshots(),
+      stream: _peopleStream ??= companyPeopleRef(widget.companyId).limit(200).snapshots(),
       builder: (c, s) {
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -7631,7 +7631,7 @@ class ToolsPage extends StatefulWidget {
   State<ToolsPage> createState() => _ToolsPageState();
 }
 
-class _ToolsPageState extends State<ToolsPage> {
+class _ToolsPageState extends State<ToolsPage> { Stream<QuerySnapshot<Map<String, dynamic>>>? _toolsStream;
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
   String _sortMode = 'name'; // 'name' | 'count' | 'date'
@@ -8071,7 +8071,7 @@ class _ToolsPageState extends State<ToolsPage> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
+              stream: _toolsStream ??= companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
               builder: (c, s) {
                 if (!s.hasData) return const Center(child: CircularProgressIndicator());
                 final docs = s.data!.docs;
@@ -8283,7 +8283,7 @@ class HistoryTab extends StatefulWidget {
   State<HistoryTab> createState() => _HistoryTabState();
 }
 
-class _HistoryTabState extends State<HistoryTab> {
+class _HistoryTabState extends State<HistoryTab> { Stream<QuerySnapshot<Map<String, dynamic>>>? _movesStream;
   String _searchQuery = "";
 
   Future<void> _openOnWindows(String path) async {
@@ -8448,7 +8448,7 @@ class _HistoryTabState extends State<HistoryTab> {
         ),
         Expanded(
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: companyMovesRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
+            stream: _movesStream ??= companyMovesRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
             builder: (c, s) {
               if (!s.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -10385,7 +10385,7 @@ class TimesheetsPage extends StatefulWidget {
   State<TimesheetsPage> createState() => _TimesheetsPageState();
 }
 
-class _TimesheetsPageState extends State<TimesheetsPage> {
+class _TimesheetsPageState extends State<TimesheetsPage> { Stream<QuerySnapshot<Map<String, dynamic>>>? _cachedStream;
   String? _monthFilter;
   String? _siteFilter;
   String? _personFilter;
@@ -10408,7 +10408,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
     } catch (_) {}
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> get _stream {
+  Stream<QuerySnapshot<Map<String, dynamic>>> get _stream => _cachedStream ??= _computeStream(); Stream<QuerySnapshot<Map<String, dynamic>>> _computeStream() {
     // For personId queries avoid orderBy — it requires a composite Firestore index.
     // Sort client-side instead.
     if (widget.personId != null) {
