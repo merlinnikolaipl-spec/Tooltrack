@@ -81,6 +81,11 @@ jobs:
           python3 scripts/patch_firestore_read_optimization.py
           echo "Firestore read optimization patch step complete"
 
+      - name: Integrate HomeWidget for shift widget (iOS)
+        run: |
+          python3 scripts/patch_home_widget.py
+          echo "HomeWidget patch step complete"
+
       - name: Configure Sign in with Apple entitlements
         run: |
           # Add entitlements file reference to Xcode project
