@@ -6198,10 +6198,11 @@ class HomeCompanyPage extends StatefulWidget {
 
 class _HomeCompanyPageState extends State<HomeCompanyPage> {
   int index = 1;
+  final Set<int> _visitedTabs = {1};
 
   void _onPendingWidgetAction() {
     if (pendingWidgetAction.value != null && mounted) {
-      setState(() => index = 3);
+      setState(() { index = 3; _visitedTabs.add(3); });
     }
   }
   int _toolsOnHandsCount = 0;
@@ -6252,10 +6253,10 @@ class _HomeCompanyPageState extends State<HomeCompanyPage> {
     final i18n = I18n(AppState.of(context).lang.value);
 
     final pages = [
-      PeoplePage(companyId: widget.companyId, role: widget.role),
-      ToolsPage(companyId: widget.companyId, role: widget.role),
-      MovesPage(companyId: widget.companyId, role: widget.role),
-      CompanyProfilePage(companyId: widget.companyId, role: widget.role, onLogout: _logout),
+      _visitedTabs.contains(0) ? PeoplePage(companyId: widget.companyId, role: widget.role) : const SizedBox.shrink(),
+      _visitedTabs.contains(1) ? ToolsPage(companyId: widget.companyId, role: widget.role) : const SizedBox.shrink(),
+      _visitedTabs.contains(2) ? MovesPage(companyId: widget.companyId, role: widget.role) : const SizedBox.shrink(),
+      _visitedTabs.contains(3) ? CompanyProfilePage(companyId: widget.companyId, role: widget.role, onLogout: _logout) : const SizedBox.shrink(),
     ];
 
 
@@ -6273,7 +6274,7 @@ class _HomeCompanyPageState extends State<HomeCompanyPage> {
       body: IndexedStack(index: index, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
-        onDestinationSelected: (i) => setState(() => index = i),
+        onDestinationSelected: (i) => setState(() { index = i; _visitedTabs.add(i); }),
         destinations: [
           NavigationDestination(icon: const Icon(Icons.people), label: i18n.t('people')),
           NavigationDestination(icon: const Icon(Icons.build), label: i18n.t('tools')),
