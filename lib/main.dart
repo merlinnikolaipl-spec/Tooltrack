@@ -9861,7 +9861,7 @@ class _ShiftButtonState extends State<ShiftButton> {
       HomeWidget.saveWidgetData<bool>('shiftActive', active);
       HomeWidget.saveWidgetData<String>('shiftSiteName', siteName);
       HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
-      HomeWidget.updateWidget(androidName: 'ShiftWidgetProvider', iOSName: 'ShiftWidget');
+      HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
     } catch (_) {}
   }
 
