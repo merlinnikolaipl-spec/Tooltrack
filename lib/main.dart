@@ -9957,6 +9957,7 @@ class _ShiftButtonState extends State<ShiftButton> {
   }
   
   Future<void> _startShift() async {
+    try {
     final appState = AppState.of(context);
     final i18n = I18n(appState.lang.value);
 
@@ -10275,6 +10276,13 @@ class _ShiftButtonState extends State<ShiftButton> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(i18n.t('shiftStarted'))));
+    }
+  
+    } catch (e, st) {
+      try { FirebaseCrashlytics.instance.recordError(e, st, fatal: false); } catch (_) {}
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка запуска смены: ' + e.toString())));
+      }
     }
   }
   
