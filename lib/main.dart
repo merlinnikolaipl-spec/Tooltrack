@@ -6270,7 +6270,7 @@ class _HomeCompanyPageState extends State<HomeCompanyPage> {
           )
         ],
       ),
-      body: pages[index],
+      body: IndexedStack(index: index, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) => setState(() => index = i),
