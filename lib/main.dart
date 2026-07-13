@@ -10240,7 +10240,7 @@ class _ShiftButtonState extends State<ShiftButton> {
       final androidNotifImpl = _localNotifs.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       var notifEnabled = await androidNotifImpl?.areNotificationsEnabled() ?? true; if (!notifEnabled) { try { await androidNotifImpl?.requestNotificationsPermission(); } catch (_) {} await Future.delayed(const Duration(milliseconds: 400)); notifEnabled = await androidNotifImpl?.areNotificationsEnabled() ?? true; }
 
-      if (!notifEnabled && mounted) {
+      if (!notifEnabled && mounted) { try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': 'android', 'tag': 'GPS_START', 'msg': 'blocked_notif_disabled', 'err': ''}); } catch (_) {}
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('GPS-трекинг недоступен: включи уведомления для ToolKeeper в настройках'),
           duration: Duration(seconds: 5),
@@ -10268,7 +10268,7 @@ class _ShiftButtonState extends State<ShiftButton> {
         }
         Future(() async {
           try {
-            await _initBackgroundService();
+try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': 'android', 'tag': 'GPS_START', 'msg': 'attempt_start_service', 'err': ''}); } catch (_) {}             await _initBackgroundService();
             final bgService = FlutterBackgroundService();
             await bgService.startService();
             await Future.delayed(const Duration(milliseconds: 2000));
