@@ -30,7 +30,7 @@ Future<void> _log(String tag, String msg, {String err = ''}) async {
         'msg': {'stringValue': msg},
         'err': {'stringValue': err},
         'ts': {'stringValue': ts},
-        'platform': {'stringValue': 'ios'},
+        'platform': {'stringValue': Platform.isAndroid ? 'android' : 'ios'},
       }
     });
     await http.post(
