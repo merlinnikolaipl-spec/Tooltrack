@@ -19,6 +19,7 @@ class ShiftWidgetProvider : HomeWidgetProvider() {
           widgetData: SharedPreferences,
         ) {
       appWidgetIds.forEach { widgetId ->
+          try {
           val active = widgetData.getBoolean("shiftActive", false)
             val siteName = widgetData.getString("shiftSiteName", "") ?: ""
           val startMillis = widgetData.getLong("shiftStartMillis", 0L)
@@ -48,7 +49,8 @@ class ShiftWidgetProvider : HomeWidgetProvider() {
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)
-      }
+      
+          } catch (e: Exception) {}}
     }
 
     private fun buildPendingIntent(context: Context, action: String, widgetId: Int): PendingIntent {
