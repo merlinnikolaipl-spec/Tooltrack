@@ -10278,6 +10278,10 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
               'interval': capturedInterval,
               'idToken': capturedIdToken ?? '',
             });
+                        try {
+                                        final running = await bgService.isRunning();
+                                        await FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': Platform.isAndroid ? 'android' : 'ios', 'tag': 'GPS_ISRUNNING', 'msg': running.toString(), 'err': ''});
+                        } catch (_) {}
           } catch (e) {
             FirebaseCrashlytics.instance.recordError(e, StackTrace.current, fatal: false);
                         try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': Platform.isAndroid ? 'android' : 'ios', 'tag': 'GPS_START_ERROR2', 'msg': e.toString(), 'err': ''}); } catch (_) {}
