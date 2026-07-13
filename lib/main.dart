@@ -10280,6 +10280,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
             });
           } catch (e) {
             FirebaseCrashlytics.instance.recordError(e, StackTrace.current, fatal: false);
+                        try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': Platform.isAndroid ? 'android' : 'ios', 'tag': 'GPS_START_ERROR2', 'msg': e.toString(), 'err': ''}); } catch (_) {}
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка запуска GPS-сервиса: $e')));
             }
