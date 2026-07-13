@@ -10430,7 +10430,7 @@ class _ShiftButtonState extends State<ShiftButton> {
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                    await prefs.remove('shift_shiftId');
+                    await prefs.remove('shift_shiftId'); try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); await HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget'); _lastWidgetActive = false; } catch (_) {}
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
