@@ -10294,7 +10294,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
     }
   
     } catch (e, st) {
-      try { FirebaseCrashlytics.instance.recordError(e, st, fatal: false); } catch (_) {}
+      try { FirebaseCrashlytics.instance.recordError(e, st, fatal: false); } catch (_) {}      try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTime.now().toIso8601String(), 'platform': Platform.isAndroid ? 'android' : 'ios', 'tag': 'GPS_START_ERROR', 'msg': e.toString(), 'err': st.toString()}); } catch (_) {}
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка запуска смены: ' + e.toString())));
       }
