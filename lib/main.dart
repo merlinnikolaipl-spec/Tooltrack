@@ -10217,11 +10217,16 @@ class _ShiftButtonState extends State<ShiftButton> {
 
       // Проверяем тариф — GPS только с Про и выше
       String companyPlan = Plans.free;
+      bool gpsPlanOverride = false;
       try {
         final compSnap = await companyDoc(widget.companyId).get();
-        companyPlan = (compSnap.data()?['plan'] as String?) ?? Plans.free;
+        final compData = compSnap.data();
+        companyPlan = (compData?['plan'] as String?) ?? (compData?['planId'] as String?) ?? Plans.free;
+        if ((compData?['billingMode'] as String?) == 'free_unlimited' || companyPlan == 'unlimited') {
+          gpsPlanOverride = true;
+        }
       } catch (_) {}
-      if (!Plans.gpsEnabled(companyPlan)) {
+      if (!Plans.gpsEnabled(companyPlan) && !gpsPlanOverride) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(i18n.t('gpsNotInPlan')),
