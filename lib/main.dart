@@ -10238,7 +10238,7 @@ class _ShiftButtonState extends State<ShiftButton> {
 
       // Проверяем уведомления — без них startForeground() крашит весь процесс (Android 14+)
       final androidNotifImpl = _localNotifs.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      final notifEnabled = await androidNotifImpl?.areNotificationsEnabled() ?? true;
+      var notifEnabled = await androidNotifImpl?.areNotificationsEnabled() ?? true; if (!notifEnabled) { try { await androidNotifImpl?.requestNotificationsPermission(); } catch (_) {} await Future.delayed(const Duration(milliseconds: 400)); notifEnabled = await androidNotifImpl?.areNotificationsEnabled() ?? true; }
 
       if (!notifEnabled && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
