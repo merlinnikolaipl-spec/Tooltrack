@@ -9851,6 +9851,10 @@ class _ShiftButtonState extends State<ShiftButton> {
   // Реальный ID для поиска смен: анкета (если привязан) или uid
   String get _queryPersonId => _linkedPersonId ?? widget.userId;
 
+  bool? _lastWidgetActive;
+  String? _lastWidgetSiteName;
+  int? _lastWidgetStartMillis;
+
   void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) {
     try {
       final active = activeShifts.isNotEmpty;
@@ -9858,6 +9862,12 @@ class _ShiftButtonState extends State<ShiftButton> {
       final siteName = (data?['siteName'] ?? '').toString();
       final startTs = data?['startTime'];
       final startMillis = startTs is Timestamp ? startTs.millisecondsSinceEpoch : 0;
+      if (_lastWidgetActive == active && _lastWidgetSiteName == siteName && _lastWidgetStartMillis == startMillis) {
+        return;
+      }
+      _lastWidgetActive = active;
+      _lastWidgetSiteName = siteName;
+      _lastWidgetStartMillis = startMillis;
       HomeWidget.saveWidgetData<bool>('shiftActive', active);
       HomeWidget.saveWidgetData<String>('shiftSiteName', siteName);
       HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
