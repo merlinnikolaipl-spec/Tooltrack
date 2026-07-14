@@ -23,6 +23,7 @@ class ShiftWidgetProvider : HomeWidgetProvider() {
           val active = widgetData.getBoolean("shiftActive", false)
             val siteName = widgetData.getString("shiftSiteName", "") ?: ""
           val startMillis = widgetData.getLong("shiftStartMillis", 0L)
+          val debugInfo = widgetData.getString("debugInfo", "") ?: ""
 
             val views = RemoteViews(context.packageName, R.layout.shift_widget_layout)
 
@@ -41,7 +42,7 @@ class ShiftWidgetProvider : HomeWidgetProvider() {
             } else {
               views.setTextViewText(R.id.widget_status, "Смена не активна")
               views.setTextColor(R.id.widget_dot, 0xFF9E9E9E.toInt())
-              views.setTextViewText(R.id.widget_site, "")
+                                  views.setTextViewText(R.id.widget_site, debugInfo)
               views.setViewVisibility(R.id.widget_chronometer, View.GONE)
               views.setTextViewText(R.id.widget_button, "Начать смену")
               views.setInt(R.id.widget_button, "setBackgroundResource", R.drawable.widget_button_start)
