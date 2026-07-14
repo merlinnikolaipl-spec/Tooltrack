@@ -9812,7 +9812,11 @@ class _SitesPageState extends State<SitesPage> {
 void _pushShiftWidgetUpdate() {
   HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
   if (Platform.isAndroid) {
-    const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+    const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget').then((r) {
+      HomeWidget.saveWidgetData<String>('debugInfo', 'ok r=$r ${DateTime.now()}');
+    }).catchError((e) {
+      HomeWidget.saveWidgetData<String>('debugInfo', 'err $e ${DateTime.now()}');
+    });
   }
   Future.delayed(const Duration(seconds: 2), () {
     HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
