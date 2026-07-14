@@ -8108,7 +8108,7 @@ class _ToolsPageState extends State<ToolsPage> { Stream<QuerySnapshot<Map<String
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _toolsStream ??= companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).limit(200).snapshots(),
+                      stream: _toolsStream ??= companyToolsRef(widget.companyId).orderBy('createdAt', descending: true).limit(5000).snapshots(),
               builder: (c, s) {
                 if (!s.hasData) return const Center(child: CircularProgressIndicator());
                 final docs = s.data!.docs;
