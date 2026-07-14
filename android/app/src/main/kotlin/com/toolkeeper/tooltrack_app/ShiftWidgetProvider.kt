@@ -30,7 +30,7 @@ class ShiftWidgetProvider : HomeWidgetProvider() {
             if (active) {
                 views.setTextViewText(R.id.widget_status, "Смена активна")
                   views.setTextColor(R.id.widget_dot, 0xFF4CAF50.toInt())
-                    views.setTextViewText(R.id.widget_site, siteName)
+                                        views.setTextViewText(R.id.widget_site, if (debugInfo.isNotEmpty()) "$siteName [$debugInfo]" else siteName)
                       views.setViewVisibility(R.id.widget_chronometer, View.VISIBLE)
                       if (startMillis > 0) {
                           val base = SystemClock.elapsedRealtime() - (System.currentTimeMillis() - startMillis)
