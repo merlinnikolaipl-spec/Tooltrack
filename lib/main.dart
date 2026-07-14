@@ -9809,6 +9809,12 @@ class _SitesPageState extends State<SitesPage> {
   }
 }
 
+void _pushShiftWidgetUpdate() {
+  HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+  Future.delayed(const Duration(seconds: 2), () {
+    HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+  });
+}
 // Виджет кнопки начала/конца смены
 class ShiftButton extends StatefulWidget {
   final String companyId;
@@ -9821,7 +9827,7 @@ class ShiftButton extends StatefulWidget {
   State<ShiftButton> createState() => _ShiftButtonState();
 }
 
-class _ShiftButtonState extends State<ShiftButton> {
+class _ShiftButtonState extends State<ShiftButton> with WidgetsBindingObserver {
   // ID анкеты, к которой привязан пользователь (null = не привязан)
   String? _linkedPersonId;
   bool _linkedPersonLoaded = false;
@@ -9829,8 +9835,31 @@ class _ShiftButtonState extends State<ShiftButton> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadLinkedPerson();
   }
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _resyncWidgetFromServer();
+    }
+  }
+
+  Future<void> _resyncWidgetFromServer() async {
+    try {
+      final snap = await companyTimesheetsRef(widget.companyId)
+          .where('personId', isEqualTo: _queryPersonId)
+          .where('endTime', isNull: true)
+          .get();
+      if (!mounted) return;
+      _syncShiftWidget(snap.docs);
+    } catch (_) {}
+  }    
 
   Future<void> _loadLinkedPerson() async {
     try {
@@ -9870,8 +9899,8 @@ class _ShiftButtonState extends State<ShiftButton> {
       _lastWidgetStartMillis = startMillis;
       HomeWidget.saveWidgetData<bool>('shiftActive', active);
       HomeWidget.saveWidgetData<String>('shiftSiteName', siteName);
-      HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
-      HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+            HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
+      _pushShiftWidgetUpdate();      
     } catch (_) {}
   }
 
@@ -10448,7 +10477,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                    await prefs.remove('shift_shiftId'); try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); await HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget'); _lastWidgetActive = false; } catch (_) {}
+                    await prefs.remove('shift_shiftId'); try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate();} catch (_) {}
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
@@ -10970,7 +10999,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> { Stream<QuerySnapshot<
                       }
                       if (isOwnShift) {
                                   await HomeWidget.saveWidgetData<bool>('shiftActive', false);
-                                  await HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+                                            _pushShiftWidgetUpdate();
                       }
             } catch (_) {}
       if (mounted) {
