@@ -49,7 +49,7 @@
             android:value="2" />
 
         <service
-                        android:name="com.pravera.flutter_background_service.BackgroundService"
+                                    android:name="id.flutter.flutter_background_service.BackgroundService"
                         android:enabled="true"
                         android:exported="false"
                         android:foregroundServiceType="location"
