@@ -7,6 +7,8 @@ import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 
 class MainActivity : FlutterActivity() {
     private val BATTERY_CHANNEL = "com.toolkeeper.app/battery"
@@ -36,6 +38,24 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     else -> result.notImplemented()
+                }
+            }
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.toolkeeper.app/widget")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "forceUpdateShiftWidget") {
+                    try {
+                        val manager = AppWidgetManager.getInstance(applicationContext)
+                        val componentName = ComponentName(applicationContext, ShiftWidgetProvider::class.java)
+                        val ids = manager.getAppWidgetIds(componentName)
+                        if (ids.isNotEmpty()) {
+                            ShiftWidgetProvider().onUpdate(applicationContext, manager, ids)
+                        }
+                        result.success(ids.size)
+                    } catch (e: Exception) {
+                        result.success(-1)
+                    }
+                } else {
+                    result.notImplemented()
                 }
             }
     }
