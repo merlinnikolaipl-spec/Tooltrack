@@ -9811,8 +9811,14 @@ class _SitesPageState extends State<SitesPage> {
 
 void _pushShiftWidgetUpdate() {
   HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+  if (Platform.isAndroid) {
+    const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+  }
   Future.delayed(const Duration(seconds: 2), () {
     HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+    if (Platform.isAndroid) {
+      const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+    }
   });
 }
 // Виджет кнопки начала/конца смены
