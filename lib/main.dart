@@ -10952,6 +10952,27 @@ class _TimesheetsPageState extends State<TimesheetsPage> { Stream<QuerySnapshot<
         if (reportController.text.trim().isNotEmpty)
           'workReport': reportController.text.trim(),
       });
+            // Sync home screen widget if this shift belongs to current user
+            try {
+                      final closedPersonId = (doc.data()['personId'] ?? '').toString();
+                      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+                      bool isOwnShift = uid.isNotEmpty && uid == closedPersonId;
+                      if (!isOwnShift && uid.isNotEmpty) {
+                                  try {
+                                                final peopleSnap = await companyPeopleRef(widget.companyId)
+                                                                  .where('linkedUserId', isEqualTo: uid)
+                                                                  .limit(1)
+                                                                  .get();
+                                                if (peopleSnap.docs.isNotEmpty && peopleSnap.docs.first.id == closedPersonId) {
+                                                                isOwnShift = true;
+                                                }
+                                  } catch (_) {}
+                      }
+                      if (isOwnShift) {
+                                  await HomeWidget.saveWidgetData<bool>('shiftActive', false);
+                                  await HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+                      }
+            } catch (_) {}
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(i18n.t('shiftClosed'))),
