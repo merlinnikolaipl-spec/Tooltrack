@@ -7561,7 +7561,7 @@ class _PeoplePageState extends State<PeoplePage> { Stream<QuerySnapshot<Map<Stri
       length: 3,
       child: Scaffold(
         floatingActionButton: canManage
-            ? FloatingActionButton(onPressed: _addPersonDialog, child: const Icon(Icons.add))
+                        ? FloatingActionButton(heroTag: 'fab_people', onPressed: _addPersonDialog, child: const Icon(Icons.add))
             : null,
         body: Column(
           children: [
@@ -8052,7 +8052,7 @@ class _ToolsPageState extends State<ToolsPage> { Stream<QuerySnapshot<Map<String
 
     return Scaffold(
       floatingActionButton: canManage
-          ? FloatingActionButton(onPressed: _addToolDialog, child: const Icon(Icons.add))
+                    ? FloatingActionButton(heroTag: 'fab_tools', onPressed: _addToolDialog, child: const Icon(Icons.add))
           : null,
       body: Column(
         children: [
@@ -9714,7 +9714,7 @@ class _SitesPageState extends State<SitesPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+            floatingActionButton: FloatingActionButton(heroTag: 'fab_sites',
         onPressed: () => _addOrEditSite(),
         child: const Icon(Icons.add),
       ),
