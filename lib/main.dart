@@ -10150,7 +10150,7 @@ class _ShiftButtonState extends State<ShiftButton> {
           return;
         } else {
           final pos = await Geolocator.getCurrentPosition(
-                        desiredAccuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10),
+                                                desiredAccuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 25),
           );
           if (!mounted) return;
           userLat = pos.latitude;
@@ -10176,6 +10176,13 @@ class _ShiftButtonState extends State<ShiftButton> {
           }
         }
       } catch (e) {
+                try {
+                            final lastPos = await Geolocator.getLastKnownPosition();
+                            if (lastPos != null) {
+                                          userLat = lastPos.latitude;
+                                          userLng = lastPos.longitude;
+                            }
+                } catch (_) {}
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('GPS: ' + e.toString())));
         }
@@ -10360,9 +10367,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   double? distFromSite;
                   try {
                     final pos = await Geolocator.getCurrentPosition(
-                      desiredAccuracy: LocationAccuracy.high,
-              
-                          timeLimit: Duration(seconds: 10),
+                                  desiredAccuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 25),
                     );
                     endLat = pos.latitude;
                     endLng = pos.longitude;
@@ -10370,7 +10375,15 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                       distFromSite = Geolocator.distanceBetween(
                           endLat, endLng, siteLat, siteLng);
                     }
-                  } catch (_) {}
+                  } catch (_) {
+                            try {
+                                        final lastPos = await Geolocator.getLastKnownPosition();
+                                        if (lastPos != null) {
+                                                      endLat = lastPos.latitude;
+                                                      endLng = lastPos.longitude;
+                                        }
+                            } catch (_) {}
+                  }
 
                   String report = reportController.text.trim();
 
