@@ -10479,7 +10479,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                     'totalHours': hours,
                     'workReport': report,
                   });
-                                                    try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (_) {}
+                                                    try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (e) { try { await HomeWidget.saveWidgetData<String>('debugInfo', 'endShift1 err $e ${DateTime.now()}'); } catch (_) {} }
 
                   // Отменить запланированные напоминания
                   await _localNotifs.cancel(101);
@@ -10496,7 +10496,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                                                await prefs.remove('shift_shiftId'); try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate();} catch (_) {}
+                                                await prefs.remove('shift_shiftId'); try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate();} catch (e) { try { await HomeWidget.saveWidgetData<String>('debugInfo', 'endShift2 err $e ${DateTime.now()}'); } catch (_) {} }
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
