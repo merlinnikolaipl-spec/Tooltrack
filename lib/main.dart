@@ -9893,9 +9893,11 @@ class _ShiftButtonState extends State<ShiftButton> with WidgetsBindingObserver {
   bool? _lastWidgetActive;
   String? _lastWidgetSiteName;
   int? _lastWidgetStartMillis;
+  DateTime? _suppressSyncUntil;
 
   void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) {
     try {
+      if (_suppressSyncUntil != null && DateTime.now().isBefore(_suppressSyncUntil!)) { return; }
       final active = activeShifts.isNotEmpty;
       final data = active ? activeShifts.first.data() : null;
       final siteName = (data?['siteName'] ?? '').toString();
@@ -10471,7 +10473,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                     'totalHours': hours,
                     'workReport': report,
                   });
-                  try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate(); } catch (_) {}
+                                    try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate(); } catch (_) {}
 
                   // Отменить запланированные напоминания
                   await _localNotifs.cancel(101);
@@ -10488,7 +10490,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                    await prefs.remove('shift_shiftId'); try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate();} catch (_) {}
+                            await prefs.remove('shift_shiftId'); try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate();} catch (_) {}
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
