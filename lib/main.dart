@@ -10471,6 +10471,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                     'totalHours': hours,
                     'workReport': report,
                   });
+                  try { await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate(); } catch (_) {}
 
                   // Отменить запланированные напоминания
                   await _localNotifs.cancel(101);
