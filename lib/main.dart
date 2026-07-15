@@ -9809,21 +9809,24 @@ class _SitesPageState extends State<SitesPage> {
   }
 }
 
-void _pushShiftWidgetUpdate() {
-  HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
-  if (Platform.isAndroid) {
-    const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget').then((r) {
-      HomeWidget.saveWidgetData<String>('debugInfo', 'ok r=$r ${DateTime.now()}');
-    }).catchError((e) {
-      HomeWidget.saveWidgetData<String>('debugInfo', 'err $e ${DateTime.now()}');
-    });
-  }
-  Future.delayed(const Duration(seconds: 2), () {
-    HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+Future<void> _pushShiftWidgetUpdate() async {
+    try {
+          await HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+    } catch (_) {}
     if (Platform.isAndroid) {
-      const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+          try {
+                  final r = await const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+                  await HomeWidget.saveWidgetData<String>('debugInfo', 'ok r=$r ${DateTime.now()}');
+          } catch (e) {
+                  await HomeWidget.saveWidgetData<String>('debugInfo', 'err $e ${DateTime.now()}');
+          }
     }
-  });
+    Future.delayed(const Duration(seconds: 2), () {
+          HomeWidget.updateWidget(qualifiedAndroidName: 'com.toolkeeper.tooltrack_app.ShiftWidgetProvider', iOSName: 'ShiftWidget');
+          if (Platform.isAndroid) {
+                  const MethodChannel('com.toolkeeper.app/widget').invokeMethod('forceUpdateShiftWidget');
+          }
+    });
 }
 // Виджет кнопки начала/конца смены
 class ShiftButton extends StatefulWidget {
@@ -9895,7 +9898,7 @@ class _ShiftButtonState extends State<ShiftButton> with WidgetsBindingObserver {
   int? _lastWidgetStartMillis;
   DateTime? _suppressSyncUntil;
 
-  void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) {
+void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) async {
     try {
       if (_suppressSyncUntil != null && DateTime.now().isBefore(_suppressSyncUntil!)) { return; }
       final active = activeShifts.isNotEmpty;
@@ -9912,7 +9915,7 @@ class _ShiftButtonState extends State<ShiftButton> with WidgetsBindingObserver {
       HomeWidget.saveWidgetData<bool>('shiftActive', active);
       HomeWidget.saveWidgetData<String>('shiftSiteName', siteName);
             HomeWidget.saveWidgetData<int>('shiftStartMillis', startMillis);
-      _pushShiftWidgetUpdate();      
+            await _pushShiftWidgetUpdate();
     } catch (_) {}
   }
 
@@ -10473,7 +10476,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                     'totalHours': hours,
                     'workReport': report,
                   });
-                                    try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate(); } catch (_) {}
+                                            try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (_) {}
 
                   // Отменить запланированные напоминания
                   await _localNotifs.cancel(101);
@@ -10490,7 +10493,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                            await prefs.remove('shift_shiftId'); try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); _pushShiftWidgetUpdate();} catch (_) {}
+                                      await prefs.remove('shift_shiftId'); try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate();} catch (_) {}
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
@@ -11012,7 +11015,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> { Stream<QuerySnapshot<
                       }
                       if (isOwnShift) {
                                   await HomeWidget.saveWidgetData<bool>('shiftActive', false);
-                                            _pushShiftWidgetUpdate();
+                                                    await _pushShiftWidgetUpdate();
                       }
             } catch (_) {}
       if (mounted) {
