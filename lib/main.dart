@@ -9897,12 +9897,15 @@ class _ShiftButtonState extends State<ShiftButton> with WidgetsBindingObserver {
   String? _lastWidgetSiteName;
   int? _lastWidgetStartMillis;
   DateTime? _suppressSyncUntil;
+  final Set<String> _recentlyEndedShiftIds = <String>{};
 
 void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeShifts) async {
     try {
-      if (_suppressSyncUntil != null && DateTime.now().isBefore(_suppressSyncUntil!)) { return; }
-      final active = activeShifts.isNotEmpty;
-      final data = active ? activeShifts.first.data() : null;
+            if (_suppressSyncUntil != null && DateTime.now().isBefore(_suppressSyncUntil!)) { return; }
+            _recentlyEndedShiftIds.removeWhere((id) => !activeShifts.any((d) => d.id == id));
+            final filteredShifts = activeShifts.where((d) => !_recentlyEndedShiftIds.contains(d.id)).toList();
+            final active = filteredShifts.isNotEmpty;
+            final data = active ? filteredShifts.first.data() : null;
       final siteName = (data?['siteName'] ?? '').toString();
       final startTs = data?['startTime'];
       final startMillis = startTs is Timestamp ? startTs.millisecondsSinceEpoch : 0;
@@ -10476,7 +10479,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                     'totalHours': hours,
                     'workReport': report,
                   });
-                                            try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (_) {}
+                                                    try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (_) {}
 
                   // Отменить запланированные напоминания
                   await _localNotifs.cancel(101);
@@ -10493,7 +10496,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('shift_companyId');
-                                      await prefs.remove('shift_shiftId'); try { _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate();} catch (_) {}
+                                                await prefs.remove('shift_shiftId'); try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate();} catch (_) {}
                   } catch (_) {}
 
                   if (ctx.mounted) Navigator.pop(ctx);
