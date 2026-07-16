@@ -10406,6 +10406,7 @@ try { FirebaseFirestore.instance.collection('ios_debug_logs').add({'ts': DateTim
               onPressed: saving ? null : () async {
                 setDlg(() => saving = true);
                 try {
+                  try { _recentlyEndedShiftIds.add(shiftId); _suppressSyncUntil = DateTime.now().add(const Duration(seconds: 5)); await HomeWidget.saveWidgetData<bool>('shiftActive', false); await _pushShiftWidgetUpdate(); } catch (e) { try { await HomeWidget.saveWidgetData<String>('debugInfo', 'endShift0 err $e ${DateTime.now()}'); } catch (_) {} }
                   final startTime = (shiftData['startTime'] as Timestamp).toDate();
                   final endNow = DateTime.now();
                   final hours = endNow.difference(startTime).inSeconds / 3600.0;
