@@ -1,4 +1,52 @@
 name: Android Release Build
-on: {workflow_dispatch: null}
-permissions: {contents: write}
-jobs: {build: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v4}, {name: Setup Java, uses: actions/setup-java@v4, with: {distribution: zulu, java-version: '17'}}, {name: Setup Flutter, uses: subosito/flutter-action@v2, with: {flutter-version: '3.24.0', channel: stable}}, {name: Install dependencies, run: flutter pub get}, {name: Build release AAB, run: "flutter build appbundle --release --build-name=1.1.1 --build-number=2"}, {name: Upload AAB, uses: actions/upload-artifact@v4, with: {name: Tooltrack-release-aab, path: build/app/outputs/bundle/release/app-release.aab}}]}}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode keystore and create key.properties
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Build release AAB
+        run: flutter build appbundle --release --build-name=1.1.1 --build-number=2
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tooltrack-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
