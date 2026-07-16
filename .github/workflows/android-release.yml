@@ -1,0 +1,4 @@
+name: Android Release Build
+on: {workflow_dispatch: null}
+permissions: {contents: write}
+jobs: {build: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v4}, {name: Setup Java, uses: actions/setup-java@v4, with: {distribution: zulu, java-version: '17'}}, {name: Setup Flutter, uses: subosito/flutter-action@v2, with: {flutter-version: '3.24.0', channel: stable}}, {name: Install dependencies, run: flutter pub get}, {name: Build release AAB, run: "flutter build appbundle --release --build-name=1.1.1 --build-number=2"}, {name: Upload AAB, uses: actions/upload-artifact@v4, with: {name: Tooltrack-release-aab, path: build/app/outputs/bundle/release/app-release.aab}}]}}
