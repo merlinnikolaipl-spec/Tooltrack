@@ -72,4 +72,4 @@ Six tiers (Free/Basic/Pro/Business/Enterprise/Enterprise+) with people-count lim
 
 ### Platforms
 
-Supported: Android, Windows, Web. iOS/macOS are not configured (no `GoogleService-Info.plist`, no macOS `firebase_options`). Android Firebase config is `android/app/google-services.json`.
+Supported: Android, Windows, Web, iOS. Android Firebase config is `android/app/google-services.json`; iOS config is `ios/Runner/GoogleService-Info.plist`. iOS build/release uses GitHub Actions workflow `.github/workflows/ios-appstore.yml` exclusively (Bitrise and Codemagic are no longer used, out of credits). See `README.md` for full iOS build history, critical rules, and current status.
