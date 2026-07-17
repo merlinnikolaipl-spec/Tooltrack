@@ -43,7 +43,7 @@ jobs:
           EOF
 
       - name: Build release AAB
-        run: flutter build appbundle --release --build-name=1.1.1 --build-number=22
+        run: flutter build appbundle --release --build-name=1.1.1 --build-number=23
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
