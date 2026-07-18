@@ -15,6 +15,10 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		EB470D780D0E880BD5DE0E92 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D08A1559388EFF001F17E176 /* Pods_Runner.framework */; };
+AA00BB11CC22DD33EE44FF08 /* ShiftWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33EE44FF07 /* ShiftWidget.swift */; };
+AA00BB11CC22DD33EE44FF0D /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33EE44FF0B /* WidgetKit.framework */; };
+AA00BB11CC22DD33EE44FF0E /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33EE44FF0C /* SwiftUI.framework */; };
+AA00BB11CC22DD33EE44FF13 /* ShiftWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33EE44FF01 /* ShiftWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +29,13 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
+AA00BB11CC22DD33EE44FF14 /* PBXContainerItemProxy */ = {
+isa = PBXContainerItemProxy;
+containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+proxyType = 1;
+remoteGlobalIDString = AA00BB11CC22DD33EE44FF00;
+remoteInfo = ShiftWidgetExtension;
+};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,6 +49,17 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+AA00BB11CC22DD33EE44FF12 /* Embed Foundation Extensions */ = {
+isa = PBXCopyFilesBuildPhase;
+buildActionMask = 2147483647;
+dstPath = "";
+dstSubfolderSpec = 13;
+files = (
+AA00BB11CC22DD33EE44FF13 /* ShiftWidgetExtension.appex in Embed Foundation Extensions */,
+);
+name = "Embed Foundation Extensions";
+runOnlyForDeploymentPostprocessing = 0;
+};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -60,6 +82,12 @@
 		D08A1559388EFF001F17E176 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D37027F05A47F515D8738DA3 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		F6DAA49E7AF41D2AECBD08AB /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+AA00BB11CC22DD33EE44FF01 /* ShiftWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShiftWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+AA00BB11CC22DD33EE44FF07 /* ShiftWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShiftWidget.swift; sourceTree = "<group>"; };
+AA00BB11CC22DD33EE44FF09 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+AA00BB11CC22DD33EE44FF0A /* ShiftWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShiftWidgetExtension.entitlements; sourceTree = "<group>"; };
+AA00BB11CC22DD33EE44FF0B /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+AA00BB11CC22DD33EE44FF0C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +99,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+AA00BB11CC22DD33EE44FF10 /* Frameworks */ = {
+isa = PBXFrameworksBuildPhase;
+buildActionMask = 2147483647;
+files = (
+AA00BB11CC22DD33EE44FF0D /* WidgetKit.framework in Frameworks */,
+AA00BB11CC22DD33EE44FF0E /* SwiftUI.framework in Frameworks */,
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -113,6 +150,7 @@
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				84C5035592B0A7D59E66D5AF /* Pods */,
 				C3FFD44E639BF7E06FFFD2C1 /* Frameworks */,
+AA00BB11CC22DD33EE44FF06 /* ShiftWidgetExtension */,
 			);
 			sourceTree = "<group>";
 		};
@@ -121,6 +159,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+AA00BB11CC22DD33EE44FF01 /* ShiftWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -144,10 +183,22 @@
 			isa = PBXGroup;
 			children = (
 				D08A1559388EFF001F17E176 /* Pods_Runner.framework */,
+AA00BB11CC22DD33EE44FF0B /* WidgetKit.framework */,
+AA00BB11CC22DD33EE44FF0C /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+AA00BB11CC22DD33EE44FF06 /* ShiftWidgetExtension */ = {
+isa = PBXGroup;
+children = (
+AA00BB11CC22DD33EE44FF07 /* ShiftWidget.swift */,
+AA00BB11CC22DD33EE44FF09 /* Info.plist */,
+AA00BB11CC22DD33EE44FF0A /* ShiftWidgetExtension.entitlements */,
+);
+path = ShiftWidgetExtension;
+sourceTree = "<group>";
+};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -179,16 +230,35 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+AA00BB11CC22DD33EE44FF12 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+AA00BB11CC22DD33EE44FF15 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
 		};
+AA00BB11CC22DD33EE44FF00 /* ShiftWidgetExtension */ = {
+isa = PBXNativeTarget;
+buildConfigurationList = AA00BB11CC22DD33EE44FF02 /* Build configuration list for PBXNativeTarget "ShiftWidgetExtension" */;
+buildPhases = (
+AA00BB11CC22DD33EE44FF0F /* Sources */,
+AA00BB11CC22DD33EE44FF10 /* Frameworks */,
+AA00BB11CC22DD33EE44FF11 /* Resources */,
+);
+buildRules = (
+);
+dependencies = (
+);
+name = ShiftWidgetExtension;
+productName = ShiftWidgetExtension;
+productReference = AA00BB11CC22DD33EE44FF01 /* ShiftWidgetExtension.appex */;
+productType = "com.apple.product-type.app-extension";
+};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -207,6 +277,10 @@
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
 					};
+AA00BB11CC22DD33EE44FF00 = {
+CreatedOnToolsVersion = 14.0;
+DevelopmentTeam = VHF76Z663B;
+};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -224,6 +298,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+AA00BB11CC22DD33EE44FF00 /* ShiftWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -247,6 +322,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+AA00BB11CC22DD33EE44FF11 /* Resources */ = {
+isa = PBXResourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -323,6 +405,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+AA00BB11CC22DD33EE44FF0F /* Sources */ = {
+isa = PBXSourcesBuildPhase;
+buildActionMask = 2147483647;
+files = (
+AA00BB11CC22DD33EE44FF08 /* ShiftWidget.swift in Sources */,
+);
+runOnlyForDeploymentPostprocessing = 0;
+};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -331,6 +421,11 @@
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
 		};
+AA00BB11CC22DD33EE44FF15 /* PBXTargetDependency */ = {
+isa = PBXTargetDependency;
+target = AA00BB11CC22DD33EE44FF00 /* ShiftWidgetExtension */;
+targetProxy = AA00BB11CC22DD33EE44FF14 /* PBXContainerItemProxy */;
+};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -636,6 +731,61 @@
 			};
 			name = Release;
 		};
+AA00BB11CC22DD33EE44FF03 /* Debug */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_ENTITLEMENTS = ShiftWidgetExtension/ShiftWidgetExtension.entitlements;
+CODE_SIGN_STYLE = Automatic;
+DEVELOPMENT_TEAM = VHF76Z663B;
+GENERATE_INFOPLIST_FILE = YES;
+INFOPLIST_FILE = ShiftWidgetExtension/Info.plist;
+IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+PRODUCT_BUNDLE_IDENTIFIER = com.toolkeeper.app.ShiftWidget;
+PRODUCT_NAME = "$(TARGET_NAME)";
+SKIP_INSTALL = YES;
+SWIFT_VERSION = 5.0;
+TARGETED_DEVICE_FAMILY = "1,2";
+};
+name = Debug;
+};
+AA00BB11CC22DD33EE44FF04 /* Release */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_ENTITLEMENTS = ShiftWidgetExtension/ShiftWidgetExtension.entitlements;
+CODE_SIGN_IDENTITY = "iPhone Distribution";
+CODE_SIGN_STYLE = Manual;
+DEVELOPMENT_TEAM = VHF76Z663B;
+GENERATE_INFOPLIST_FILE = YES;
+INFOPLIST_FILE = ShiftWidgetExtension/Info.plist;
+IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+PRODUCT_BUNDLE_IDENTIFIER = com.toolkeeper.app.ShiftWidget;
+PRODUCT_NAME = "$(TARGET_NAME)";
+PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Widget App Store";
+SKIP_INSTALL = YES;
+SWIFT_VERSION = 5.0;
+TARGETED_DEVICE_FAMILY = "1,2";
+};
+name = Release;
+};
+AA00BB11CC22DD33EE44FF05 /* Profile */ = {
+isa = XCBuildConfiguration;
+buildSettings = {
+CODE_SIGN_ENTITLEMENTS = ShiftWidgetExtension/ShiftWidgetExtension.entitlements;
+CODE_SIGN_IDENTITY = "iPhone Distribution";
+CODE_SIGN_STYLE = Manual;
+DEVELOPMENT_TEAM = VHF76Z663B;
+GENERATE_INFOPLIST_FILE = YES;
+INFOPLIST_FILE = ShiftWidgetExtension/Info.plist;
+IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+PRODUCT_BUNDLE_IDENTIFIER = com.toolkeeper.app.ShiftWidget;
+PRODUCT_NAME = "$(TARGET_NAME)";
+PROVISIONING_PROFILE_SPECIFIER = "ToolKeeper Widget App Store";
+SKIP_INSTALL = YES;
+SWIFT_VERSION = 5.0;
+TARGETED_DEVICE_FAMILY = "1,2";
+};
+name = Profile;
+};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -669,6 +819,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+AA00BB11CC22DD33EE44FF02 /* Build configuration list for PBXNativeTarget "ShiftWidgetExtension" */ = {
+isa = XCConfigurationList;
+buildConfigurations = (
+AA00BB11CC22DD33EE44FF03 /* Debug */,
+AA00BB11CC22DD33EE44FF04 /* Release */,
+AA00BB11CC22DD33EE44FF05 /* Profile */,
+);
+defaultConfigurationIsVisible = 0;
+defaultConfigurationName = Release;
+};
 /* End XCConfigurationList section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
