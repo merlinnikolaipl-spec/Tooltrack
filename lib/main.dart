@@ -10181,9 +10181,34 @@ void _syncShiftWidget(List<QueryDocumentSnapshot<Map<String, dynamic>>> activeSh
     LocationPermission gpsPermission = LocationPermission.denied;
     try {
       gpsPermission = await Geolocator.checkPermission();
-      if (gpsPermission == LocationPermission.denied) {
-        gpsPermission = await Geolocator.requestPermission();
-      }
+if (gpsPermission == LocationPermission.denied) {
+            bool discloseAgreed = true;
+            if (mounted) {
+                          discloseAgreed = await showDialog<bool>(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (ctx) => AlertDialog(
+                                                                    title: const Text('Использование геолокации'),
+                                                                    content: const Text(
+                                                                                            'ToolKeeper использует данные о местоположении устройства, в том числе в фоновом режиме, чтобы фиксировать начало и конец смены и вести учёт рабочего времени на объекте, даже когда приложение свёрнуто. Разрешить доступ к геолокации?',
+                                                                                          ),
+                                                                    actions: [
+                                                                                            TextButton(
+                                                                                                                      onPressed: () => Navigator.pop(ctx, false),
+                                                                                                                      child: Text(i18n.t('cancel')),
+                                                                                                                    ),
+                                                                                            FilledButton(
+                                                                                                                      onPressed: () => Navigator.pop(ctx, true),
+                                                                                                                      child: const Text('Разрешить'),
+                                                                                                                    ),
+                                                                                          ],
+                                                                  ),
+                                            ) ?? false;
+            }
+            if (discloseAgreed) {
+                          gpsPermission = await Geolocator.requestPermission();
+            }
+}
     } catch (_) {}
     if (!mounted) return;
 
