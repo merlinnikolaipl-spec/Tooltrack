@@ -10188,10 +10188,8 @@ if (gpsPermission == LocationPermission.denied) {
                                               context: context,
                                               barrierDismissible: false,
                                               builder: (ctx) => AlertDialog(
-                                                                    title: const Text('Использование геолокации'),
-                                                                    content: const Text(
-                                                                                            'ToolKeeper использует данные о местоположении устройства, в том числе в фоновом режиме, чтобы фиксировать начало и конец смены и вести учёт рабочего времени на объекте, даже когда приложение свёрнуто. Разрешить доступ к геолокации?',
-                                                                                          ),
+                                                                                                    title: Text(i18n.t('locationDisclosureTitle')),
+                                                                                                    content: Text(i18n.t('locationDisclosureText')),
                                                                     actions: [
                                                                                             TextButton(
                                                                                                                       onPressed: () => Navigator.pop(ctx, false),
@@ -10199,7 +10197,7 @@ if (gpsPermission == LocationPermission.denied) {
                                                                                                                     ),
                                                                                             FilledButton(
                                                                                                                       onPressed: () => Navigator.pop(ctx, true),
-                                                                                                                      child: const Text('Разрешить'),
+                                                                                                                                        child: Text(i18n.t('allow')),
                                                                                                                     ),
                                                                                           ],
                                                                   ),
