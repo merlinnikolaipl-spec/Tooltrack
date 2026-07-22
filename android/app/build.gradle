@@ -34,8 +34,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.toolkeeper.tooltrack_app"
-    compileSdkVersion 35
-    ndkVersion "27.0.12077973"
+    compileSdkVersion 36
+            ndkVersion flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
