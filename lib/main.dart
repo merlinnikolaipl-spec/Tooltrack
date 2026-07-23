@@ -9673,6 +9673,9 @@ class _SitesPageState extends State<SitesPage> {
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: companySitesRef(widget.companyId).limit(100).snapshots(),
         builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                                  return Center(child: Text('Error: ${snapshot.error}'));
+                    }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
