@@ -7308,7 +7308,7 @@ class PeoplePage extends StatefulWidget {
   State<PeoplePage> createState() => _PeoplePageState();
 }
 
-class _PeoplePageState extends State<PeoplePage> { Stream<QuerySnapshot<Map<String, dynamic>>>? _peopleStream;
+  class _PeoplePageState extends State<PeoplePage> { final Map<String, Stream<QuerySnapshot<Map<String, dynamic>>>> _streamCache = {};
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
   String get _role => normalizeRole(widget.role.trim());
@@ -7460,8 +7460,10 @@ class _PeoplePageState extends State<PeoplePage> { Stream<QuerySnapshot<Map<Stri
 
   // type=null shows archive (all fired/completed); activeOnly filters by status
   Widget _buildList(I18n i18n, {String? type, bool activeOnly = true}) {
+        final key = 'type=$type|activeOnly=$activeOnly';
+        final cachedStream = _streamCache[key] ??= companyPeopleRef(widget.companyId).limit(200).snapshots();
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: companyPeopleRef(widget.companyId).limit(200).snapshots(),
+        stream: cachedStream,
       builder: (c, s) {
           if (s.hasError) return Center(child: Text('Error: ${s.error}'));
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
