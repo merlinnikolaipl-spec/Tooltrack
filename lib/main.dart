@@ -7461,8 +7461,9 @@ class _PeoplePageState extends State<PeoplePage> { Stream<QuerySnapshot<Map<Stri
   // type=null shows archive (all fired/completed); activeOnly filters by status
   Widget _buildList(I18n i18n, {String? type, bool activeOnly = true}) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _peopleStream ??= companyPeopleRef(widget.companyId).limit(200).snapshots(),
+        stream: companyPeopleRef(widget.companyId).limit(200).snapshots(),
       builder: (c, s) {
+          if (s.hasError) return Center(child: Text('Error: ${s.error}'));
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
 
         final docs = s.data!.docs.where((d) {
